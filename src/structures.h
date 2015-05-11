@@ -209,6 +209,15 @@ typedef struct PlayableAnimationLookup {
 	int16 Flags;
 } PlayableAnimationLookup;
 
+typedef struct LKAnimationBlock {
+	int16 type;
+	int16 seq;
+	uint32 nTimes;
+	uint32 ofsTimes;
+	uint32 nKeys;
+	uint32 ofsKeys;
+} LKAnimationBlock;
+
 typedef struct AnimationBlock {
 	int16 type;
 	int16 seq;
@@ -220,14 +229,7 @@ typedef struct AnimationBlock {
 	uint32 ofsKeys;
 } AnimationBlock;
 
-typedef struct LKAnimationBlock {
-	int16 type;
-	int16 seq;
-	uint32 nTimes;
-	uint32 ofsTimes;
-	uint32 nKeys;
-	uint32 ofsKeys;
-} LKAnimationBlock;
+
 
 typedef struct LKModelBoneDef {
 	int32 animid;
