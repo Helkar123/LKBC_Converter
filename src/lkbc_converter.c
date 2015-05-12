@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "M2 opening error \n");
 	}
 	LKM2File lk_model;
+
 	read_model(lk_m2, lk_model);
 
 	return 0;

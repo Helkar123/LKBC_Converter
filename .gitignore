@@ -6,6 +6,10 @@ cmake_install.cmake
 Makefile
 Testing/
 
+# Eclipse
+.project
+.cproject
+
 # Doxygen
 doc
 

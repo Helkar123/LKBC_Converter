@@ -3,10 +3,9 @@
  * File reading routines
  */
 
-#include <stdio.h>
-#include "structures.h"
+#include <stdlib.h>
+#include "reading.h"
 
-unsigned int i = 0; //used in loops
 
 /**
  * Each substructure in the M2 has a variable size except the header.
@@ -60,7 +59,7 @@ int read_model(FILE *lk_m2, LKM2File lk_model) {
 	fread(&lk_model.vertices, sizeof(ModelVertex), lk_model.header.nVertices,
 			lk_m2);
 
-//TODO mallocs... inside or before the "if" ?
+//FIXME malloc()s... inside or before the "if" ?
 	//Colors
 	if (lk_model.header.nColors > 0) {
 		lk_model.lkcolors = malloc(
@@ -85,9 +84,10 @@ int read_model(FILE *lk_m2, LKM2File lk_model) {
 	fseek(lk_m2, lk_model.header.ofsTextures, SEEK_SET);
 	fread(&lk_model.textures_def, sizeof(ModelTextureDef),
 			lk_model.header.nTextures, lk_m2);
-//TODO Implement memory allocation
+
 	//TRANSPARENCY
 	if (lk_model.header.nTransparency > 0) {
+		lk_model.transparencies=malloc(lk_model.header.nTransparency*sizeof(Transparency));
 		fseek(lk_m2, lk_model.header.ofsTransparency, SEEK_SET);
 		fread(&lk_model.transparencies, sizeof(Transparency),
 				lk_model.header.nTransparency, lk_m2);
@@ -95,13 +95,16 @@ int read_model(FILE *lk_m2, LKM2File lk_model) {
 
 	//TEXANIMS
 	if (lk_model.header.nTexAnims > 0) {
+		lk_model.lk_tex_anims=malloc(lk_model.header.nTexAnims*sizeof(LKTextureAnimation));
 		fseek(lk_m2, lk_model.header.ofsTexAnims, SEEK_SET);
 		fread(&lk_model.lk_tex_anims, sizeof(LKTextureAnimation),
 				lk_model.header.nTexAnims, lk_m2);
 
 		//read addresses to real animation data
+		int i;
 		for (i = 0; i < lk_model.header.nTexAnims; i++) {
 			//translation
+			lk_model.lk_temp_anim_ofs=malloc(lk_model.header.nTexAnims*sizeof(LKAnimOfs));
 			if (lk_model.lk_tex_anims[i].Translation.nTimes > 0) {
 				fseek(lk_m2, lk_model.lk_tex_anims[i].Translation.ofsTimes,
 						SEEK_SET);
@@ -194,48 +197,58 @@ int read_model(FILE *lk_m2, LKM2File lk_model) {
 	}
 
 	//Render flags
+	lk_model.renderflags=malloc(lk_model.header.nRenderFlags*sizeof(int));
 	fseek(lk_m2, lk_model.header.ofsRenderFlags, SEEK_SET);
 	fread(&lk_model.renderflags, sizeof(int), lk_model.header.nRenderFlags,
 			lk_m2);
 
 	//Bone lookup table
+	lk_model.BoneLookupTable=malloc(lk_model.header.nBoneLookupTable*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsBoneLookupTable, SEEK_SET);
 	fread(&lk_model.BoneLookupTable, sizeof(short),
 			lk_model.header.nBoneLookupTable, lk_m2);
 
 	//Texture lookup table
+	lk_model.TexLookupTable=malloc(lk_model.header.nTexLookup*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsTexLookup, SEEK_SET);
 	fread(&lk_model.TexLookupTable, sizeof(short), lk_model.header.nTexLookup,
 			lk_m2);
 
 	//TexUnit
+	lk_model.TexUnit=malloc(lk_model.header.nTexUnitLookup*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsTexUnitLookup, SEEK_SET);
 	fread(&lk_model.TexUnit, sizeof(short), lk_model.header.nTexUnitLookup,
 			lk_m2);
 
 	//TransLookup
+	lk_model.TransparencyLookup=malloc(lk_model.header.nTransparencyLookup*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsTransparencyLookup, SEEK_SET);
 	fread(&lk_model.TransparencyLookup, sizeof(short),
 			lk_model.header.nTransparencyLookup, lk_m2);
 
 	//TexAnimLookup
+	lk_model.TexAnimLookup=malloc(lk_model.header.nTexAnimLookup*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsTexAnimLookup, SEEK_SET);
 	fread(&lk_model.TexAnimLookup, sizeof(short),
 			lk_model.header.nTexAnimLookup, lk_m2);
 
 	//BoundingTriangles
+	lk_model.BoundingTriangles=malloc(lk_model.header.nBoundingTriangles*sizeof(short));
 	fseek(lk_m2, lk_model.header.ofsBoundingTriangles, SEEK_SET);
 	fread(&lk_model.BoundingTriangles, sizeof(short),
 			lk_model.header.nBoundingTriangles, lk_m2);
 
 	//BoundingVertices
+	lk_model.BoundingVertices=malloc(lk_model.header.nBoundingVertices*sizeof(BoundingVertice));
 	fseek(lk_m2, lk_model.header.ofsBoundingVertices, SEEK_SET);
 	fread(&lk_model.BoundingVertices, sizeof(BoundingVertice),
 			lk_model.header.nBoundingVertices, lk_m2);
 
 	//BoundingNormals
+	lk_model.BoundingNormals=malloc(lk_model.header.nBoundingNormals*sizeof(BoundingNormal));
 	fseek(lk_m2, lk_model.header.ofsBoundingNormals, SEEK_SET);
 	fread(&lk_model.BoundingNormals, sizeof(BoundingNormal),
 			lk_model.header.nBoundingNormals, lk_m2);
+
 	return 0;
 }
