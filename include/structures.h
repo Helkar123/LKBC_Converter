@@ -441,18 +441,18 @@ typedef struct TextureAnimation {
  */
 typedef struct LKM2File {
 	LKModelHeader header;
-	char *lk_filename;
+	char *filename;
 	unsigned int *globalsequences;
-	LKModelAnimation *lk_animations;
-	LKModelBoneDef *lk_bones;
+	LKModelAnimation *animations;
+	LKModelBoneDef *bones;
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *lkcolors;
 	ColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
 	Transparency *transparencies;
-	LKTextureAnimation *lk_tex_anims;
-	LKAnimOfs *lk_temp_anim_ofs;
+	LKTextureAnimation *tex_anims;
+	LKAnimOfs *temp_anim_ofs;
 	int *renderflags;
 	short *BoneLookupTable;
 	short *TexLookupTable;

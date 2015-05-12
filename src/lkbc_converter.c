@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "reading.h"
 
 int main(int argc, char *argv[]) {
@@ -17,10 +18,11 @@ int main(int argc, char *argv[]) {
 	if (lk_m2 == NULL) {
 		fprintf(stderr, "M2 opening error \n");
 	}
+
 	struct LKM2File lk_model;
-	read_model(lk_m2, lk_model);
 
+	read_model(lk_m2, &lk_model);
 
-
+	fclose(lk_m2);
 	return 0;
 }
