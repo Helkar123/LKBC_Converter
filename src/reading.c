@@ -3,6 +3,7 @@
  * File reading routines
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "reading.h"
 

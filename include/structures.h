@@ -1,7 +1,10 @@
-/**
+/*
  * @file
  * M2 structures
  */
+
+#ifndef STRUCTURES
+#define STRUCTURES
 
 typedef unsigned char uint8;
 typedef char int8;
@@ -460,3 +463,5 @@ typedef struct LKM2File {
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
 } LKM2File;
+
+#endif
