@@ -3,8 +3,8 @@
  * Reading functions prototypes
  */
 
-#ifndef READING
-#define READING
+#ifndef READING_H
+#define READING_H
 
 #include <stdio.h>
 #include "structures.h"

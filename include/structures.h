@@ -1,10 +1,10 @@
-/*
+/**
  * @file
  * M2 structures
  */
 
-#ifndef STRUCTURES
-#define STRUCTURES
+#ifndef STRUCTURES_H
+#define STRUCTURES_H
 
 typedef unsigned char uint8;
 typedef char int8;

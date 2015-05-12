@@ -7,94 +7,12 @@
 #include <stdlib.h>
 #include "reading.h"
 
-
 /**
- * Each substructure in the M2 has a variable size except the header.
- * Memory for each substructure must therefore be allocated at reading depending on header values.
+ * Read texture animations. WIP
  * @param lk_m2 The file to read data.
  * @param lk_model Structure with M2 file content
  */
-int read_model(FILE *lk_m2, LKM2File lk_model) {
-	//Header
-	fseek(lk_m2, 0, SEEK_SET);
-	fread(&lk_model.header, sizeof(lk_model.header), 1, lk_m2);
-
-	//Name
-	lk_model.lk_filename = malloc(lk_model.header.nameLength);
-	fseek(lk_m2, lk_model.header.nameOfs, SEEK_SET);
-	fread(&lk_model.lk_filename, sizeof(char), lk_model.header.nameLength,
-			lk_m2);
-
-	//Global sequences
-	lk_model.globalsequences = malloc(
-			lk_model.header.nGlobalSequences * sizeof(unsigned int));
-	if (lk_model.header.nGlobalSequences > 0) {
-		fseek(lk_m2, lk_model.header.ofsGlobalSequences, SEEK_SET);
-		fread(&lk_model.globalsequences, sizeof(unsigned int),
-				lk_model.header.nGlobalSequences, lk_m2);
-	}
-
-	//Animations
-	lk_model.lk_animations = malloc(
-			lk_model.header.nAnimations * sizeof(LKModelAnimation));
-	fseek(lk_m2, lk_model.header.ofsAnimations, SEEK_SET);
-	fread(&lk_model.lk_animations, sizeof(LKModelAnimation),
-			lk_model.header.nAnimations, lk_m2);
-
-	//Bones
-	lk_model.lk_bones = malloc(lk_model.header.nBones * sizeof(LKModelBoneDef));
-	fseek(lk_m2, lk_model.header.ofsBones, SEEK_SET);
-	fread(&lk_model.lk_bones, sizeof(LKModelBoneDef), lk_model.header.nBones,
-			lk_m2);
-
-	//Skeleton Bone Lookup
-	lk_model.keybonelookup = malloc(
-			lk_model.header.nKeyBoneLookup * sizeof(short));
-	fseek(lk_m2, lk_model.header.ofsKeyBoneLookup, SEEK_SET);
-	fread(&lk_model.keybonelookup, sizeof(short),
-			lk_model.header.nKeyBoneLookup, lk_m2);
-
-	//Vertices
-	lk_model.vertices = malloc(lk_model.header.nVertices * sizeof(ModelVertex));
-	fseek(lk_m2, lk_model.header.ofsVertices, SEEK_SET);
-	fread(&lk_model.vertices, sizeof(ModelVertex), lk_model.header.nVertices,
-			lk_m2);
-
-//FIXME malloc()s... inside or before the "if" ?
-	//Colors
-	if (lk_model.header.nColors > 0) {
-		lk_model.lkcolors = malloc(
-				lk_model.header.nColors * sizeof(LKColorDef));
-		lk_model.colorsdata = malloc(
-				lk_model.header.nColors * sizeof(ColorDataBlock));
-		fseek(lk_m2, lk_model.header.ofsColors, SEEK_SET);
-		fread(&lk_model.lkcolors, sizeof(LKColorDef), lk_model.header.nColors,
-				lk_m2);
-
-		//Color data block
-		int temp_ofs[2];
-		fseek(lk_m2, lk_model.lkcolors[0].RGB.ofsTimes, SEEK_SET);
-		fread(&temp_ofs, sizeof(int), 2, lk_m2);
-		fseek(lk_m2, temp_ofs[1], SEEK_SET);
-		fread(&lk_model.colorsdata, sizeof(ColorDataBlock),
-				lk_model.header.nColors, lk_m2);
-	};
-	//Textures definition
-	lk_model.textures_def = malloc(
-			lk_model.header.nTextures * sizeof(ModelTextureDef));
-	fseek(lk_m2, lk_model.header.ofsTextures, SEEK_SET);
-	fread(&lk_model.textures_def, sizeof(ModelTextureDef),
-			lk_model.header.nTextures, lk_m2);
-
-	//TRANSPARENCY
-	if (lk_model.header.nTransparency > 0) {
-		lk_model.transparencies=malloc(lk_model.header.nTransparency*sizeof(Transparency));
-		fseek(lk_m2, lk_model.header.ofsTransparency, SEEK_SET);
-		fread(&lk_model.transparencies, sizeof(Transparency),
-				lk_model.header.nTransparency, lk_m2);
-	}
-
-	//TEXANIMS
+int read_texanims(FILE* lk_m2, LKM2File lk_model){
 	if (lk_model.header.nTexAnims > 0) {
 		lk_model.lk_tex_anims=malloc(lk_model.header.nTexAnims*sizeof(LKTextureAnimation));
 		fseek(lk_m2, lk_model.header.ofsTexAnims, SEEK_SET);
@@ -194,8 +112,100 @@ int read_model(FILE *lk_m2, LKM2File lk_model) {
 				lk_model.lk_temp_anim_ofs[i].s_ofskeys = 0;
 			}
 		}
-
+		return 0;
 	}
+	return -1;
+}
+
+/**
+ * Each substructure in the M2 has a variable size except the header.
+ * Memory for each substructure must therefore be allocated at reading depending on header values.
+ * @param lk_m2 The file to read data.
+ * @param lk_model Structure with M2 file content
+ */
+int read_model(FILE *lk_m2, LKM2File lk_model) {
+	//Header
+	fseek(lk_m2, 0, SEEK_SET);
+	fread(&lk_model.header, sizeof(lk_model.header), 1, lk_m2);
+
+	//Name
+	lk_model.lk_filename = malloc(lk_model.header.nameLength);
+	fseek(lk_m2, lk_model.header.nameOfs, SEEK_SET);
+	fread(&lk_model.lk_filename, sizeof(char), lk_model.header.nameLength,
+			lk_m2);
+
+	//Global sequences
+	lk_model.globalsequences = malloc(
+			lk_model.header.nGlobalSequences * sizeof(unsigned int));
+	if (lk_model.header.nGlobalSequences > 0) {
+		fseek(lk_m2, lk_model.header.ofsGlobalSequences, SEEK_SET);
+		fread(&lk_model.globalsequences, sizeof(unsigned int),
+				lk_model.header.nGlobalSequences, lk_m2);
+	}
+
+	//Animations
+	lk_model.lk_animations = malloc(
+			lk_model.header.nAnimations * sizeof(LKModelAnimation));
+	fseek(lk_m2, lk_model.header.ofsAnimations, SEEK_SET);
+	fread(&lk_model.lk_animations, sizeof(LKModelAnimation),
+			lk_model.header.nAnimations, lk_m2);
+
+	//Bones
+	lk_model.lk_bones = malloc(lk_model.header.nBones * sizeof(LKModelBoneDef));
+	fseek(lk_m2, lk_model.header.ofsBones, SEEK_SET);
+	fread(&lk_model.lk_bones, sizeof(LKModelBoneDef), lk_model.header.nBones,
+			lk_m2);
+
+	//Skeleton Bone Lookup
+	lk_model.keybonelookup = malloc(
+			lk_model.header.nKeyBoneLookup * sizeof(short));
+	fseek(lk_m2, lk_model.header.ofsKeyBoneLookup, SEEK_SET);
+	fread(&lk_model.keybonelookup, sizeof(short),
+			lk_model.header.nKeyBoneLookup, lk_m2);
+
+	//Vertices
+	lk_model.vertices = malloc(lk_model.header.nVertices * sizeof(ModelVertex));
+	fseek(lk_m2, lk_model.header.ofsVertices, SEEK_SET);
+	fread(&lk_model.vertices, sizeof(ModelVertex), lk_model.header.nVertices,
+			lk_m2);
+
+//FIXME malloc()s... inside or before the "if" ?
+	//Colors
+	if (lk_model.header.nColors > 0) {
+		lk_model.lkcolors = malloc(
+				lk_model.header.nColors * sizeof(LKColorDef));
+		lk_model.colorsdata = malloc(
+				lk_model.header.nColors * sizeof(ColorDataBlock));
+		fseek(lk_m2, lk_model.header.ofsColors, SEEK_SET);
+		fread(&lk_model.lkcolors, sizeof(LKColorDef), lk_model.header.nColors,
+				lk_m2);
+
+		//Color data block
+		int temp_ofs[2];
+		fseek(lk_m2, lk_model.lkcolors[0].RGB.ofsTimes, SEEK_SET);
+		fread(&temp_ofs, sizeof(int), 2, lk_m2);
+		fseek(lk_m2, temp_ofs[1], SEEK_SET);
+		fread(&lk_model.colorsdata, sizeof(ColorDataBlock),
+				lk_model.header.nColors, lk_m2);
+	};
+	//Textures definition
+	lk_model.textures_def = malloc(
+			lk_model.header.nTextures * sizeof(ModelTextureDef));
+	fseek(lk_m2, lk_model.header.ofsTextures, SEEK_SET);
+	fread(&lk_model.textures_def, sizeof(ModelTextureDef),
+			lk_model.header.nTextures, lk_m2);
+
+	//TRANSPARENCY
+	if (lk_model.header.nTransparency > 0) {
+		lk_model.transparencies=malloc(lk_model.header.nTransparency*sizeof(Transparency));
+		fseek(lk_m2, lk_model.header.ofsTransparency, SEEK_SET);
+		fread(&lk_model.transparencies, sizeof(Transparency),
+				lk_model.header.nTransparency, lk_m2);
+	}
+
+	//TEXANIMS
+	read_texanims(lk_m2, lk_model);
+
 
 	//Render flags
 	lk_model.renderflags=malloc(lk_model.header.nRenderFlags*sizeof(int));

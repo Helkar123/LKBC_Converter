@@ -2,8 +2,8 @@
  * @file
  * Conversion functions
  */
-#ifndef CONVERSION
-#define CONVERSION
+#ifndef CONVERSION_H
+#define CONVERSION_H
 
 void x();
 

@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include "reading.h"
-#include "structures.h"
 
 int main(int argc, char *argv[]) {
 	printf("LKBC_Converter by Koward\n");
@@ -18,9 +17,10 @@ int main(int argc, char *argv[]) {
 	if (lk_m2 == NULL) {
 		fprintf(stderr, "M2 opening error \n");
 	}
-	LKM2File lk_model;
-
+	struct LKM2File lk_model;
 	read_model(lk_m2, lk_model);
+
+
 
 	return 0;
 }
