@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "M2 opening error \n");
 	}
 
-	struct LKM2File lk_model;
+	struct LKM2 lk_model;
 
 	read_model(lk_m2_file, &lk_model);
 
