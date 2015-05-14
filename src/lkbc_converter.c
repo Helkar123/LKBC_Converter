@@ -14,15 +14,23 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	FILE *lk_m2 = fopen(argv[1], "r+b");
-	if (lk_m2 == NULL) {
+	FILE *lk_m2_file = fopen(argv[1], "r+b");
+	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
 	}
 
 	struct LKM2File lk_model;
 
-	read_model(lk_m2, &lk_model);
+	read_model(lk_m2_file, &lk_model);
 
-	fclose(lk_m2);
+	/*FIXME
+	 FILE *skin_file = fopen(, "r+b");
+	 if (skin_file == NULL) {
+	 fprintf(stderr, "SKIN/LK opening error \r\n");
+	 }
+
+	 fclose(skin_file);
+	 */
+	fclose(lk_m2_file);
 	return 0;
 }

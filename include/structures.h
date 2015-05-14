@@ -436,18 +436,21 @@ typedef struct TextureAnimation {
 	AnimationBlock Scaling;
 } TextureAnimation;
 
+///FILES///
+
 /**
  * Structure of a M2/WotLK model
  */
-typedef struct LKM2File {
+typedef struct LKM2 {
 	LKModelHeader header;
 	char *filename;
 	unsigned int *globalsequences;
 	LKModelAnimation *animations;
 	LKModelBoneDef *bones;
+	LKAnimOfs *animofs;
 	short *keybonelookup;
 	ModelVertex *vertices;
-	LKColorDef *lkcolors;
+	LKColorDef *colors;
 	ColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
 	Transparency *transparencies;
@@ -462,6 +465,40 @@ typedef struct LKM2File {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
-} LKM2File;
+} LKM2;
 
+/**
+ * Structure of Skin/WotLK resources
+ */
+typedef struct Skin {
+	SkinHeader header;
+	//TODO Finish the structure
+} Skin;
+
+/**
+ * Structure of a M2/BC model
+ */
+typedef struct BCM2 {
+	ModelHeader header;
+	char *filename;
+	unsigned int *globalsequences;
+	ModelAnimation *animations;
+	ModelBoneDef *bones;
+	short *keybonelookup;
+	ModelVertex *vertices;
+	ColorDef *colors;
+	ColorDataBlock *colorsdata;
+	ModelTextureDef *textures_def;
+	Transparency *transparencies;
+	TextureAnimation *tex_anims;
+	int *renderflags;
+	short *BoneLookupTable;
+	short *TexLookupTable;
+	short *TexUnit;
+	short *TransparencyLookup;
+	short *TexAnimLookup;
+	short *BoundingTriangles;
+	BoundingVertice *BoundingVertices;
+	BoundingNormal *BoundingNormals;
+} BCM2;
 #endif
