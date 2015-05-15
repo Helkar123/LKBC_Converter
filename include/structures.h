@@ -239,27 +239,10 @@ typedef struct LKModelBoneDef {
 	uint16 geoid;
 	int32 unk;
 
-	int16 trans_type;
-	int16 trans_seq;
-	uint32 trans_nTimes;
-	uint32 trans_ofsTimes;
-	uint32 trans_nKeys;
-	uint32 trans_ofsKeys;
-
-	int16 rot_type;
-	int16 rot_seq;
-	uint32 rot_nTimes;
-	uint32 rot_ofsTimes;
-	uint32 rot_nKeys;
-	uint32 rot_ofsKeys;
-
-	int16 scal_type;
-	int16 scal_seq;
-	uint32 scal_nTimes;
-	uint32 scal_ofsTimes;
-	uint32 scal_nKeys;
-	uint32 scal_ofsKeys;
-
+	//Offsets link to a new nX ofsX
+	LKAnimationBlock trans;
+	LKAnimationBlock rot;
+	LKAnimationBlock scal;
 	float pivot[3];
 } LKModelBoneDef;
 
@@ -270,35 +253,21 @@ typedef struct ModelBoneDef {
 	int16 geoid;
 	int32 unk;
 
-	int16 trans_type;
-	int16 trans_seq;
-	uint32 trans_nRanges;
-	uint32 trans_ofsRanges;
-	uint32 trans_nTimes;
-	uint32 trans_ofsTimes;
-	uint32 trans_nKeys;
-	uint32 trans_ofsKeys;
-
-	int16 rot_type;
-	int16 rot_seq;
-	uint32 rot_nRanges;
-	uint32 rot_ofsRanges;
-	uint32 rot_nTimes;
-	uint32 rot_ofsTimes;
-	uint32 rot_nKeys;
-	uint32 rot_ofsKeys;
-
-	int16 scal_type;
-	int16 scal_seq;
-	uint32 scal_nRanges;
-	uint32 scal_ofsRanges;
-	uint32 scal_nTimes;
-	uint32 scal_ofsTimes;
-	uint32 scal_nKeys;
-	uint32 scal_ofsKeys;
+	AnimationBlock trans;
+	AnimationBlock rot;
+	AnimationBlock scal;
 
 	float pivot[3];
 } ModelBoneDef;
+
+typedef struct BonesDataBlock{
+	int trans_data_ntimes[128];
+	int trans_data_nkeys[128];
+	int rot_data_ntimes[128];
+	short rot_data_nkeys[128];
+	int scal_data_ntimes[128];
+	int scal_data_nkeys[128];
+} BonesDataBlock;
 
 typedef struct ModelVertex {
 	Vec3D pos;
@@ -448,6 +417,7 @@ typedef struct LKM2 {
 	LKModelAnimation *animations;
 	LKModelBoneDef *bones;
 	LKAnimOfs *animofs;
+	BonesDataBlock bonesdata;
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
@@ -472,7 +442,7 @@ typedef struct LKM2 {
  */
 typedef struct Skin {
 	SkinHeader header;
-	//TODO Finish the structure
+//TODO Finish the structure
 } Skin;
 
 /**
@@ -484,6 +454,7 @@ typedef struct BCM2 {
 	unsigned int *globalsequences;
 	ModelAnimation *animations;
 	ModelBoneDef *bones;
+	BonesDataBlock *bonesdata;
 	short *keybonelookup;
 	ModelVertex *vertices;
 	ColorDef *colors;

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "reading.h"
+#include "printer.h"
 
 int main(int argc, char *argv[]) {
 	printf("LKBC_Converter by Koward\n");
@@ -31,6 +32,15 @@ int main(int argc, char *argv[]) {
 
 	 fclose(skin_file);
 	 */
+
+	printf("trans_data_ntimes%d\ntrans_data_nkeys%d\nrot_data_ntimes%d\nrot_data_nkeys%d\nscal_data_ntimes%d\nscal_data_nkeys%d\n",
+	lk_model.bonesdata.trans_data_ntimes[0],
+	lk_model.bonesdata.trans_data_nkeys[0],
+	lk_model.bonesdata.rot_data_ntimes[0],
+	lk_model.bonesdata.rot_data_nkeys[0],
+	lk_model.bonesdata.scal_data_ntimes[0],
+	lk_model.bonesdata.scal_data_nkeys[0]);
+
 	fclose(lk_m2_file);
 	return 0;
 }
