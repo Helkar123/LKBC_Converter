@@ -8,129 +8,164 @@
 #include "reading.h"
 
 /**
- * Read model bones. WIP
+ * Read model bones with animations. WIP
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
+ * i is a bone number, j is an animation number
  */
 int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
 	ptr->bones = malloc(ptr->header.nBones * sizeof(LKModelBoneDef));
 	fseek(lk_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fread(ptr->bones, sizeof(LKModelBoneDef), ptr->header.nBones, lk_m2_file);
 
-	//Store animofs
-	ptr->animofs = malloc(ptr->header.nBones * sizeof(LKAnimOfs));
+	//Store animofs (layer 1)
+	//You could access each ArrayRef by animofs[n of the bone].(t/r/s)_(times/keys).(n/ofs)
+	//This allows later to read the real animation data, by following each ArrayRef.
+	ptr->animofs = malloc(ptr->header.nBones * sizeof(LKAnimOfs));//1 LKAnimOfs per bone
 	int i;
 	for (i = 0; i < ptr->header.nBones; i++) {
 		LKModelBoneDef lk_bone = ptr->bones[i];
-		unsigned int ntimes = 0, ofstimes = 0;
 		//translation
-		if (lk_bone.trans.nTimes > 0) {
-			fseek(lk_m2_file, lk_bone.trans.ofsTimes, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.trans.ofsTimes + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].trans.nTimes = ntimes;
-			ptr->animofs[i].t_ntimes = ntimes;
-			ptr->animofs[i].t_ofstimes = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.trans.Times.n > 0) {
+			ptr->animofs[i].t_times = malloc(
+					lk_bone.trans.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.trans.Times.ofs, SEEK_SET);
+			fread(ptr->animofs[i].t_times, sizeof(ArrayRef),
+					lk_bone.trans.Times.n, lk_m2_file);
 		}
-		if (lk_bone.trans.nKeys > 0) {
-			fseek(lk_m2_file, lk_bone.trans.ofsKeys, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.trans.ofsKeys + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].trans.nKeys = ntimes;
-			ptr->animofs[i].t_nkeys = ntimes;
-			ptr->animofs[i].t_ofskeys = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.trans.Keys.n > 0) {
+			ptr->animofs[i].t_keys = malloc(
+					lk_bone.trans.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.trans.Keys.ofs, SEEK_SET);
+			fread(ptr->animofs[i].t_keys, sizeof(ArrayRef),
+					lk_bone.trans.Keys.n, lk_m2_file);
 		}
 		//rotation
-		if (lk_bone.rot.nTimes > 0) {
-			fseek(lk_m2_file, lk_bone.rot.ofsTimes, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.rot.ofsTimes + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].rot.nTimes = ntimes;
-			ptr->animofs[i].r_ntimes = ntimes;
-			ptr->animofs[i].r_ofstimes = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.rot.Times.n > 0) {
+			ptr->animofs[i].r_times = malloc(
+					lk_bone.rot.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.rot.Times.ofs, SEEK_SET);
+			fread(ptr->animofs[i].r_times, sizeof(ArrayRef),
+					lk_bone.rot.Times.n, lk_m2_file);
 		}
-		if (lk_bone.rot.nKeys > 0) {
-			fseek(lk_m2_file, lk_bone.rot.ofsKeys, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.rot.ofsKeys + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].rot.nKeys = ntimes;
-			ptr->animofs[i].r_nkeys = ntimes;
-			ptr->animofs[i].r_ofskeys = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.rot.Keys.n > 0) {
+			ptr->animofs[i].r_keys = malloc(
+					lk_bone.rot.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.rot.Keys.ofs, SEEK_SET);
+			fread(ptr->animofs[i].r_keys, sizeof(ArrayRef), lk_bone.rot.Keys.n,
+					lk_m2_file);
 		}
 		//scaling
-		if (lk_bone.scal.nTimes > 0) {
-			fseek(lk_m2_file, lk_bone.scal.ofsTimes, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.scal.ofsTimes + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].scal.nTimes = ntimes;
-			ptr->animofs[i].s_ntimes = ntimes;
-			ptr->animofs[i].s_ofstimes = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.scal.Times.n > 0) {
+			ptr->animofs[i].s_times = malloc(
+					lk_bone.scal.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.scal.Times.ofs, SEEK_SET);
+			fread(ptr->animofs[i].s_times, sizeof(ArrayRef),
+					lk_bone.scal.Times.n, lk_m2_file);
 		}
-		if (lk_bone.scal.nKeys > 0) {
-			fseek(lk_m2_file, lk_bone.scal.ofsKeys, SEEK_SET);
-			fread(&ntimes, sizeof(int), 1, lk_m2_file);
-			fseek(lk_m2_file, lk_bone.scal.ofsKeys + 0x4, SEEK_SET);
-			fread(&ofstimes, sizeof(int), 1, lk_m2_file);
-			ptr->bones[i].scal.nKeys = ntimes;
-			ptr->animofs[i].s_nkeys = ntimes;
-			ptr->animofs[i].s_ofskeys = ofstimes;
-			ntimes = 0;
-			ofstimes = 0;
+		if (lk_bone.scal.Keys.n > 0) {
+			ptr->animofs[i].s_keys = malloc(
+					lk_bone.scal.Times.n * sizeof(ArrayRef));
+			fseek(lk_m2_file, lk_bone.scal.Keys.ofs, SEEK_SET);
+			fread(ptr->animofs[i].s_keys, sizeof(ArrayRef), lk_bone.scal.Keys.n,
+					lk_m2_file);
 		}
 	}
-	///
-	//Store bones data
+
+	//Store bones data (layer 2)
+	//bonesdata[n of the bone].(t/r/s)_(times/keys)[index based on ntimes].values[index based on its n in animofs]
+	ptr->bonesdata = malloc(ptr->header.nBones * sizeof(BonesDataBlock));
 	for (i = 0; i < ptr->header.nBones; i++) {
+		LKModelBoneDef lk_bone = ptr->bones[i];
+		int j;
 		//translation
-		if (ptr->bones[i].trans.nTimes > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].t_ofstimes, SEEK_SET);
-			fread(&ptr->bonesdata.trans_data_ntimes, sizeof(int),
-					ptr->bones[i].trans.nTimes, lk_m2_file);
+		if (lk_bone.trans.Times.n > 0) {
+			ptr->bonesdata[i].t_times = malloc(
+					lk_bone.trans.Times.n * sizeof(Uint32Array));
+			for (j = 0; j < lk_bone.trans.Times.n; j++) {
+				if (ptr->animofs[i].t_times[j].n > 0) {
+					ptr->bonesdata[i].t_times[j].values = malloc(
+							ptr->animofs[i].t_times[j].n * sizeof(uint32));
+					fseek(lk_m2_file, ptr->animofs[i].t_times[j].ofs, SEEK_SET);
+					fread(ptr->bonesdata[i].t_times[j].values, sizeof(uint32),
+							ptr->animofs[i].t_times[j].n, lk_m2_file);
+				}
+			}
 		}
-		if (ptr->bones[i].trans.nKeys > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].t_ofskeys, SEEK_SET);
-			fread(&ptr->bonesdata.trans_data_nkeys, sizeof(int),
-					ptr->bones[i].trans.nKeys * 3, lk_m2_file);
+		if (ptr->bones[i].trans.Keys.n > 0) {
+			ptr->bonesdata[i].t_keys = malloc(
+					lk_bone.trans.Keys.n * sizeof(Vec3DArray));
+			for (j = 0; j < lk_bone.trans.Keys.n; j++) {
+				if (ptr->animofs[i].t_keys[j].n > 0) {
+					ptr->bonesdata[i].t_keys[j].values = malloc(
+							ptr->animofs[i].t_keys[j].n * sizeof(Vec3D));
+					fseek(lk_m2_file, ptr->animofs[i].t_keys[j].ofs, SEEK_SET);
+					fread(ptr->bonesdata[i].t_keys[j].values, sizeof(Vec3D),
+							ptr->animofs[i].t_keys[j].n, lk_m2_file);
+				}
+			}
 		}
 		//rotation
-		if (ptr->bones[i].rot.nTimes > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].r_ofstimes, SEEK_SET);
-			fread(&ptr->bonesdata.rot_data_ntimes, sizeof(int),
-					ptr->bones[i].rot.nTimes, lk_m2_file);
+		if (ptr->bones[i].rot.Times.n > 0) {
+			ptr->bonesdata[i].r_times = malloc(
+					lk_bone.rot.Times.n * sizeof(Uint32Array));
+			for (j = 0; j < lk_bone.rot.Times.n; j++) {
+				if (ptr->animofs[i].r_times[j].n > 0) {
+					ptr->bonesdata[i].r_times[j].values = malloc(
+							ptr->animofs[i].r_times[j].n * sizeof(uint32));
+					fseek(lk_m2_file, ptr->animofs[i].r_times[j].ofs, SEEK_SET);
+					fread(ptr->bonesdata[i].r_times[j].values, sizeof(uint32),
+							ptr->animofs[i].r_times[j].n, lk_m2_file);
+				}
+			}
 		}
-		if (ptr->bones[i].rot.nKeys > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].r_ofskeys, SEEK_SET);
-			fread(&ptr->bonesdata.rot_data_nkeys, sizeof(int),
-					ptr->bones[i].rot.nKeys * 4, lk_m2_file);//Quaternions
+		if (ptr->bones[i].rot.Keys.n > 0) {
+			ptr->bonesdata[i].r_keys = malloc(
+					lk_bone.rot.Keys.n * sizeof(QuatArray));
+			for (j = 0; j < lk_bone.rot.Keys.n; j++) {
+				if (ptr->animofs[i].r_keys[j].n > 0) {
+					ptr->bonesdata[i].r_keys[j].values = malloc(
+							ptr->animofs[i].r_keys[j].n * sizeof(Quat));
+					fseek(lk_m2_file, ptr->animofs[i].r_keys[j].ofs, SEEK_SET);
+					int test;
+					test = fread(ptr->bonesdata[i].r_keys[j].values, sizeof(Quat),
+							ptr->animofs[i].r_keys[j].n, lk_m2_file);
+					printf(" Attempt to read %d Quaternions at %d\n",ptr->animofs[i].r_keys[j].n,ptr->animofs[i].r_keys[j].ofs);//FIXME Debug
+					printf("Read count : %d\n",test);
+					printf("Bone number : %d\n",i);
+					printf("Animation number : %d\n",j);
+					printf("Rotation first value of the first Quat: %d\n", ptr->bonesdata[i].r_keys[j].values[0][0]);
+				}
+			}
 		}
 		//scaling
-		if (ptr->bones[i].scal.nTimes > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].s_ofstimes, SEEK_SET);
-			fread(&ptr->bonesdata.scal_data_ntimes, sizeof(int),
-					ptr->bones[i].scal.nTimes, lk_m2_file);
+		if (ptr->bones[i].scal.Times.n > 0) {
+			ptr->bonesdata[i].s_times = malloc(
+					lk_bone.scal.Times.n * sizeof(Uint32Array));
+			for (j = 0; j < lk_bone.scal.Times.n; j++) {
+				if (ptr->animofs[i].s_times[j].n > 0) {
+					ptr->bonesdata[i].s_times[j].values = malloc(
+							ptr->animofs[i].s_times[j].n * sizeof(uint32));
+					fseek(lk_m2_file, ptr->animofs[i].s_times[j].ofs, SEEK_SET);
+					fread(ptr->bonesdata[i].s_times[j].values, sizeof(uint32),
+							ptr->animofs[i].s_times[j].n, lk_m2_file);
+				}
+			}
 		}
-		if (ptr->bones[i].scal.nKeys > 0) {
-			fseek(lk_m2_file, ptr->animofs[i].s_ofskeys, SEEK_SET);
-			fread(&ptr->bonesdata.scal_data_nkeys, sizeof(int),
-					ptr->bones[i].scal.nKeys * 3, lk_m2_file);
+		if (ptr->bones[i].scal.Keys.n > 0) {
+			ptr->bonesdata[i].s_keys = malloc(
+					lk_bone.scal.Keys.n * sizeof(Vec3DArray));
+			for (j = 0; j < lk_bone.scal.Keys.n; j++) {
+				if (ptr->animofs[i].s_keys[j].n > 0) {
+					ptr->bonesdata[i].s_keys[j].values = malloc(
+							ptr->animofs[i].s_keys[j].n * sizeof(Vec3D));
+					fseek(lk_m2_file, ptr->animofs[i].s_keys[j].ofs, SEEK_SET);
+					fread(ptr->bonesdata[i].s_keys[j].values, sizeof(Vec3D),
+							ptr->animofs[i].s_keys[j].n, lk_m2_file);
+				}
+			}
 		}
 	}
-	///
 	return 0;
 }
 
@@ -153,91 +188,91 @@ int read_texanims(FILE* lk_m2_file, LKM2 *ptr) {
 			//translation
 			ptr->temp_anim_ofs = malloc(
 					ptr->header.nTexAnims * sizeof(LKAnimOfs));
-			if (ptr->tex_anims[i].Translation.nTimes > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Translation.ofsTimes,
+			if (ptr->tex_anims[i].Translation.Times.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Translation.Times.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].t_ntimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].t_times.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Translation.ofsTimes + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Translation.Times.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].t_ofstimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].t_times.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].t_ntimes = 0;
-				ptr->temp_anim_ofs[i].t_ofstimes = 0;
+				ptr->temp_anim_ofs[i].t_times.n = 0;
+				ptr->temp_anim_ofs[i].t_times.ofs = 0;
 			}
-			if (ptr->tex_anims[i].Translation.nKeys > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Translation.ofsKeys,
+			if (ptr->tex_anims[i].Translation.Keys.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Translation.Keys.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].t_nkeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].t_keys.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Translation.ofsKeys + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Translation.Keys.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].t_ofskeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].t_keys.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].t_nkeys = 0;
-				ptr->temp_anim_ofs[i].t_ofskeys = 0;
+				ptr->temp_anim_ofs[i].t_keys.n = 0;
+				ptr->temp_anim_ofs[i].t_keys.ofs = 0;
 			}
 			//Rotation
-			if (ptr->tex_anims[i].Rotation.nTimes > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.ofsTimes,
+			if (ptr->tex_anims[i].Rotation.Times.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.Times.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].r_ntimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].r_times.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.ofsTimes + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.Times.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].r_ofstimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].r_times.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].r_ntimes = 0;
-				ptr->temp_anim_ofs[i].r_ofstimes = 0;
+				ptr->temp_anim_ofs[i].r_times.n = 0;
+				ptr->temp_anim_ofs[i].r_times.ofs = 0;
 			}
-			if (ptr->tex_anims[i].Rotation.nKeys > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.ofsKeys,
+			if (ptr->tex_anims[i].Rotation.Keys.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.Keys.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].r_nkeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].r_keys.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.ofsKeys + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Rotation.Keys.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].r_ofskeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].r_keys.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].r_nkeys = 0;
-				ptr->temp_anim_ofs[i].r_ofskeys = 0;
+				ptr->temp_anim_ofs[i].r_keys.n = 0;
+				ptr->temp_anim_ofs[i].r_keys.ofs = 0;
 			}
 			//Scaling
-			if (ptr->tex_anims[i].Scaling.nTimes > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.ofsTimes,
+			if (ptr->tex_anims[i].Scaling.Times.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.Times.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].s_ntimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].s_times.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.ofsTimes + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.Times.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].s_ofstimes, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].s_times.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].s_ntimes = 0;
-				ptr->temp_anim_ofs[i].s_ofstimes = 0;
+				ptr->temp_anim_ofs[i].s_times.n = 0;
+				ptr->temp_anim_ofs[i].s_times.ofs = 0;
 			}
-			if (ptr->tex_anims[i].Scaling.nKeys > 0) {
-				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.ofsKeys,
+			if (ptr->tex_anims[i].Scaling.Keys.n > 0) {
+				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.Keys.ofs,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].s_nkeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].s_keys.n, sizeof(int), 1,
 						lk_m2_file);
 
-				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.ofsKeys + 0x4,
+				fseek(lk_m2_file, ptr->tex_anims[i].Scaling.Keys.ofs + 0x4,
 				SEEK_SET);
-				fread(&ptr->temp_anim_ofs[i].s_ofskeys, sizeof(int), 1,
+				fread(&ptr->temp_anim_ofs[i].s_keys.ofs, sizeof(int), 1,
 						lk_m2_file);
 			} else {
-				ptr->temp_anim_ofs[i].s_nkeys = 0;
-				ptr->temp_anim_ofs[i].s_ofskeys = 0;
+				ptr->temp_anim_ofs[i].s_keys.n = 0;
+				ptr->temp_anim_ofs[i].s_keys.ofs = 0;
 			}
 		}
 		return 0;
@@ -303,7 +338,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 		//Color Data Block
 		int temp_ofs[2];
-		fseek(lk_m2_file, ptr->colors[0].RGB.ofsTimes, SEEK_SET);
+		fseek(lk_m2_file, ptr->colors[0].RGB.Times.ofs, SEEK_SET);
 		fread(&temp_ofs, sizeof(int), 2, lk_m2_file);
 		fseek(lk_m2_file, temp_ofs[1], SEEK_SET);
 		fread(&ptr->colorsdata, sizeof(ColorDataBlock), ptr->header.nColors,

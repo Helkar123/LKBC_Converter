@@ -12,8 +12,14 @@ typedef unsigned short uint16;
 typedef short int16;
 typedef unsigned int uint32;
 typedef int int32;
+typedef short Quat[4];
 typedef float Vec3D[3];
 typedef float Vec2D[2];
+
+typedef struct ArrayRef{
+	uint32 n;
+	uint32 ofs;
+} ArrayRef;
 
 typedef struct LKModelHeader {
 	uint32 id;								//0x000
@@ -215,21 +221,16 @@ typedef struct PlayableAnimationLookup {
 typedef struct LKAnimationBlock {
 	int16 type;
 	int16 seq;
-	uint32 nTimes;
-	uint32 ofsTimes;
-	uint32 nKeys;
-	uint32 ofsKeys;
+	ArrayRef Times;
+	ArrayRef Keys;
 } LKAnimationBlock;
 
 typedef struct AnimationBlock {
 	int16 type;
 	int16 seq;
-	uint32 nRanges;
-	uint32 ofsRanges;
-	uint32 nTimes;
-	uint32 ofsTimes;
-	uint32 nKeys;
-	uint32 ofsKeys;
+	ArrayRef Ranges;
+	ArrayRef Times;
+	ArrayRef Keys;
 } AnimationBlock;
 
 typedef struct LKModelBoneDef {
@@ -243,7 +244,8 @@ typedef struct LKModelBoneDef {
 	LKAnimationBlock trans;
 	LKAnimationBlock rot;
 	LKAnimationBlock scal;
-	float pivot[3];
+
+	Vec3D pivot;
 } LKModelBoneDef;
 
 typedef struct ModelBoneDef {
@@ -257,16 +259,26 @@ typedef struct ModelBoneDef {
 	AnimationBlock rot;
 	AnimationBlock scal;
 
-	float pivot[3];
+	Vec3D pivot;
 } ModelBoneDef;
 
+typedef struct Uint32Array{
+	uint32 *values;
+} Uint32Array;
+typedef struct Vec3DArray{
+	Vec3D *values;
+} Vec3DArray;
+typedef struct QuatArray{
+	Quat *values;
+} QuatArray;
+
 typedef struct BonesDataBlock{
-	int trans_data_ntimes[128];
-	int trans_data_nkeys[128];
-	int rot_data_ntimes[128];
-	short rot_data_nkeys[128];
-	int scal_data_ntimes[128];
-	int scal_data_nkeys[128];
+	Uint32Array *t_times;
+	Vec3DArray *t_keys;
+	Uint32Array *r_times;
+	QuatArray *r_keys;
+	Uint32Array *s_times;
+	Vec3DArray *s_keys;
 } BonesDataBlock;
 
 typedef struct ModelVertex {
@@ -278,20 +290,24 @@ typedef struct ModelVertex {
 	int unk1, unk2;
 } ModelVertex;
 
+
 typedef struct LKAnimOfs {
-	uint32 t_ntimes;
-	uint32 t_ofstimes;
-	uint32 t_nkeys;
-	uint32 t_ofskeys;
-	uint32 r_ntimes;
-	uint32 r_ofstimes;
-	uint32 r_nkeys;
-	uint32 r_ofskeys;
-	uint32 s_ntimes;
-	uint32 s_ofstimes;
-	uint32 s_nkeys;
-	uint32 s_ofskeys;
+	ArrayRef *t_times;
+	ArrayRef *t_keys;
+	ArrayRef *r_times;
+	ArrayRef *r_keys;
+	ArrayRef *s_times;
+	ArrayRef *s_keys;
 } LKAnimOfs;
+
+typedef struct LKAnimOfsSimple {
+	ArrayRef t_times;
+	ArrayRef t_keys;
+	ArrayRef r_times;
+	ArrayRef r_keys;
+	ArrayRef s_times;
+	ArrayRef s_keys;
+} LKAnimOfsSimple;
 
 typedef struct SkinHeader {
 	char ID[4];
@@ -417,7 +433,7 @@ typedef struct LKM2 {
 	LKModelAnimation *animations;
 	LKModelBoneDef *bones;
 	LKAnimOfs *animofs;
-	BonesDataBlock bonesdata;
+	BonesDataBlock *bonesdata;
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
@@ -425,7 +441,7 @@ typedef struct LKM2 {
 	ModelTextureDef *textures_def;
 	Transparency *transparencies;
 	LKTextureAnimation *tex_anims;
-	LKAnimOfs *temp_anim_ofs;
+	LKAnimOfsSimple *temp_anim_ofs;
 	int *renderflags;
 	short *BoneLookupTable;
 	short *TexLookupTable;
