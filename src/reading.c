@@ -128,13 +128,17 @@ int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
 							ptr->animofs[i].r_keys[j].n * sizeof(Quat));
 					fseek(lk_m2_file, ptr->animofs[i].r_keys[j].ofs, SEEK_SET);
 					int test;
-					test = fread(ptr->bonesdata[i].r_keys[j].values, sizeof(Quat),
-							ptr->animofs[i].r_keys[j].n, lk_m2_file);
-					printf(" Attempt to read %d Quaternions at %d\n",ptr->animofs[i].r_keys[j].n,ptr->animofs[i].r_keys[j].ofs);//FIXME Debug
-					printf("Read count : %d\n",test);
-					printf("Bone number : %d\n",i);
-					printf("Animation number : %d\n",j);
-					printf("Rotation first value of the first Quat: %d\n", ptr->bonesdata[i].r_keys[j].values[0][0]);
+					test = fread(ptr->bonesdata[i].r_keys[j].values,
+							sizeof(Quat), ptr->animofs[i].r_keys[j].n,
+							lk_m2_file);
+					printf(" Attempt to read %d Quaternions at %d\n",
+							ptr->animofs[i].r_keys[j].n,
+							ptr->animofs[i].r_keys[j].ofs);	//FIXME Debug
+					printf("Read count : %d\n", test);
+					printf("Bone number : %d\n", i);
+					printf("Animation number : %d\n", j);
+					printf("Rotation first value of the first Quat: %d\n",
+							ptr->bonesdata[i].r_keys[j].values[0][0]);
 				}
 			}
 		}
@@ -301,7 +305,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 			ptr->header.nGlobalSequences * sizeof(unsigned int));
 	if (ptr->header.nGlobalSequences > 0) {
 		fseek(lk_m2_file, ptr->header.ofsGlobalSequences, SEEK_SET);
-		fread(&ptr->globalsequences, sizeof(unsigned int),
+		fread(ptr->globalsequences, sizeof(unsigned int),
 				ptr->header.nGlobalSequences, lk_m2_file);
 	}
 
@@ -318,7 +322,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	//Skeleton Bone Lookup
 	ptr->keybonelookup = malloc(ptr->header.nKeyBoneLookup * sizeof(short));
 	fseek(lk_m2_file, ptr->header.ofsKeyBoneLookup, SEEK_SET);
-	fread(&ptr->keybonelookup, sizeof(short), ptr->header.nKeyBoneLookup,
+	fread(ptr->keybonelookup, sizeof(short), ptr->header.nKeyBoneLookup,
 			lk_m2_file);
 
 	//Vertices
@@ -333,22 +337,21 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
 		ptr->colorsdata = malloc(ptr->header.nColors * sizeof(ColorDataBlock));
 		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
-		fread(&ptr->colors, sizeof(LKColorDef), ptr->header.nColors,
-				lk_m2_file);
+		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors, lk_m2_file);
 
 		//Color Data Block
 		int temp_ofs[2];
 		fseek(lk_m2_file, ptr->colors[0].RGB.Times.ofs, SEEK_SET);
 		fread(&temp_ofs, sizeof(int), 2, lk_m2_file);
 		fseek(lk_m2_file, temp_ofs[1], SEEK_SET);
-		fread(&ptr->colorsdata, sizeof(ColorDataBlock), ptr->header.nColors,
+		fread(ptr->colorsdata, sizeof(ColorDataBlock), ptr->header.nColors,
 				lk_m2_file);
 	};
 
 	//Textures Definition
 	ptr->textures_def = malloc(ptr->header.nTextures * sizeof(ModelTextureDef));
 	fseek(lk_m2_file, ptr->header.ofsTextures, SEEK_SET);
-	fread(&ptr->textures_def, sizeof(ModelTextureDef), ptr->header.nTextures,
+	fread(ptr->textures_def, sizeof(ModelTextureDef), ptr->header.nTextures,
 			lk_m2_file);
 
 	//Transparency
@@ -356,7 +359,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 		ptr->transparencies = malloc(
 				ptr->header.nTransparency * sizeof(Transparency));
 		fseek(lk_m2_file, ptr->header.ofsTransparency, SEEK_SET);
-		fread(&ptr->transparencies, sizeof(Transparency),
+		fread(ptr->transparencies, sizeof(Transparency),
 				ptr->header.nTransparency, lk_m2_file);
 	}
 
@@ -366,7 +369,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	//Render Flags
 	ptr->renderflags = malloc(ptr->header.nRenderFlags * sizeof(int));
 	fseek(lk_m2_file, ptr->header.ofsRenderFlags, SEEK_SET);
-	fread(&ptr->renderflags, sizeof(int), ptr->header.nRenderFlags, lk_m2_file);
+	fread(ptr->renderflags, sizeof(int), ptr->header.nRenderFlags, lk_m2_file);
 
 	//Bone Lookup Table
 	ptr->BoneLookupTable = malloc(ptr->header.nBoneLookupTable * sizeof(short));
@@ -377,25 +380,25 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	//Texture Lookup Table
 	ptr->TexLookupTable = malloc(ptr->header.nTexLookup * sizeof(short));
 	fseek(lk_m2_file, ptr->header.ofsTexLookup, SEEK_SET);
-	fread(&ptr->TexLookupTable, sizeof(short), ptr->header.nTexLookup,
+	fread(ptr->TexLookupTable, sizeof(short), ptr->header.nTexLookup,
 			lk_m2_file);
 
 	//TexUnit
 	ptr->TexUnit = malloc(ptr->header.nTexUnitLookup * sizeof(short));
 	fseek(lk_m2_file, ptr->header.ofsTexUnitLookup, SEEK_SET);
-	fread(&ptr->TexUnit, sizeof(short), ptr->header.nTexUnitLookup, lk_m2_file);
+	fread(ptr->TexUnit, sizeof(short), ptr->header.nTexUnitLookup, lk_m2_file);
 
 	//TransLookup
 	ptr->TransparencyLookup = malloc(
 			ptr->header.nTransparencyLookup * sizeof(short));
 	fseek(lk_m2_file, ptr->header.ofsTransparencyLookup, SEEK_SET);
-	fread(&ptr->TransparencyLookup, sizeof(short),
+	fread(ptr->TransparencyLookup, sizeof(short),
 			ptr->header.nTransparencyLookup, lk_m2_file);
 
 	//TexAnimLookup
 	ptr->TexAnimLookup = malloc(ptr->header.nTexAnimLookup * sizeof(short));
 	fseek(lk_m2_file, ptr->header.ofsTexAnimLookup, SEEK_SET);
-	fread(&ptr->TexAnimLookup, sizeof(short), ptr->header.nTexAnimLookup,
+	fread(ptr->TexAnimLookup, sizeof(short), ptr->header.nTexAnimLookup,
 			lk_m2_file);
 
 	//BoundingTriangles

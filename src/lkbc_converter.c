@@ -33,7 +33,6 @@ int main(int argc, char *argv[]) {
 	 fclose(skin_file);
 	 */
 
-
 	fclose(lk_m2_file);
 	return 0;
 }

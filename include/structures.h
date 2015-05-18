@@ -16,7 +16,7 @@ typedef short Quat[4];
 typedef float Vec3D[3];
 typedef float Vec2D[2];
 
-typedef struct ArrayRef{
+typedef struct ArrayRef {
 	uint32 n;
 	uint32 ofs;
 } ArrayRef;
@@ -262,17 +262,17 @@ typedef struct ModelBoneDef {
 	Vec3D pivot;
 } ModelBoneDef;
 
-typedef struct Uint32Array{
+typedef struct Uint32Array {
 	uint32 *values;
 } Uint32Array;
-typedef struct Vec3DArray{
+typedef struct Vec3DArray {
 	Vec3D *values;
 } Vec3DArray;
-typedef struct QuatArray{
+typedef struct QuatArray {
 	Quat *values;
 } QuatArray;
 
-typedef struct BonesDataBlock{
+typedef struct BonesDataBlock {
 	Uint32Array *t_times;
 	Vec3DArray *t_keys;
 	Uint32Array *r_times;
@@ -289,7 +289,6 @@ typedef struct ModelVertex {
 	Vec2D texcoords;
 	int unk1, unk2;
 } ModelVertex;
-
 
 typedef struct LKAnimOfs {
 	ArrayRef *t_times;
