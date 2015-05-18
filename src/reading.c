@@ -131,7 +131,7 @@ int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
 					test = fread(ptr->bonesdata[i].r_keys[j].values,
 							sizeof(Quat), ptr->animofs[i].r_keys[j].n,
 							lk_m2_file);
-					printf(" Attempt to read %d Quaternions at %d\n",
+					/*printf(" Attempt to read %d Quaternions at %d\n",
 							ptr->animofs[i].r_keys[j].n,
 							ptr->animofs[i].r_keys[j].ofs);	//FIXME Debug
 					printf("Read count : %d\n", test);
@@ -139,6 +139,7 @@ int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
 					printf("Animation number : %d\n", j);
 					printf("Rotation first value of the first Quat: %d\n",
 							ptr->bonesdata[i].r_keys[j].values[0][0]);
+							*/
 				}
 			}
 		}
