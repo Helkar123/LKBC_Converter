@@ -46,23 +46,30 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "M2 opening error \n");
 	}
 
-	struct LKM2 lk_model;
+	LKM2 lk_model;
 
 	read_model(lk_m2_file, &lk_model);
 
-	//FIXME
 	FILE **skin_files;
-	skin_files = malloc (lk_model.header.nViews * sizeof (FILE *));
+	skin_files = malloc(lk_model.header.nViews * sizeof(FILE *));
 	int i;
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		printf("Opening Skin file : %s\n", skin_name(argv[1], i));
 		skin_files[i] = fopen(skin_name(argv[1], i), "r+b");
 		if (skin_files[i] == NULL) {
-			fprintf(stderr, "SKIN/LK number %d opening error \r\n",i);
+			fprintf(stderr, "SKIN/LK number %d opening error \r\n", i);
 			return -1;
 		}
 	}
+	Skin *skins;
+	read_skins(skin_files, &skins, lk_model.header.nViews);
 
+	printf("header nIndices of the first skin : %d\n",
+			skins[0].header.nIndices);
+	printf("header ofsIndices of the first skin : %d\n",
+			skins[0].header.ofsIndices);
+	printf("header nTriangles of the first skin : %d\n",
+			skins[0].header.nTriangles);
 	//Closing
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		fclose(skin_files[i]);

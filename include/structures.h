@@ -457,6 +457,11 @@ typedef struct LKM2 {
  */
 typedef struct Skin {
 	SkinHeader header;
+	uint32 Indices;
+	uint32 Triangles;
+	uint32 Properties;
+	uint32 Submeshes;
+	uint32 TextureUnits;
 //TODO Finish the structure
 } Skin;
 

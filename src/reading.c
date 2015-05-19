@@ -8,12 +8,28 @@
 #include "reading.h"
 
 /**
+ * @param skin_files A list of pointers to skin files to read data from.
+ * @param skins A pointer to a list of skins structure where data will be written.
+ * @param n The number of skin files. Between 1 and 4.
+ */
+int read_skins(FILE **skin_files, Skin **ptr, int n) {
+	int i;
+	for (i = 0; i < n; i++) {
+		ptr[i]=malloc(sizeof(SkinHeader));
+		fseek(skin_files[i], 0, SEEK_SET);
+		int nread = fread(&ptr[i]->header, sizeof(SkinHeader), 1,
+				skin_files[i]);
+	}
+	return 0;
+}
+
+/**
  * Read model bones with animations. WIP
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
  * i is a bone number, j is an animation number
  */
-int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
+int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 	ptr->bones = malloc(ptr->header.nBones * sizeof(LKModelBoneDef));
 	fseek(lk_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fread(ptr->bones, sizeof(LKModelBoneDef), ptr->header.nBones, lk_m2_file);
@@ -132,14 +148,14 @@ int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
 							sizeof(Quat), ptr->animofs[i].r_keys[j].n,
 							lk_m2_file);
 					/*printf(" Attempt to read %d Quaternions at %d\n",
-							ptr->animofs[i].r_keys[j].n,
-							ptr->animofs[i].r_keys[j].ofs);	//FIXME Debug
-					printf("Read count : %d\n", test);
-					printf("Bone number : %d\n", i);
-					printf("Animation number : %d\n", j);
-					printf("Rotation first value of the first Quat: %d\n",
-							ptr->bonesdata[i].r_keys[j].values[0][0]);
-							*/
+					 ptr->animofs[i].r_keys[j].n,
+					 ptr->animofs[i].r_keys[j].ofs);	//FIXME Debug
+					 printf("Read count : %d\n", test);
+					 printf("Bone number : %d\n", i);
+					 printf("Animation number : %d\n", j);
+					 printf("Rotation first value of the first Quat: %d\n",
+					 ptr->bonesdata[i].r_keys[j].values[0][0]);
+					 */
 				}
 			}
 		}
@@ -179,7 +195,7 @@ int read_bones(FILE* lk_m2_file, LKM2 *ptr) {
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
  */
-int read_texanims(FILE* lk_m2_file, LKM2 *ptr) {
+int read_texanims(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nTexAnims > 0) {
 		ptr->tex_anims = malloc(
 				ptr->header.nTexAnims * sizeof(LKTextureAnimation));
