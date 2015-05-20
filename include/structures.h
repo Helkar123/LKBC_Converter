@@ -483,7 +483,7 @@ typedef struct Skin {
 	Indices* Triangles;
 	Property *Properties;
 	LKSubmesh *Submeshes;
-	uint32 TextureUnits;
+	TexUnit *TextureUnits;
 //TODO Finish the structure
 } Skin;
 
