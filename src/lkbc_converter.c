@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 	FILE *lk_m2_file = fopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
+		return -1;
 	}
 
 	LKM2 lk_model;
@@ -64,13 +65,7 @@ int main(int argc, char *argv[]) {
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 
-	printf("header nIndices of the first skin : %d\n",
-			skins[0].header.nIndices);
-	printf("header ofsIndices of the first skin : %d\n",
-			skins[0].header.ofsIndices);
-	printf("header nTriangles of the first skin : %d\n",
-			skins[0].header.nTriangles);
-	//Closing
+	//Closing files
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		fclose(skin_files[i]);
 	}

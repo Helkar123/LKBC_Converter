@@ -15,10 +15,11 @@
 int read_skins(FILE **skin_files, Skin **ptr, int n) {
 	int i;
 	for (i = 0; i < n; i++) {
-		ptr[i]=malloc(sizeof(SkinHeader));
+		ptr[i] = malloc(sizeof(SkinHeader));
 		fseek(skin_files[i], 0, SEEK_SET);
 		int nread = fread(&ptr[i]->header, sizeof(SkinHeader), 1,
 				skin_files[i]);
+		//TODO Read the rest of the structure by following values from the Header.
 	}
 	return 0;
 }

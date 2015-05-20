@@ -15,6 +15,9 @@ typedef int int32;
 typedef short Quat[4];
 typedef float Vec3D[3];
 typedef float Vec2D[2];
+typedef uint16 Indices[3]; //Indices for Triangles
+typedef uint16 Vertex; //The vertex in the global vertex list
+typedef uint8 Property[4]; //Bones Indices into BoneLookupTable
 
 typedef struct ArrayRef {
 	uint32 n;
@@ -337,6 +340,21 @@ typedef struct ViewsHeader {
 	uint32 LOD;
 } ViewsHeader;
 
+typedef struct LKSubmesh {
+	uint32 ID;
+	uint16 StartVertex;
+	uint16 nVertices;
+	uint16 StartTriangle;
+	uint16 nTriangles;
+	uint16 nBones;
+	uint16 StartBones;
+	uint16 boneInfluences;
+	uint16 RootBone;
+	Vec3D CenterMass;
+	Vec3D CenterBoundingBox;
+	float Radius;
+} LKSubmesh;
+
 typedef struct Submesh {
 	uint32 ID;
 	uint16 StartVertex;
@@ -345,9 +363,9 @@ typedef struct Submesh {
 	uint16 nTriangles;
 	uint16 nBones;
 	uint16 StartBones;
-	uint16 Unknown;
+	uint16 Unknown;  //Amount of bones up the parent-chain affecting the submesh
 	uint16 RootBone;
-	float Position[3];
+	Vec3D Position;
 	float Floats[4];
 } Submesh;
 
@@ -420,6 +438,10 @@ typedef struct TextureAnimation {
 	AnimationBlock Scaling;
 } TextureAnimation;
 
+typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.x
+//TODO Code it
+} View;
+
 ///FILES///
 
 /**
@@ -457,10 +479,10 @@ typedef struct LKM2 {
  */
 typedef struct Skin {
 	SkinHeader header;
-	uint32 Indices;
-	uint32 Triangles;
-	uint32 Properties;
-	uint32 Submeshes;
+	Vertex *Indices;
+	Indices* Triangles;
+	Property *Properties;
+	LKSubmesh *Submeshes;
 	uint32 TextureUnits;
 //TODO Finish the structure
 } Skin;
