@@ -196,10 +196,10 @@ typedef struct LKModelAnimation {
 	int16 unused;
 	uint32 d1;
 	uint32 d2;
-	uint32 playSpeed;//BlendTime
-	Vec3D boxA;//MinimumExtent
-	Vec3D boxB;//MaximumExtent
-	float rad;//BoundsRadius
+	uint32 playSpeed;				//BlendTime
+	Vec3D boxA;				//MinimumExtent
+	Vec3D boxB;				//MaximumExtent
+	float rad;				//BoundsRadius
 	int16 NextAnimation;
 	int16 Index;
 } LKModelAnimation;
@@ -227,16 +227,16 @@ typedef struct PlayableAnimationLookup {
 typedef struct LKAnimationBlock {
 	int16 type;
 	int16 seq;
-	ArrayRef Times;//links to i ArraysRefs of j uint32
-	ArrayRef Keys;//links to i ArrayRefs of j elements
+	ArrayRef Times;  //links to i ArraysRefs of j uint32
+	ArrayRef Keys;  //links to i ArrayRefs of j elements
 } LKAnimationBlock;
 
 typedef struct AnimationBlock {
 	int16 type;
 	int16 seq;
-	ArrayRef Ranges;//links to i interpolations ranges of type (int,int)
-	ArrayRef Times;//links to i uint32
-	ArrayRef Keys;//links to i elements
+	ArrayRef Ranges;  //links to i interpolations ranges of type (int,int)
+	ArrayRef Times;  //links to i uint32
+	ArrayRef Keys;  //links to i elements
 } AnimationBlock;
 
 typedef struct LKModelBoneDef {
@@ -296,23 +296,23 @@ typedef struct ModelVertex {
 	int unk1, unk2;
 } ModelVertex;
 
-typedef struct LKAnimOfs {
+typedef struct AnimOfs {
 	ArrayRef *t_times;
 	ArrayRef *t_keys;
 	ArrayRef *r_times;
 	ArrayRef *r_keys;
 	ArrayRef *s_times;
 	ArrayRef *s_keys;
-} LKAnimOfs;
+} AnimOfs;
 
-typedef struct LKAnimOfsSimple {//Temporary, for TexAnims. Remnant of Stan84's code.
+typedef struct AnimOfsSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
 	ArrayRef t_keys;
 	ArrayRef r_times;
 	ArrayRef r_keys;
 	ArrayRef s_times;
 	ArrayRef s_keys;
-} LKAnimOfsSimple;
+} AnimOfsSimple;
 
 typedef struct SkinHeader {
 	char ID[4];
@@ -450,14 +450,14 @@ typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.
 	TexUnit *TextureUnits;
 } View;
 
-typedef struct LKAttachment{
+typedef struct LKAttachment {
 	uint32 ID;
 	uint32 bone;
 	Vec3D position;
 	LKAnimationBlock Data;
 } LKAttachment;
 
-typedef struct Attachment{
+typedef struct Attachment {
 	uint32 ID;
 	uint32 bone;
 	Vec3D position;
@@ -474,10 +474,10 @@ typedef struct LKM2 {
 	char *filename;
 	unsigned int *globalsequences;
 	LKModelAnimation *animations;
-	short *animlookup;//TODO Read it
+	short *AnimLookup;
 
 	LKModelBoneDef *bones;
-	LKAnimOfs *animofs; //bones layer 1
+	AnimOfs *animofs; //bones layer 1
 	BonesDataBlock *bonesdata; //bones layer 2
 	short *keybonelookup;
 	ModelVertex *vertices;
@@ -486,7 +486,7 @@ typedef struct LKM2 {
 	ModelTextureDef *textures_def;
 	Transparency *transparencies;
 	LKTextureAnimation *tex_anims;
-	LKAnimOfsSimple *temp_anim_ofs;
+	AnimOfsSimple *temp_anim_ofs;
 	int *renderflags;
 	int16 *BoneLookupTable;
 	short *TexLookupTable;
@@ -496,11 +496,11 @@ typedef struct LKM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
-	LKAttachment *Attachments;
-	uint16 *attachlookup;
-/*TODO Events, Lights, Cameras,
- * CameraLookup, RibbonEmitters, ParticleEmmiters.
- */
+	LKAttachment *Attachments; //TODO Read it
+	uint16 *AttachLookup; //TODO Read it
+	/*TODO Events, Lights, Cameras,
+	 * CameraLookup, RibbonEmitters, ParticleEmmiters.
+	 */
 } LKM2;
 
 /**
@@ -523,10 +523,10 @@ typedef struct BCM2 {
 	char *filename;
 	unsigned int *globalsequences;
 	ModelAnimation *animations;
-	int16 *animlookup;
+	int16 *AnimLookup;
 	ModelBoneDef *bones;
 	int16 *bonelookup;
-	short *keybonelookup;//Skeletal Bone Lookup
+	short *keybonelookup; //Skeletal Bone Lookup
 	ModelVertex *vertices;
 	View *views;
 	ColorDef *colors;
@@ -543,10 +543,11 @@ typedef struct BCM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
-	LKAttachment *Attachments;
-	uint16 *attachlookup;
+	Attachment *Attachments;
+	uint16 *AttachLookup;
 /*TODO AttachLookup, Attachments_2, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
 } BCM2;
+
 #endif

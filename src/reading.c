@@ -80,7 +80,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 	//Store animofs (layer 1)
 	//You will access each ArrayRef by animofs[n of the bone].(t/r/s)_(times/keys).(n/ofs)
 	//This allows later to read the real animation data, by following each ArrayRef.
-	ptr->animofs = malloc(ptr->header.nBones * sizeof(LKAnimOfs));//1 LKAnimOfs per bone
+	ptr->animofs = malloc(ptr->header.nBones * sizeof(AnimOfs));//1 LKAnimOfs per bone
 	int i;
 	for (i = 0; i < ptr->header.nBones; i++) {
 		LKModelBoneDef lk_bone = ptr->bones[i];
@@ -144,7 +144,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 			for (j = 0; j < lk_bone.trans.Times.n; j++) {
 				if (ptr->animofs[i].t_times[j].n > 0) {
 					ptr->bonesdata[i].t_times[j].values = malloc(
-							ptr->animofs[i].t_times[j].n * sizeof(uint32));//The number of elements was found previously in this function (stored in animofs)
+							ptr->animofs[i].t_times[j].n * sizeof(uint32));	//The number of elements was found previously in this function (stored in animofs)
 					fseek(lk_m2_file, ptr->animofs[i].t_times[j].ofs, SEEK_SET);
 					fread(ptr->bonesdata[i].t_times[j].values, sizeof(uint32),
 							ptr->animofs[i].t_times[j].n, lk_m2_file);
@@ -242,7 +242,7 @@ int read_texanims(FILE *lk_m2_file, LKM2 *ptr) {
 		for (i = 0; i < ptr->header.nTexAnims; i++) {
 			//translation
 			ptr->temp_anim_ofs = malloc(
-					ptr->header.nTexAnims * sizeof(LKAnimOfs));
+					ptr->header.nTexAnims * sizeof(AnimOfsSimple));
 			if (ptr->tex_anims[i].Translation.Times.n > 0) {
 				fseek(lk_m2_file, ptr->tex_anims[i].Translation.Times.ofs,
 				SEEK_SET);
@@ -367,6 +367,12 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fread(ptr->animations, sizeof(LKModelAnimation), ptr->header.nAnimations,
 			lk_m2_file);
 
+	//Animations Lookup Table
+	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(short));
+	fseek(lk_m2_file, ptr->header.ofsAnimationLookup, SEEK_SET);
+	fread(ptr->AnimLookup, sizeof(short), ptr->header.nAnimationLookup,
+			lk_m2_file);
+
 	//Bones
 	read_bones(lk_m2_file, ptr);
 
@@ -472,5 +478,11 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsBoundingNormals, SEEK_SET);
 	fread(ptr->BoundingNormals, sizeof(BoundingNormal),
 			ptr->header.nBoundingNormals, lk_m2_file);
+
+	//Attachment Lookup Table
+	ptr->AttachLookup = malloc(ptr->header.nAttachLookup * sizeof(short));
+	fseek(lk_m2_file, ptr->header.ofsAttachLookup, SEEK_SET);
+	fread(ptr->AttachLookup, sizeof(short), ptr->header.nAttachLookup,
+			lk_m2_file);
 	return 0;
 }
