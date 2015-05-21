@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	//Reading files
 	printf("Opening M2/WotLK file : %s\n", argv[1]);
 	FILE *lk_m2_file = fopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
@@ -67,8 +68,18 @@ int main(int argc, char *argv[]) {
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 
+	//Converting
+	BCM2 bc_model;
+	//TODO Conversion
+
+	//Writing
+	char new_name[64] = "BC_";
+	strcat(new_name, argv[1]);
+	printf("New name : %s\n", new_name);
+	//TODO Writing the BC file.
+
 	//Closing files
-	printf("Closing files...\n");
+	printf("Closing streams...\n");
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		fclose(skin_files[i]);
 	}

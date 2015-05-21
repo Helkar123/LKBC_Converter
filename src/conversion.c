@@ -89,6 +89,7 @@ ModelHeader header_converter(LKModelHeader lk_header) {
 }
 
 TextureAnimation tex_anim_converter(LKTextureAnimation lk_tex_anim) {
+	//TODO proper ranges
 	TextureAnimation tex_anim;
 	tex_anim.Translation.type = lk_tex_anim.Translation.type;
 	tex_anim.Translation.seq = lk_tex_anim.Translation.seq;
@@ -124,9 +125,9 @@ TextureAnimation tex_anim_converter(LKTextureAnimation lk_tex_anim) {
  * Convert a LKM2
  */
 int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
-	/*
 	 ptr->header = header_converter(lk_m2.header);
 
+	/*
 	 //views_header = views_converter(skin_header);
 
 	 int i;

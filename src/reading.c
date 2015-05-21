@@ -423,9 +423,9 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fread(ptr->renderflags, sizeof(int), ptr->header.nRenderFlags, lk_m2_file);
 
 	//Bone Lookup Table
-	ptr->BoneLookupTable = malloc(ptr->header.nBoneLookupTable * sizeof(short));
+	ptr->BoneLookupTable = malloc(ptr->header.nBoneLookupTable * sizeof(int16));
 	fseek(lk_m2_file, ptr->header.ofsBoneLookupTable, SEEK_SET);
-	fread(ptr->BoneLookupTable, sizeof(short), ptr->header.nBoneLookupTable,
+	fread(ptr->BoneLookupTable, sizeof(int16), ptr->header.nBoneLookupTable,
 			lk_m2_file);
 
 	//Texture Lookup Table
@@ -458,6 +458,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsBoundingTriangles, SEEK_SET);
 	fread(ptr->BoundingTriangles, sizeof(short), ptr->header.nBoundingTriangles,
 			lk_m2_file);
+
 	//BoundingVertices
 	ptr->BoundingVertices = malloc(
 			ptr->header.nBoundingVertices * sizeof(BoundingVertice));

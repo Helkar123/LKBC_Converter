@@ -87,7 +87,7 @@ typedef struct LKModelHeader {
 	uint32 ofsAttachments;					//0x0f4
 	uint32 nAttachLookup; 					//0x0f8
 	uint32 ofsAttachLookup;					//0x0fc
-	uint32 nAttachments_2; 					//0x100
+	uint32 nAttachments_2; 					//0x100 Events
 	uint32 ofsAttachments_2;				//0x104
 	uint32 nLights; 						//0x108
 	uint32 ofsLights;						//0x10c
@@ -190,13 +190,16 @@ typedef struct LKModelAnimation {
 	int16 subAnimID;
 	uint32 length;
 	float moveSpeed;
-	uint32 loopType;
+	//uint32 loopType;
 	uint32 flags;
+	int16 probability;
+	int16 unused;
 	uint32 d1;
 	uint32 d2;
-	uint32 playSpeed;
-	Vec3D boxA, boxB;
-	float rad;
+	uint32 playSpeed;//BlendTime
+	Vec3D boxA;//MinimumExtent
+	Vec3D boxB;//MaximumExtent
+	float rad;//BoundsRadius
 	int16 NextAnimation;
 	int16 Index;
 } LKModelAnimation;
@@ -231,7 +234,7 @@ typedef struct LKAnimationBlock {
 typedef struct AnimationBlock {
 	int16 type;
 	int16 seq;
-	ArrayRef Ranges;//links to i interpolations ranges of type (uint32,uint32)
+	ArrayRef Ranges;//links to i interpolations ranges of type (int,int)
 	ArrayRef Times;//links to i uint32
 	ArrayRef Keys;//links to i elements
 } AnimationBlock;
@@ -447,6 +450,20 @@ typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.
 	TexUnit *TextureUnits;
 } View;
 
+typedef struct LKAttachment{
+	uint32 ID;
+	uint32 bone;
+	Vec3D position;
+	LKAnimationBlock Data;
+} LKAttachment;
+
+typedef struct Attachment{
+	uint32 ID;
+	uint32 bone;
+	Vec3D position;
+	AnimationBlock Data;
+} Attachment;
+
 ///FILES///
 
 /**
@@ -457,6 +474,8 @@ typedef struct LKM2 {
 	char *filename;
 	unsigned int *globalsequences;
 	LKModelAnimation *animations;
+	short *animlookup;//TODO Read it
+
 	LKModelBoneDef *bones;
 	LKAnimOfs *animofs; //bones layer 1
 	BonesDataBlock *bonesdata; //bones layer 2
@@ -469,7 +488,7 @@ typedef struct LKM2 {
 	LKTextureAnimation *tex_anims;
 	LKAnimOfsSimple *temp_anim_ofs;
 	int *renderflags;
-	short *BoneLookupTable;
+	int16 *BoneLookupTable;
 	short *TexLookupTable;
 	short *TexUnit;
 	short *TransparencyLookup;
@@ -477,7 +496,9 @@ typedef struct LKM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
-/*TODO Attachments, AttachLookup, Events, Lights, Cameras,
+	LKAttachment *Attachments;
+	uint16 *attachlookup;
+/*TODO Events, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
 } LKM2;
@@ -502,8 +523,10 @@ typedef struct BCM2 {
 	char *filename;
 	unsigned int *globalsequences;
 	ModelAnimation *animations;
+	int16 *animlookup;
 	ModelBoneDef *bones;
-	short *keybonelookup;
+	int16 *bonelookup;
+	short *keybonelookup;//Skeletal Bone Lookup
 	ModelVertex *vertices;
 	View *views;
 	ColorDef *colors;
@@ -512,7 +535,7 @@ typedef struct BCM2 {
 	Transparency *transparencies;
 	TextureAnimation *tex_anims;
 	int *renderflags;
-	short *BoneLookupTable;
+	int16 *BoneLookupTable;
 	short *TexLookupTable;
 	short *TexUnit;
 	short *TransparencyLookup;
@@ -520,7 +543,9 @@ typedef struct BCM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
-/*TODO Attachments, AttachLookup, Attachments_2, Lights, Cameras,
+	LKAttachment *Attachments;
+	uint16 *attachlookup;
+/*TODO AttachLookup, Attachments_2, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
 } BCM2;
