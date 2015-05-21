@@ -17,6 +17,7 @@
  * Example : skin_name("Test.m2", 2) returns "Test02.skin"
  * @param m2_name A string usually given as an argument to the program. Example : "Test.m2"
  * @param number The skin file number.
+ * @author ghuysmans
  */
 char* skin_name(char *m2_name, int number) {
 	size_t m2_name_length = strlen(m2_name);
@@ -41,6 +42,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
+	printf("Opening M2/WotLK file : %s\n", argv[1]);
 	FILE *lk_m2_file = fopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
@@ -48,7 +50,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	LKM2 lk_model;
-
 	read_model(lk_m2_file, &lk_model);
 
 	FILE **skin_files;
@@ -62,10 +63,12 @@ int main(int argc, char *argv[]) {
 			return -1;
 		}
 	}
+
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 
 	//Closing files
+	printf("Closing files...\n");
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		fclose(skin_files[i]);
 	}

@@ -67,8 +67,18 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fread(ptr->bones, sizeof(LKModelBoneDef), ptr->header.nBones, lk_m2_file);
 
+	/*This function is a good example about reading LK Animation Blocks and ArrayRefs.
+	 * In the Block, you have what I call an ArrayRef : a number of elements and a file-relative offset to the first element.
+	 * In LKAnimBlock, you have ArrayRefs of ArrayRefs. So you have to work by layers. One structure is required per layer.
+	 *
+	 * In the first, you store the n ArrayRefs you got by following the Block ArrayRef.
+	 *
+	 * In the second, you store the arrays of elements you get by following each layer 1 ArrayRef obtained in step one. So there are n of them.
+	 * Remember each of these arrays of elements in the layer 2 has a custom size, given by its corresponding layer 1 ArrayRef.
+	 */
+
 	//Store animofs (layer 1)
-	//You could access each ArrayRef by animofs[n of the bone].(t/r/s)_(times/keys).(n/ofs)
+	//You will access each ArrayRef by animofs[n of the bone].(t/r/s)_(times/keys).(n/ofs)
 	//This allows later to read the real animation data, by following each ArrayRef.
 	ptr->animofs = malloc(ptr->header.nBones * sizeof(LKAnimOfs));//1 LKAnimOfs per bone
 	int i;
@@ -130,11 +140,11 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		//translation
 		if (lk_bone.trans.Times.n > 0) {
 			ptr->bonesdata[i].t_times = malloc(
-					lk_bone.trans.Times.n * sizeof(Uint32Array));
+					lk_bone.trans.Times.n * sizeof(Uint32Array));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 			for (j = 0; j < lk_bone.trans.Times.n; j++) {
 				if (ptr->animofs[i].t_times[j].n > 0) {
 					ptr->bonesdata[i].t_times[j].values = malloc(
-							ptr->animofs[i].t_times[j].n * sizeof(uint32));
+							ptr->animofs[i].t_times[j].n * sizeof(uint32));//The number of elements was found previously in this function (stored in animofs)
 					fseek(lk_m2_file, ptr->animofs[i].t_times[j].ofs, SEEK_SET);
 					fread(ptr->bonesdata[i].t_times[j].values, sizeof(uint32),
 							ptr->animofs[i].t_times[j].n, lk_m2_file);
@@ -180,15 +190,6 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 					test = fread(ptr->bonesdata[i].r_keys[j].values,
 							sizeof(Quat), ptr->animofs[i].r_keys[j].n,
 							lk_m2_file);
-					/*printf(" Attempt to read %d Quaternions at %d\n",
-					 ptr->animofs[i].r_keys[j].n,
-					 ptr->animofs[i].r_keys[j].ofs);	//FIXME Debug
-					 printf("Read count : %d\n", test);
-					 printf("Bone number : %d\n", i);
-					 printf("Animation number : %d\n", j);
-					 printf("Rotation first value of the first Quat: %d\n",
-					 ptr->bonesdata[i].r_keys[j].values[0][0]);
-					 */
 				}
 			}
 		}

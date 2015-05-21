@@ -224,16 +224,16 @@ typedef struct PlayableAnimationLookup {
 typedef struct LKAnimationBlock {
 	int16 type;
 	int16 seq;
-	ArrayRef Times;
-	ArrayRef Keys;
+	ArrayRef Times;//links to i ArraysRefs of j uint32
+	ArrayRef Keys;//links to i ArrayRefs of j elements
 } LKAnimationBlock;
 
 typedef struct AnimationBlock {
 	int16 type;
 	int16 seq;
-	ArrayRef Ranges;
-	ArrayRef Times;
-	ArrayRef Keys;
+	ArrayRef Ranges;//links to i interpolations ranges of type (uint32,uint32)
+	ArrayRef Times;//links to i uint32
+	ArrayRef Keys;//links to i elements
 } AnimationBlock;
 
 typedef struct LKModelBoneDef {
@@ -302,7 +302,7 @@ typedef struct LKAnimOfs {
 	ArrayRef *s_keys;
 } LKAnimOfs;
 
-typedef struct LKAnimOfsSimple {
+typedef struct LKAnimOfsSimple {//Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
 	ArrayRef t_keys;
 	ArrayRef r_times;
@@ -439,7 +439,12 @@ typedef struct TextureAnimation {
 } TextureAnimation;
 
 typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.x
-//TODO Code it
+	ViewsHeader header;
+	Vertex *Indices;
+	Indices* Triangles;
+	Property *Properties;
+	Submesh *Submeshes;
+	TexUnit *TextureUnits;
 } View;
 
 ///FILES///
@@ -453,8 +458,8 @@ typedef struct LKM2 {
 	unsigned int *globalsequences;
 	LKModelAnimation *animations;
 	LKModelBoneDef *bones;
-	LKAnimOfs *animofs;
-	BonesDataBlock *bonesdata;
+	LKAnimOfs *animofs; //bones layer 1
+	BonesDataBlock *bonesdata; //bones layer 2
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
@@ -472,6 +477,9 @@ typedef struct LKM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
+/*TODO Attachments, AttachLookup, Events, Lights, Cameras,
+ * CameraLookup, RibbonEmitters, ParticleEmmiters.
+ */
 } LKM2;
 
 /**
@@ -484,7 +492,6 @@ typedef struct Skin {
 	Property *Properties;
 	LKSubmesh *Submeshes;
 	TexUnit *TextureUnits;
-//TODO Finish the structure
 } Skin;
 
 /**
@@ -496,9 +503,9 @@ typedef struct BCM2 {
 	unsigned int *globalsequences;
 	ModelAnimation *animations;
 	ModelBoneDef *bones;
-	BonesDataBlock *bonesdata;
 	short *keybonelookup;
 	ModelVertex *vertices;
+	View *views;
 	ColorDef *colors;
 	ColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
@@ -513,5 +520,8 @@ typedef struct BCM2 {
 	short *BoundingTriangles;
 	BoundingVertice *BoundingVertices;
 	BoundingNormal *BoundingNormals;
+/*TODO Attachments, AttachLookup, Attachments_2, Lights, Cameras,
+ * CameraLookup, RibbonEmitters, ParticleEmmiters.
+ */
 } BCM2;
 #endif
