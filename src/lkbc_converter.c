@@ -9,7 +9,9 @@
 #include "reading.h"
 #include "printer.h"
 
+/** Skin file extension */
 #define SKIN_SUFF ".skin"
+/** M2 file extension */
 #define M2_EXT ".m2"
 
 /**
@@ -35,6 +37,9 @@ char* skin_name(char *m2_name, int number) {
 	return s;
 }
 
+/**
+ * Main function
+ */
 int main(int argc, char *argv[]) {
 	printf("LKBC_Converter by Koward\n");
 	if (argc < 2) {

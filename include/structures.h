@@ -19,10 +19,21 @@ typedef uint16 Indices[3]; //Indices for Triangles
 typedef uint16 Vertex; //The vertex in the global vertex list
 typedef uint8 Property[4]; //Bones Indices into BoneLookupTable
 
-typedef struct ArrayRef {
+typedef struct ArrayRef {//Can point to absolutely anything
 	uint32 n;
 	uint32 ofs;
 } ArrayRef;
+
+/*Arrays with an unknown size*/
+typedef struct Uint32Array {
+	uint32 *values;
+} Uint32Array;
+typedef struct Vec3DArray {
+	Vec3D *values;
+} Vec3DArray;
+typedef struct QuatArray {
+	Quat *values;
+} QuatArray;
 
 typedef struct LKModelHeader {
 	uint32 id;								//0x000
@@ -268,24 +279,15 @@ typedef struct ModelBoneDef {
 	Vec3D pivot;
 } ModelBoneDef;
 
-typedef struct Uint32Array {
-	uint32 *values;
-} Uint32Array;
-typedef struct Vec3DArray {
-	Vec3D *values;
-} Vec3DArray;
-typedef struct QuatArray {
-	Quat *values;
-} QuatArray;
 
-typedef struct BonesDataBlock {
+typedef struct LKBonesDataBlock {
 	Uint32Array *t_times;
 	Vec3DArray *t_keys;
 	Uint32Array *r_times;
 	QuatArray *r_keys;
 	Uint32Array *s_times;
 	Vec3DArray *s_keys;
-} BonesDataBlock;
+} LKBonesDataBlock;
 
 typedef struct ModelVertex {
 	Vec3D pos;
@@ -478,7 +480,7 @@ typedef struct LKM2 {
 
 	LKModelBoneDef *bones;
 	AnimOfs *animofs; //bones layer 1
-	BonesDataBlock *bonesdata; //bones layer 2
+	LKBonesDataBlock *bonesdata; //bones layer 2
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
@@ -498,9 +500,9 @@ typedef struct LKM2 {
 	BoundingNormal *BoundingNormals;
 	LKAttachment *Attachments; //TODO Read it
 	uint16 *AttachLookup; //TODO Read it
-	/*TODO Events, Lights, Cameras,
-	 * CameraLookup, RibbonEmitters, ParticleEmmiters.
-	 */
+/*TODO Events, Lights, Cameras,
+ * CameraLookup, RibbonEmitters, ParticleEmmiters.
+ */
 } LKM2;
 
 /**
