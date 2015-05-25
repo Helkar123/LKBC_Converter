@@ -145,8 +145,6 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 				t_times_size += lk_m2.animofs[i].t_times[j].n;
 			}
 
-			t_times_size++;	//FIXME I dont know why but there is one more Timestamp.
-
 			ptr->bones[i].trans.Times.n = t_times_size;
 			printf("Number of Timestamps&Keys for this bone : %d\n",
 					t_times_size);
@@ -158,15 +156,13 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 					t_times_size * sizeof(Vec3D));
 
 			int intertime;
-			ptr->bonesdata[i].t_times.values[t_times_size - 1] =
-					ptr->animations[ptr->header.nAnimations - 1].timeEnd;
 
 			for (j = 0; j < ptr->header.nAnimations; j++) {
 				//printf("\tAnimation : %d\n", j);//FIXME DEBUG
-				intertime = times_index;
-				ptr->bonesdata[i].t_ranges.values[j][0] = intertime;//Range : keep the records FIXME
 
+				intertime = times_index;
 				if (lk_m2.animofs[i].t_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
+					ptr->bonesdata[i].t_ranges.values[j][0] = intertime;//Range : keep the records FIXME
 					int k;
 					for (k = 0; k < lk_m2.animofs[i].t_times[j].n; k++) {//Take each value for this anim and put it in the BC data
 						ptr->bonesdata[i].t_times.values[times_index] =
@@ -174,12 +170,14 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 										+ lk_m2.bonesdata[i].t_times[j].values[k];//Start Timestamp + animation-relative time
 						printf("\t\tAdded Timestamp : %d\n",
 								ptr->bonesdata[i].t_times.values[times_index]);
-						intertime = times_index;
 						times_index++;
+						intertime++;
 					}
-					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
+					ptr->bonesdata[i].t_ranges.values[j][1] = intertime - 1;
+					intertime++;
 				} else {
-					ptr->bonesdata[i].t_ranges.values[j][1] = intertime + 1;
+					ptr->bonesdata[i].t_ranges.values[j][0] = intertime - 1;
+					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
 				}
 
 				if (lk_m2.animofs[i].t_keys[j].n > 0) {	//KEYS
@@ -202,13 +200,26 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 						ptr->bonesdata[i].t_ranges.values[j][0],
 						ptr->bonesdata[i].t_ranges.values[j][1]);
 			}
-			printf("\t\tFinal Timestamp : %d\n",
-					ptr->bonesdata[i].t_times.values[t_times_size - 1]);
-			printf("\t\tFinal Vector : (%f,%f,%f)\n",
-					ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
-					ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
-					ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
+			//Extra Timestamp&Vector if the last Time was not the TimeEnd to "loop" it
+
+			int final_time =
+					ptr->animations[ptr->header.nAnimations - 1].timeEnd;
+			if (ptr->bonesdata[i].t_times.values[t_times_size - 1]
+					< final_time) {
+
+				t_times_size++;	//FIXME I dont know why but there is one more Timestamp.
+
+				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
+
+				printf("\t\tFinal Timestamp : %d\n",
+						ptr->bonesdata[i].t_times.values[t_times_size - 1]);
+				printf("\t\tFinal Vector : (%f,%f,%f)\n",
+						ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
+						ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
+						ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
+			}
 		}
+		//END translation
 	}
 
 	//Bones
@@ -244,12 +255,24 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	ptr->filename = lk_m2.filename;
 
+	ptr->globalsequences = malloc(ptr->header.nGlobalSequences * sizeof(int));
 	int i;
 	for (i = 0; i < ptr->header.nGlobalSequences; i++) {
 		ptr->globalsequences[i] = lk_m2.globalsequences[i];
 	}
 
 	animations_converter(ptr, lk_m2);
+
+	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
+	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
+		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
+	}
+	//TODO Bonelookup
+
+	ptr->keybonelookup = malloc(ptr->header.nKeyBoneLookup * sizeof(short));
+	for (i = 0; i < ptr->header.nKeyBoneLookup; i++) {
+		ptr->keybonelookup[i] = lk_m2.keybonelookup[i];
+	}
 	/*
 	 //views_header = views_converter(skin_header);
 

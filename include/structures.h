@@ -500,7 +500,7 @@ typedef struct LKM2 {
 	char *filename;
 	unsigned int *globalsequences;
 	LKModelAnimation *animations;
-	short *AnimLookup;
+	int16 *AnimLookup;
 
 	LKModelBoneDef *bones;
 	AnimOfs *animofs; //bones layer 1
