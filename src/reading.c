@@ -148,7 +148,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].t_times[j].values = malloc(
 								ptr->animofs[i].t_times[j].n * sizeof(uint32));	//The number of elements was found previously in this function (stored in animofs)
 						fseek(lk_m2_file, ptr->animofs[i].t_times[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						fread(ptr->bonesdata[i].t_times[j].values,
 								sizeof(uint32), ptr->animofs[i].t_times[j].n,
 								lk_m2_file);
@@ -163,7 +163,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].t_keys[j].values = malloc(
 								ptr->animofs[i].t_keys[j].n * sizeof(Vec3D));
 						fseek(lk_m2_file, ptr->animofs[i].t_keys[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						fread(ptr->bonesdata[i].t_keys[j].values, sizeof(Vec3D),
 								ptr->animofs[i].t_keys[j].n, lk_m2_file);
 					}
@@ -178,7 +178,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].r_times[j].values = malloc(
 								ptr->animofs[i].r_times[j].n * sizeof(uint32));
 						fseek(lk_m2_file, ptr->animofs[i].r_times[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						fread(ptr->bonesdata[i].r_times[j].values,
 								sizeof(uint32), ptr->animofs[i].r_times[j].n,
 								lk_m2_file);
@@ -193,7 +193,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].r_keys[j].values = malloc(
 								ptr->animofs[i].r_keys[j].n * sizeof(Quat));
 						fseek(lk_m2_file, ptr->animofs[i].r_keys[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						int test;
 						test = fread(ptr->bonesdata[i].r_keys[j].values,
 								sizeof(Quat), ptr->animofs[i].r_keys[j].n,
@@ -210,7 +210,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].s_times[j].values = malloc(
 								ptr->animofs[i].s_times[j].n * sizeof(uint32));
 						fseek(lk_m2_file, ptr->animofs[i].s_times[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						fread(ptr->bonesdata[i].s_times[j].values,
 								sizeof(uint32), ptr->animofs[i].s_times[j].n,
 								lk_m2_file);
@@ -225,7 +225,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 						ptr->bonesdata[i].s_keys[j].values = malloc(
 								ptr->animofs[i].s_keys[j].n * sizeof(Vec3D));
 						fseek(lk_m2_file, ptr->animofs[i].s_keys[j].ofs,
-								SEEK_SET);
+						SEEK_SET);
 						fread(ptr->bonesdata[i].s_keys[j].values, sizeof(Vec3D),
 								ptr->animofs[i].s_keys[j].n, lk_m2_file);
 					}

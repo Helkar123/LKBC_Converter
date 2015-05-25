@@ -3,142 +3,230 @@
  * Conversion functions
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "structures.h"
 
 /**
  * Header conversion
+ * @param ptr Pointer to the BCM2 file which will be modified.
  * @param lk_header LK M2 Header.
  * @return A TBC Header.
  */
-ModelHeader header_converter(LKModelHeader lk_header) {
-	ModelHeader tbc_header;
-
-	tbc_header.id = lk_header.id;
+int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
+	ptr->header.id = lk_header.id;
 	//TODO version=0x107 if the model has particles
-	tbc_header.version = 0x104;
-	tbc_header.nameLength = lk_header.nameLength;
-	tbc_header.nameOfs = 0x150;
-	tbc_header.GlobalModelFlags = lk_header.GlobalModelFlags;
-	tbc_header.nGlobalSequences = lk_header.nGlobalSequences;
-	tbc_header.ofsGlobalSequences = lk_header.ofsGlobalSequences;
-	tbc_header.nAnimations = lk_header.nAnimations;
-	tbc_header.ofsAnimations = lk_header.ofsAnimations;
-	tbc_header.nAnimationLookup = lk_header.nAnimationLookup;
-	tbc_header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
-	tbc_header.nPlayableAnimationLookup = 0xcb; //Placeholder
-	tbc_header.ofsPlayableAnimationLookup = 0x00; //Determine where you insert the Data block from above
-	tbc_header.nBones = lk_header.nBones;
-	tbc_header.ofsBones = lk_header.ofsBones;
-	tbc_header.nKeyBoneLookup = lk_header.nKeyBoneLookup;
-	tbc_header.ofsKeyBoneLookup = lk_header.ofsKeyBoneLookup;
-	tbc_header.nVertices = lk_header.nVertices;
-	tbc_header.ofsVertices = lk_header.ofsVertices;
-	tbc_header.nViews = lk_header.nViews;
-	tbc_header.ofsViews = 0x00;
-	tbc_header.nColors = lk_header.nColors;
-	tbc_header.ofsColors = lk_header.ofsColors;
-	tbc_header.nTextures = lk_header.nTextures;
-	tbc_header.ofsTextures = lk_header.ofsTextures;
-	tbc_header.nTransparency = lk_header.nTransparency;
-	tbc_header.ofsTransparency = lk_header.ofsTransparency;
-	tbc_header.nI = 0x00;
-	tbc_header.ofsI = 0x00;
-	tbc_header.nTexAnims = lk_header.nTexAnims;
-	tbc_header.ofsTexAnims = lk_header.ofsTexAnims;
-	tbc_header.nTexReplace = lk_header.nTexReplace;
-	tbc_header.ofsTexReplace = lk_header.ofsTexReplace;
-	tbc_header.nRenderFlags = lk_header.nRenderFlags;
-	tbc_header.ofsRenderFlags = lk_header.ofsRenderFlags;
-	tbc_header.nBoneLookupTable = lk_header.nBoneLookupTable;
-	tbc_header.ofsBoneLookupTable = lk_header.ofsBoneLookupTable;
-	tbc_header.nTexLookup = lk_header.nTexLookup;
-	tbc_header.ofsTexLookup = lk_header.ofsTexLookup;
-	tbc_header.nTexUnitLookup = lk_header.nTexUnitLookup;
-	tbc_header.ofsTexUnitLookup = lk_header.ofsTexUnitLookup;
-	tbc_header.nTransparencyLookup = lk_header.nTransparencyLookup;
-	tbc_header.ofsTransparencyLookup = lk_header.ofsTransparencyLookup;
-	tbc_header.nTexAnimLookup = lk_header.nTexAnimLookup;
-	tbc_header.ofsTexAnimLookup = lk_header.ofsTexAnimLookup;
-	tbc_header.nBoundingTriangles = lk_header.nBoundingTriangles;
-	tbc_header.ofsBoundingTriangles = lk_header.ofsBoundingTriangles;
-	tbc_header.nBoundingVertices = lk_header.nBoundingVertices;
-	tbc_header.ofsBoundingVertices = lk_header.ofsBoundingVertices;
-	tbc_header.nBoundingNormals = lk_header.nBoundingNormals;
-	tbc_header.ofsBoundingNormals = lk_header.ofsBoundingNormals;
-	tbc_header.nAttachments = lk_header.nAttachments;
-	tbc_header.ofsAttachments = lk_header.ofsAttachments;
-	tbc_header.nAttachLookup = lk_header.nAttachLookup;
-	tbc_header.ofsAttachLookup = lk_header.ofsAttachLookup;
-	tbc_header.nAttachments_2 = lk_header.nAttachments_2;
-	tbc_header.ofsAttachments_2 = lk_header.ofsAttachments_2;
-	tbc_header.nLights = lk_header.nLights;
-	tbc_header.ofsLights = lk_header.ofsLights;
-	tbc_header.nCameras = lk_header.nCameras;
-	tbc_header.ofsCameras = lk_header.ofsCameras;
-	tbc_header.nCameraLookup = lk_header.nCameraLookup;
-	tbc_header.ofsCameraLookup = lk_header.ofsCameraLookup;
-	tbc_header.nRibbonEmitters = lk_header.nRibbonEmitters;
-	tbc_header.ofsRibbonEmitters = lk_header.ofsRibbonEmitters;
-	tbc_header.nParticleEmitters = lk_header.nParticleEmitters;
-	tbc_header.ofsParticleEmitters = lk_header.ofsParticleEmitters;
+	ptr->header.version = 0x104;
+	ptr->header.nameLength = lk_header.nameLength;
+	ptr->header.nameOfs = 0x150;
+	ptr->header.GlobalModelFlags = lk_header.GlobalModelFlags;
+	ptr->header.nGlobalSequences = lk_header.nGlobalSequences;
+	ptr->header.ofsGlobalSequences = lk_header.ofsGlobalSequences;
+	ptr->header.nAnimations = lk_header.nAnimations;
+	ptr->header.ofsAnimations = lk_header.ofsAnimations;
+	ptr->header.nAnimationLookup = lk_header.nAnimationLookup;
+	ptr->header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
+	ptr->header.nPlayableAnimationLookup = 0xcb; //Placeholder
+	ptr->header.ofsPlayableAnimationLookup = 0x00; //Determine where you insert the Data block from above
+	ptr->header.nBones = lk_header.nBones;
+	ptr->header.ofsBones = lk_header.ofsBones;
+	ptr->header.nKeyBoneLookup = lk_header.nKeyBoneLookup;
+	ptr->header.ofsKeyBoneLookup = lk_header.ofsKeyBoneLookup;
+	ptr->header.nVertices = lk_header.nVertices;
+	ptr->header.ofsVertices = lk_header.ofsVertices;
+	ptr->header.nViews = lk_header.nViews;
+	ptr->header.ofsViews = 0x00;
+	ptr->header.nColors = lk_header.nColors;
+	ptr->header.ofsColors = lk_header.ofsColors;
+	ptr->header.nTextures = lk_header.nTextures;
+	ptr->header.ofsTextures = lk_header.ofsTextures;
+	ptr->header.nTransparency = lk_header.nTransparency;
+	ptr->header.ofsTransparency = lk_header.ofsTransparency;
+	ptr->header.nI = 0x00;
+	ptr->header.ofsI = 0x00;
+	ptr->header.nTexAnims = lk_header.nTexAnims;
+	ptr->header.ofsTexAnims = lk_header.ofsTexAnims;
+	ptr->header.nTexReplace = lk_header.nTexReplace;
+	ptr->header.ofsTexReplace = lk_header.ofsTexReplace;
+	ptr->header.nRenderFlags = lk_header.nRenderFlags;
+	ptr->header.ofsRenderFlags = lk_header.ofsRenderFlags;
+	ptr->header.nBoneLookupTable = lk_header.nBoneLookupTable;
+	ptr->header.ofsBoneLookupTable = lk_header.ofsBoneLookupTable;
+	ptr->header.nTexLookup = lk_header.nTexLookup;
+	ptr->header.ofsTexLookup = lk_header.ofsTexLookup;
+	ptr->header.nTexUnitLookup = lk_header.nTexUnitLookup;
+	ptr->header.ofsTexUnitLookup = lk_header.ofsTexUnitLookup;
+	ptr->header.nTransparencyLookup = lk_header.nTransparencyLookup;
+	ptr->header.ofsTransparencyLookup = lk_header.ofsTransparencyLookup;
+	ptr->header.nTexAnimLookup = lk_header.nTexAnimLookup;
+	ptr->header.ofsTexAnimLookup = lk_header.ofsTexAnimLookup;
+	ptr->header.nBoundingTriangles = lk_header.nBoundingTriangles;
+	ptr->header.ofsBoundingTriangles = lk_header.ofsBoundingTriangles;
+	ptr->header.nBoundingVertices = lk_header.nBoundingVertices;
+	ptr->header.ofsBoundingVertices = lk_header.ofsBoundingVertices;
+	ptr->header.nBoundingNormals = lk_header.nBoundingNormals;
+	ptr->header.ofsBoundingNormals = lk_header.ofsBoundingNormals;
+	ptr->header.nAttachments = lk_header.nAttachments;
+	ptr->header.ofsAttachments = lk_header.ofsAttachments;
+	ptr->header.nAttachLookup = lk_header.nAttachLookup;
+	ptr->header.ofsAttachLookup = lk_header.ofsAttachLookup;
+	ptr->header.nAttachments_2 = lk_header.nAttachments_2;
+	ptr->header.ofsAttachments_2 = lk_header.ofsAttachments_2;
+	ptr->header.nLights = lk_header.nLights;
+	ptr->header.ofsLights = lk_header.ofsLights;
+	ptr->header.nCameras = lk_header.nCameras;
+	ptr->header.ofsCameras = lk_header.ofsCameras;
+	ptr->header.nCameraLookup = lk_header.nCameraLookup;
+	ptr->header.ofsCameraLookup = lk_header.ofsCameraLookup;
+	ptr->header.nRibbonEmitters = lk_header.nRibbonEmitters;
+	ptr->header.ofsRibbonEmitters = lk_header.ofsRibbonEmitters;
+	ptr->header.nParticleEmitters = lk_header.nParticleEmitters;
+	ptr->header.ofsParticleEmitters = lk_header.ofsParticleEmitters;
 	int i = 0;
 	for (i = 0; i < 14; i++) {
-		tbc_header.floats[i] = lk_header.floats[i];
+		ptr->header.floats[i] = lk_header.floats[i];
 	}
-	return tbc_header;
+	return 0;
 }
 
 /**
- *
- * @param lk_tex_anim
- * @return
+ * Converts animations
+ * @param ptr Pointer to BC M2 structure
+ * @param lk_m2 LK M2 structure (no need for pointer as we should not modify it)
+ * @return 0 if successful
  */
-TextureAnimation tex_anim_converter(LKTextureAnimation lk_tex_anim) {
-	//TODO proper ranges
-	TextureAnimation tex_anim;
-	tex_anim.Translation.type = lk_tex_anim.Translation.type;
-	tex_anim.Translation.seq = lk_tex_anim.Translation.seq;
-	tex_anim.Translation.Ranges.n = 0;
-	tex_anim.Translation.Ranges.ofs = 0;
-	tex_anim.Translation.Times.n = lk_tex_anim.Translation.Times.n;
-	tex_anim.Translation.Times.ofs = lk_tex_anim.Translation.Times.ofs;
-	tex_anim.Translation.Keys.n = lk_tex_anim.Translation.Keys.n;
-	tex_anim.Translation.Keys.ofs = lk_tex_anim.Translation.Keys.ofs;
+int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
+	//Animation Sequence (also known as the easy part)
+	ptr->animations = malloc(ptr->header.nAnimations * sizeof(ModelAnimation));
+	uint32 timeline = 0;
+	int i;
+	for (i = 0; i < ptr->header.nAnimations; i++) {
+		timeline += 100; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
+		ptr->animations[i].animID = lk_m2.animations[i].animID;
+		ptr->animations[i].timeStart = timeline;
+		timeline += lk_m2.animations[i].length;
+		ptr->animations[i].timeEnd = timeline;
+		ptr->animations[i].moveSpeed = lk_m2.animations[i].moveSpeed;
+		ptr->animations[i].loopType = 0; //FIXME I really don't know where this information disappeared in LK. There is no doc.
+		ptr->animations[i].flags = lk_m2.animations[i].flags;
+		ptr->animations[i].d1 = lk_m2.animations[i].d1;
+		ptr->animations[i].d2 = lk_m2.animations[i].d2;
+		ptr->animations[i].playSpeed = lk_m2.animations[i].playSpeed;
+		int j;
+		for (j = 0; j < 3; j++) {
+			ptr->animations[i].boxA[j] = lk_m2.animations[i].boxA[j];
+			ptr->animations[i].boxB[j] = lk_m2.animations[i].boxB[j];
+		}
+		ptr->animations[i].rad = lk_m2.animations[i].rad;
+		ptr->animations[i].NextAnimation = lk_m2.animations[i].NextAnimation;
+		ptr->animations[i].Index = lk_m2.animations[i].Index;
+	}
 
-	tex_anim.Rotation.type = lk_tex_anim.Rotation.type;
-	tex_anim.Rotation.seq = lk_tex_anim.Rotation.seq;
-	tex_anim.Rotation.Ranges.n = 0;
-	tex_anim.Rotation.Ranges.ofs = 0;
-	tex_anim.Rotation.Times.n = lk_tex_anim.Rotation.Times.n;
-	tex_anim.Rotation.Times.ofs = lk_tex_anim.Rotation.Times.ofs;
-	tex_anim.Rotation.Keys.n = lk_tex_anim.Rotation.Keys.n;
-	tex_anim.Rotation.Keys.ofs = lk_tex_anim.Rotation.Keys.ofs;
+	//BonesDataBlock
+	ptr->bonesdata = malloc(ptr->header.nBones * sizeof(BonesDataBlock));
+	for (i = 0; i < ptr->header.nBones; i++) {
+		printf("Bone : %d\n", i);
 
-	tex_anim.Scaling.type = lk_tex_anim.Scaling.type;
-	tex_anim.Scaling.seq = lk_tex_anim.Scaling.seq;
-	tex_anim.Scaling.Ranges.n = 0;
-	tex_anim.Scaling.Ranges.ofs = 0;
-	tex_anim.Scaling.Times.n = lk_tex_anim.Scaling.Times.n;
-	tex_anim.Scaling.Times.ofs = lk_tex_anim.Scaling.Times.ofs;
-	tex_anim.Scaling.Keys.n = lk_tex_anim.Scaling.Keys.n;
-	tex_anim.Scaling.Keys.ofs = lk_tex_anim.Scaling.Keys.ofs;
+		//translation
+		if (lk_m2.bones[i].trans.Times.n > 0) {
+			int j;
+			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
+			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
+			ptr->bonesdata[i].t_ranges.values = malloc(
+					(ptr->header.nAnimations + 1) * sizeof(Range));
+			ptr->bonesdata[i].t_ranges.values[ptr->header.nAnimations][0] = 0;//No idea why the last (int,int) is always 0
+			ptr->bonesdata[i].t_ranges.values[ptr->header.nAnimations][1] = 0;
 
-	return tex_anim;
+			int t_times_size = 0;//Number of Timestamps (equal to the number of keys) for this bone
+			for (j = 0; j < lk_m2.header.nAnimations; j++) {
+				t_times_size += lk_m2.animofs[i].t_times[j].n;
+			}
+			printf("Number of Timestamps&Keys for this bone : %d\n",
+					t_times_size);
+
+			ptr->bonesdata[i].t_times.values = malloc(
+					t_times_size * sizeof(uint32));
+
+			ptr->bonesdata[i].t_keys.values = malloc(
+					t_times_size * sizeof(Vec3D));
+
+			int intertime;
+			for (j = 0; j < ptr->header.nAnimations; j++) {
+				printf("\tAnimation : %d\n", j);
+				intertime = times_index;
+				ptr->bonesdata[i].t_ranges.values[j][0] = intertime;//Range : keep the records FIXME
+
+				if (lk_m2.animofs[i].t_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
+					int k;
+					for (k = 0; k < lk_m2.animofs[i].t_times[j].n; k++) {//Take each value for this anim and put it in the BC data
+						ptr->bonesdata[i].t_times.values[times_index] =
+								ptr->animations[j].timeStart
+										+ lk_m2.bonesdata[i].t_times[j].values[k];//Start Timestamp + animation-relative time
+						printf("\t\tAdded Timestamp : %d\n",
+								ptr->bonesdata[i].t_times.values[times_index]);
+						intertime = times_index;
+						times_index++;
+					}
+					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
+				} else {
+					ptr->bonesdata[i].t_ranges.values[j][1] = intertime + 1;
+				}
+
+				if (lk_m2.animofs[i].t_keys[j].n > 0) {	//KEYS
+					int k;
+					for (k = 0; k < lk_m2.animofs[i].t_keys[j].n; k++) {//Take each value for this anim and put it in the BC data
+						int m;
+						for (m = 0; m < 3; m++) {
+							ptr->bonesdata[i].t_keys.values[keys_index][m] =
+									lk_m2.bonesdata[i].t_keys[j].values[k][m];//Start Timestamp + animation-relative time
+						}
+						printf("\t\tAdded Vector : (%f,%f,%f)\n",
+								ptr->bonesdata[i].t_keys.values[keys_index][0],
+								ptr->bonesdata[i].t_keys.values[keys_index][1],
+								ptr->bonesdata[i].t_keys.values[keys_index][2]);
+						keys_index++;
+					}
+				}
+				printf(
+						"\t\tInterpolation range : (%d,%d)\n",	//FIXME DEBUG
+						ptr->bonesdata[i].t_ranges.values[j][0],
+						ptr->bonesdata[i].t_ranges.values[j][1]);
+			}
+		}
+	}
+
+	//Bones
+	ptr->bones = malloc(ptr->header.nBones * sizeof(ModelBoneDef));
+	for (i = 0; i < ptr->header.nBones; i++) {
+		ptr->bones[i].animid = lk_m2.bones[i].animid;
+		ptr->bones[i].flags = lk_m2.bones[i].flags;
+		ptr->bones[i].parent = lk_m2.bones[i].parent;
+		ptr->bones[i].geoid = lk_m2.bones[i].geoid;
+		ptr->bones[i].unk = lk_m2.bones[i].unk;
+		//TODO AnimBlocks
+		//TODO Pivot
+	}
+	return 0;
 }
 
 /**
  * Convert a LKM2
  */
 int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
-	ptr->header = header_converter(lk_m2.header);
+	header_converter(ptr, lk_m2.header);
 
+	ptr->filename = lk_m2.filename;
+
+	int i;
+	for (i = 0; i < ptr->header.nGlobalSequences; i++) {
+		ptr->globalsequences[i] = lk_m2.globalsequences[i];
+	}
+
+	animations_converter(ptr, lk_m2);
 	/*
 	 //views_header = views_converter(skin_header);
 
-	 int i;
-	 for (i = 0; i < ptr->header.nAnimations; i++) {
-	 ptr->animations[i] = animation_converter(lk_m2.animations[i]);
-	 }
 
 	 // The amount of nAnimationLookup is assigned so far as the amount of animations
 	 ptr->header.nAnimationLookup = lk_m2.header.nAnimations;

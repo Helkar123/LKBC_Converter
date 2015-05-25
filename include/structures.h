@@ -12,6 +12,7 @@ typedef unsigned short uint16;
 typedef short int16;
 typedef unsigned int uint32;
 typedef int int32;
+typedef int Range[2];
 typedef short Quat[4];
 typedef float Vec3D[3];
 typedef float Vec2D[2];
@@ -24,7 +25,12 @@ typedef struct ArrayRef {//Can point to absolutely anything
 	uint32 ofs;
 } ArrayRef;
 
+
 /*Arrays with an unknown size*/
+
+typedef struct RangeArray {
+	Range *values;
+} RangeArray;
 typedef struct Uint32Array {
 	uint32 *values;
 } Uint32Array;
@@ -212,7 +218,7 @@ typedef struct LKModelAnimation {
 	Vec3D boxB;				//MaximumExtent
 	float rad;				//BoundsRadius
 	int16 NextAnimation;
-	int16 Index;
+	uint16 Index;
 } LKModelAnimation;
 
 typedef struct ModelAnimation {
@@ -225,9 +231,11 @@ typedef struct ModelAnimation {
 	uint32 d1;
 	uint32 d2;
 	uint32 playSpeed;
-	Vec3D boxA, boxB;
+	Vec3D boxA;
+	Vec3D boxB;
 	float rad;
-	int16 s[2];
+	int16 NextAnimation;
+	uint16 Index;
 } ModelAnimation;
 
 typedef struct PlayableAnimationLookup {
@@ -283,11 +291,27 @@ typedef struct ModelBoneDef {
 typedef struct LKBonesDataBlock {
 	Uint32Array *t_times;
 	Vec3DArray *t_keys;
+
 	Uint32Array *r_times;
 	QuatArray *r_keys;
+
 	Uint32Array *s_times;
 	Vec3DArray *s_keys;
 } LKBonesDataBlock;
+
+typedef struct BonesDataBlock {
+	RangeArray t_ranges;
+	Uint32Array t_times;
+	Vec3DArray t_keys;
+
+	RangeArray r_ranges;
+	Uint32Array r_times;
+	QuatArray r_keys;
+
+	RangeArray s_ranges;
+	Uint32Array s_times;
+	Vec3DArray s_keys;
+} BonesDataBlock;
 
 typedef struct ModelVertex {
 	Vec3D pos;
@@ -527,6 +551,7 @@ typedef struct BCM2 {
 	ModelAnimation *animations;
 	int16 *AnimLookup;
 	ModelBoneDef *bones;
+	BonesDataBlock *bonesdata;
 	int16 *bonelookup;
 	short *keybonelookup; //Skeletal Bone Lookup
 	ModelVertex *vertices;

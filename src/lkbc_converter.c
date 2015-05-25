@@ -8,6 +8,7 @@
 #include <string.h>
 #include "reading.h"
 #include "printer.h"
+#include "conversion.h"
 
 /** Skin file extension */
 #define SKIN_SUFF ".skin"
@@ -41,7 +42,7 @@ char* skin_name(char *m2_name, int number) {
  * Main function
  */
 int main(int argc, char *argv[]) {
-	printf("LKBC_Converter by Koward\n");
+	printf("LKBC_Converter by Koward (Work in progress)\n");
 	if (argc < 2) {
 		fprintf(stderr, "No M2 file specified.\n");
 		return -1;
@@ -75,12 +76,13 @@ int main(int argc, char *argv[]) {
 
 	//Converting
 	BCM2 bc_model;
-	//TODO Conversion
+
+	lk_to_bc(lk_model, skins, &bc_model);
 
 	//Writing
 	char new_name[64] = "BC_";
 	strcat(new_name, argv[1]);
-	printf("New name : %s\n", new_name);
+	printf("Output name : %s\n", new_name);
 	//TODO Writing the BC file.
 
 	//Closing files
