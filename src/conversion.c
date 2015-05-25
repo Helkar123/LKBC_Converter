@@ -102,7 +102,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 	uint32 timeline = 0;
 	int i;
 	for (i = 0; i < ptr->header.nAnimations; i++) {
-		timeline += 100; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
+		timeline += 3333; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
 		ptr->animations[i].animID = lk_m2.animations[i].animID;
 		ptr->animations[i].timeStart = timeline;
 		timeline += lk_m2.animations[i].length;
@@ -142,6 +142,9 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 			for (j = 0; j < lk_m2.header.nAnimations; j++) {
 				t_times_size += lk_m2.animofs[i].t_times[j].n;
 			}
+
+			t_times_size++;//FIXME I dont know why but there is one more Timestamp.
+
 			printf("Number of Timestamps&Keys for this bone : %d\n",
 					t_times_size);
 
@@ -152,6 +155,8 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 					t_times_size * sizeof(Vec3D));
 
 			int intertime;
+            ptr->bonesdata[i].t_times.values[t_times_size-1] = ptr->animations[ptr->header.nAnimations-1].timeEnd;
+
 			for (j = 0; j < ptr->header.nAnimations; j++) {
 				printf("\tAnimation : %d\n", j);
 				intertime = times_index;
@@ -168,6 +173,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 						intertime = times_index;
 						times_index++;
 					}
+					printf("\t\tFinal Timestamp : %d\n",ptr->bonesdata[i].t_times.values[t_times_size-1]);
 					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
 				} else {
 					ptr->bonesdata[i].t_ranges.values[j][1] = intertime + 1;

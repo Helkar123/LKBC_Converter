@@ -17,11 +17,10 @@ void print_anims(LKM2 lk_model) {
 	for (i = 0; i < lk_model.header.nAnimations; i++) {
 		printf("//////\n");
 		printf("Animation number %d\n", i);
-		printf(
-				"animID:%d\n subAnimID:%d\n	length:%d\n moveSpeed:%f\n",
+		printf("animID:%d\n subAnimID:%d\n	length:%d\n moveSpeed:%f\n",
 				lk_model.animations[i].animID, lk_model.animations[0].subAnimID,
-				lk_model.animations[i].length, lk_model.animations[0].moveSpeed
-				);
+				lk_model.animations[i].length,
+				lk_model.animations[0].moveSpeed);
 		printf("flags:%d\n	d1:%d\n	d2:%d\n playSpeed:%d\n rad:%f\n",
 				lk_model.animations[i].flags, lk_model.animations[0].d1,
 				lk_model.animations[i].d2, lk_model.animations[0].playSpeed,
@@ -36,21 +35,23 @@ void print_anims(LKM2 lk_model) {
  * ATM print Translation timestamps of every bone in a LK model
  * @param lk_model
  */
-void print_bonesdata(LKM2 lk_model){
+void print_bonesdata(LKM2 lk_model) {
 	int i;
 	for (i = 0; i < lk_model.header.nBones; i++) {
 		LKModelBoneDef lk_bone = lk_model.bones[i];
 		int j;
 		printf("LKBone : %d\n", i);
 		//Translation
-		if (lk_bone.trans.Times.n > 0) { //FIXME I think the memory allocation here is wrong, but I'm not sure.
-			for (j = 0; j < lk_bone.trans.Times.n; j++) {
+		if (lk_bone.trans.Keys.n > 0) {
+			for (j = 0; j < lk_bone.trans.Keys.n; j++) {
 				printf("\t LKAnimation : %d\n", j);
-				if (lk_model.animofs[i].t_times[j].n > 0) {
+				if (lk_model.animofs[i].t_keys[j].n > 0) {
 					int k;
-					for (k = 0; k < lk_model.animofs[i].t_times[j].n; k++) {
-						printf("\t\tLKTimestamp : %d\n",
-								lk_model.bonesdata[i].t_times[j].values[k]);
+					for (k = 0; k < lk_model.animofs[i].t_keys[j].n; k++) {
+						printf("\t\tLKValue : (%f,%f,%f)\n",
+								lk_model.bonesdata[i].t_keys[j].values[k][0],
+								lk_model.bonesdata[i].t_keys[j].values[k][1],
+								lk_model.bonesdata[i].t_keys[j].values[k][2]);
 					}
 				}
 			}

@@ -4,4 +4,6 @@
 
 void print_anims(LKM2 lk_model);
 
+void print_bonesdata(LKM2 lk_model);
+
 #endif
