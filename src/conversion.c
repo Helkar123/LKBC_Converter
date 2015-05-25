@@ -177,8 +177,6 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 						intertime = times_index;
 						times_index++;
 					}
-					printf("\t\tFinal Timestamp : %d\n",
-							ptr->bonesdata[i].t_times.values[t_times_size - 1]);
 					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
 				} else {
 					ptr->bonesdata[i].t_ranges.values[j][1] = intertime + 1;
@@ -198,16 +196,18 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 								ptr->bonesdata[i].t_keys.values[keys_index][2]);
 						keys_index++;
 					}
-					printf("\t\tFinal Vector : (%f,%f,%f)\n",
-							ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
-							ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
-							ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
 				}
 				printf(
 						"\t\tInterpolation range : (%d,%d)\n",	//FIXME DEBUG
 						ptr->bonesdata[i].t_ranges.values[j][0],
 						ptr->bonesdata[i].t_ranges.values[j][1]);
 			}
+			printf("\t\tFinal Timestamp : %d\n",
+					ptr->bonesdata[i].t_times.values[t_times_size - 1]);
+			printf("\t\tFinal Vector : (%f,%f,%f)\n",
+					ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
+					ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
+					ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
 		}
 	}
 
