@@ -6,9 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "reading.h"
 #include "printer.h"
+#include "reading.h"
 #include "conversion.h"
+#include "writing.h"
 
 /** Skin file extension */
 #define SKIN_SUFF ".skin"
@@ -83,7 +84,9 @@ int main(int argc, char *argv[]) {
 	char new_name[64] = "BC_";
 	strcat(new_name, argv[1]);
 	printf("Output name : %s\n", new_name);
-	//TODO Writing the BC file.
+	FILE *bc_m2_file = fopen(new_name, "w+b");
+
+	write_model(bc_m2_file, &bc_model);
 
 	//Closing files
 	printf("Closing streams...\n");
@@ -91,5 +94,6 @@ int main(int argc, char *argv[]) {
 		fclose(skin_files[i]);
 	}
 	fclose(lk_m2_file);
+	fclose(bc_m2_file);
 	return 0;
 }

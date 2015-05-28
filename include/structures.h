@@ -552,7 +552,6 @@ typedef struct BCM2 {
 	int16 *AnimLookup;
 	ModelBoneDef *bones;
 	BonesDataBlock *bonesdata;
-	int16 *bonelookup;
 	short *keybonelookup; //Skeletal Bone Lookup
 	ModelVertex *vertices;
 	View *views;
