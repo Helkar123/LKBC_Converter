@@ -35,12 +35,10 @@ int align(FILE *file) {
 
 /**
  * @param bc_m2_file The file to write data.
- * @param ptr->A pointer to a M2/BC structure.
+ * @param ptr A pointer to a M2/BC structure.
  * Write a M2/BC file from its corresponding structure
  */
 int write_model(FILE *bc_m2_file, BCM2 *ptr) {
-	printf("name : %s\n", ptr->filename);
-
 	//header
 	fwrite(&ptr->header, sizeof(ModelHeader), 1, bc_m2_file);
 	align(bc_m2_file);
@@ -57,6 +55,7 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 				bc_m2_file);
 		align(bc_m2_file);
 	}
+
 	//bones
 	if (ptr->header.nBones > 0) {
 		ptr->header.ofsBones = getPos(bc_m2_file);
@@ -130,11 +129,25 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 			}
 		}
 	}
-
-	//Rewrite bones as they now have updated offsets
 	fseek(bc_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fwrite(ptr->bones, sizeof(ModelBoneDef), ptr->header.nBones, bc_m2_file);
 	fseek(bc_m2_file, 0, SEEK_END);
+
+	//animlookup
+	if (ptr->header.nAnimationLookup > 0) {
+		ptr->header.ofsAnimationLookup = getPos(bc_m2_file);
+		fwrite(ptr->AnimLookup, sizeof(int16), ptr->header.nAnimationLookup,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+
+	//keybonelookup
+	if (ptr->header.nKeyBoneLookup > 0) {
+		ptr->header.ofsKeyBoneLookup = getPos(bc_m2_file);
+		fwrite(ptr->keybonelookup, sizeof(short), ptr->header.nKeyBoneLookup,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
 
 	//rewrite the header with updated offsets
 	fseek(bc_m2_file, 0, SEEK_SET);
