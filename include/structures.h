@@ -18,7 +18,7 @@ typedef float Vec3D[3];
 typedef float Vec2D[2];
 typedef uint16 Indices[3]; //Indices for Triangles
 typedef uint16 Vertex; //The vertex in the global vertex list
-typedef uint8 Property[4]; //Bones Indices into BoneLookupTable
+typedef uint32 Property; //Bones Indices into BoneLookupTable
 
 typedef struct ArrayRef {//Can point to absolutely anything
 	uint32 n;
@@ -340,7 +340,7 @@ typedef struct AnimOfsSimple { //Temporary, for TexAnims. Remnant of Stan84's co
 } AnimOfsSimple;
 
 typedef struct SkinHeader {
-	char ID[4];
+	uint32 ID;
 	uint32 nIndices;
 	uint32 ofsIndices;
 	uint32 nTriangles;
@@ -379,8 +379,7 @@ typedef struct LKSubmesh {
 	uint16 boneInfluences;
 	uint16 RootBone;
 	Vec3D CenterMass;
-	Vec3D CenterBoundingBox;
-	float Radius;
+	float Floats[4];//CenterBoundingBox(Vec3D)&Radius(Float)
 } LKSubmesh;
 
 typedef struct Submesh {
@@ -570,7 +569,7 @@ typedef struct BCM2 {
 	BoundingNormal *BoundingNormals;
 	Attachment *Attachments;
 	uint16 *AttachLookup;
-/*TODO AttachLookup, Attachments_2, Lights, Cameras,
+/*TODO Attachments_2, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
 } BCM2;

@@ -31,6 +31,14 @@ void print_anims(LKM2 lk_model) {
 	}
 }
 
+void print_skin(Skin skin) {
+	printf("ID : %d\n", skin.header.ID);
+	printf("Bone influences : %d\n", skin.Submeshes[0].boneInfluences);
+	printf("nProperties : %d\n", skin.header.nProperties);
+	printf("ofsProperties : %d\n", skin.header.ofsProperties);
+	printf("Property : %d\n", skin.Properties[0]);
+}
+
 /**
  * ATM print Translation timestamps of every bone in a LK model
  * @param lk_model

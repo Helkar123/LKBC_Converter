@@ -149,6 +149,61 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
+	//vertices
+	if (ptr->header.nVertices > 0) {
+		ptr->header.ofsVertices = getPos(bc_m2_file);
+		fwrite(ptr->vertices, sizeof(ModelVertex), ptr->header.nVertices,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+	//views
+	if (ptr->header.nViews > 0) {
+		ptr->header.ofsViews = getPos(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nViews; i++) {
+			int header_offset = getPos(bc_m2_file);
+			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
+			align(bc_m2_file);
+
+			if (ptr->views[i].header.nIndices > 0) {
+				ptr->views[i].header.ofsIndices = getPos(bc_m2_file);
+				fwrite(ptr->views[i].Indices, sizeof(Vertex),
+						ptr->views[i].header.nIndices, bc_m2_file);
+				align(bc_m2_file);
+			}
+			if (ptr->views[i].header.nTriangles > 0) {
+				ptr->views[i].header.ofsTriangles = getPos(bc_m2_file);
+				fwrite(ptr->views[i].Triangles, sizeof(Indices),
+						ptr->views[i].header.nTriangles/3, bc_m2_file);
+				align(bc_m2_file);
+			}
+			/* FIXME Blank Data
+			 */
+			if (ptr->views[i].header.nProperties > 0) {
+				ptr->views[i].header.ofsProperties = getPos(bc_m2_file);
+				fwrite(ptr->views[i].Properties, sizeof(Property),
+						ptr->views[i].header.nProperties, bc_m2_file);
+				align(bc_m2_file);
+			}
+			if (ptr->views[i].header.nSubmeshes > 0) {
+				ptr->views[i].header.ofsSubmeshes = getPos(bc_m2_file);
+				fwrite(ptr->views[i].Submeshes, sizeof(Submesh),
+						ptr->views[i].header.nSubmeshes, bc_m2_file);
+				align(bc_m2_file);
+			}
+			if (ptr->views[i].header.nTextureUnits > 0) {
+				ptr->views[i].header.ofsTextureUnits = getPos(bc_m2_file);
+				fwrite(ptr->views[i].TextureUnits, sizeof(TexUnit),
+						ptr->views[i].header.nTextureUnits, bc_m2_file);
+				align(bc_m2_file);
+			}
+
+			fseek(bc_m2_file, header_offset, SEEK_SET);
+			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
+			fseek(bc_m2_file, 0, SEEK_END);
+		}
+	}
+
 	//rewrite the header with updated offsets
 	fseek(bc_m2_file, 0, SEEK_SET);
 	fwrite(&ptr->header, sizeof(ModelHeader), 1, bc_m2_file);

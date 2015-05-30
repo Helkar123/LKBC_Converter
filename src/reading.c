@@ -21,37 +21,48 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 		fread(&ptr[i]->header, sizeof(SkinHeader), 1, skin_files[i]);
 
 		//Indices
-		ptr[i]->Indices = malloc(ptr[i]->header.nIndices * sizeof(Vertex));
-		fseek(skin_files[i], ptr[i]->header.ofsIndices, SEEK_SET);
-		fread(ptr[i]->Indices, sizeof(Vertex), ptr[i]->header.nIndices,
-				skin_files[i]);
+		if (ptr[i]->header.nIndices > 0) {
+			ptr[i]->Indices = malloc(ptr[i]->header.nIndices * sizeof(Vertex));
+			fseek(skin_files[i], ptr[i]->header.ofsIndices, SEEK_SET);
+			fread(ptr[i]->Indices, sizeof(Vertex), ptr[i]->header.nIndices,
+					skin_files[i]);
+		}
 
 		//Triangles
-		ptr[i]->Triangles = malloc(ptr[i]->header.nTriangles * sizeof(Indices));
-		fseek(skin_files[i], ptr[i]->header.ofsTriangles, SEEK_SET);
-		fread(ptr[i]->Triangles, sizeof(Indices), ptr[i]->header.nTriangles,
-				skin_files[i]);
+		if (ptr[i]->header.nTriangles > 0) {
+			ptr[i]->Triangles = malloc(
+					(ptr[i]->header.nTriangles / 3) * sizeof(Indices)); //FIXME Confused about Wiki saying the number is incorrect
+			fseek(skin_files[i], ptr[i]->header.ofsTriangles, SEEK_SET);
+			fread(ptr[i]->Triangles, sizeof(Indices),
+					ptr[i]->header.nTriangles / 3, skin_files[i]);
+		}
 
 		//Properties
-		ptr[i]->Properties = malloc(
-				ptr[i]->header.nProperties * sizeof(Property));
-		fseek(skin_files[i], ptr[i]->header.ofsProperties, SEEK_SET);
-		fread(ptr[i]->Properties, sizeof(Property), ptr[i]->header.nProperties,
-				skin_files[i]);
+		if (ptr[i]->header.nProperties > 0) {
+			ptr[i]->Properties = malloc(
+					ptr[i]->header.nProperties * sizeof(Property));
+			fseek(skin_files[i], ptr[i]->header.ofsProperties, SEEK_SET);
+			fread(ptr[i]->Properties, sizeof(Property),
+					ptr[i]->header.nProperties, skin_files[i]);
+		}
 
 		//Submeshes
-		ptr[i]->Submeshes = malloc(
-				ptr[i]->header.nSubmeshes * sizeof(LKSubmesh));
-		fseek(skin_files[i], ptr[i]->header.ofsSubmeshes, SEEK_SET);
-		fread(ptr[i]->Submeshes, sizeof(LKSubmesh), ptr[i]->header.nSubmeshes,
-				skin_files[i]);
+		if (ptr[i]->header.nSubmeshes > 0) {
+			ptr[i]->Submeshes = malloc(
+					ptr[i]->header.nSubmeshes * sizeof(LKSubmesh));
+			fseek(skin_files[i], ptr[i]->header.ofsSubmeshes, SEEK_SET);
+			fread(ptr[i]->Submeshes, sizeof(LKSubmesh),
+					ptr[i]->header.nSubmeshes, skin_files[i]);
+		}
 
 		//TexUnits
-		ptr[i]->TextureUnits = malloc(
-				ptr[i]->header.nTextureUnits * sizeof(TexUnit));
-		fseek(skin_files[i], ptr[i]->header.ofsTextureUnits, SEEK_SET);
-		fread(ptr[i]->TextureUnits, sizeof(TexUnit),
-				ptr[i]->header.nTextureUnits, skin_files[i]);
+		if (ptr[i]->header.nTextureUnits > 0) {
+			ptr[i]->TextureUnits = malloc(
+					ptr[i]->header.nTextureUnits * sizeof(TexUnit));
+			fseek(skin_files[i], ptr[i]->header.ofsTextureUnits, SEEK_SET);
+			fread(ptr[i]->TextureUnits, sizeof(TexUnit),
+					ptr[i]->header.nTextureUnits, skin_files[i]);
+		}
 	}
 	return 0;
 }
