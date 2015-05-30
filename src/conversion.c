@@ -132,32 +132,30 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 
 		//translation
 		if (lk_m2.bones[i].trans.Times.n > 0) {
-			int j;
-			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
-			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
 			ptr->bonesdata[i].t_ranges.values = malloc(
 					(ptr->header.nAnimations + 1) * sizeof(Range));
-			ptr->bonesdata[i].t_ranges.values[ptr->header.nAnimations][0] = 0;//No idea why the last (int,int) is always 0
+			ptr->bonesdata[i].t_ranges.values[ptr->header.nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 			ptr->bonesdata[i].t_ranges.values[ptr->header.nAnimations][1] = 0;
 
-			int t_times_size = 0;//Number of Timestamps (equal to the number of keys) for this bone
-			for (j = 0; j < lk_m2.header.nAnimations; j++) {
+			size_t t_times_size = 0; //Number of Timestamps (equal to the number of keys) for this bone
+			int j;
+			for (j = 0; j < lk_m2.bones[i].trans.Times.n; j++) {
 				t_times_size += lk_m2.animofs[i].t_times[j].n;
 			}
 
 			ptr->bones[i].trans.Times.n = t_times_size;
-			printf("Number of Timestamps&Keys for this bone : %d\n",
-					t_times_size);
 
 			ptr->bonesdata[i].t_times.values = malloc(
-					t_times_size * sizeof(uint32));
+					(t_times_size + 1) * sizeof(uint32));
 
 			ptr->bonesdata[i].t_keys.values = malloc(
-					t_times_size * sizeof(Vec3D));
+					(t_times_size + 1) * sizeof(Vec3D));
 
 			int intertime;
 
-			for (j = 0; j < ptr->header.nAnimations; j++) {
+			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
+			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
+			for (j = 0; j < lk_m2.bones[i].trans.Times.n; j++) {
 				printf("\tAnimation : %d\n", j);	//FIXME DEBUG
 				intertime = times_index;
 				if (lk_m2.animofs[i].t_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
@@ -199,14 +197,15 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 						ptr->bonesdata[i].t_ranges.values[j][0],
 						ptr->bonesdata[i].t_ranges.values[j][1]);
 			}
-			//Extra Timestamp&Vector if the last Time was not the TimeEnd to "loop" it
 
+			//Extra Timestamp&Vector if the last Time was not the TimeEnd to "loop" it
 			int final_time =
 					ptr->animations[ptr->header.nAnimations - 1].timeEnd;
 			if (ptr->bonesdata[i].t_times.values[t_times_size - 1]
 					< final_time) {
-
 				t_times_size++;	//I dont know why but there is one more Timestamp.
+				ptr->bones[i].trans.Times.n++;
+				ptr->bones[i].trans.Keys.n++;
 
 				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
 
@@ -221,44 +220,34 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		//END translation
 
 		//rotation
+		printf("rot.Times.n = %d\n", lk_m2.bones[i].rot.Times.n);//FIXME Usually 7 or 0 but in the test model at bone 34 it's 1.. I don't know why
 		if (lk_m2.bones[i].rot.Times.n > 0) {
 			int j;
 			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
 			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
 			ptr->bonesdata[i].r_ranges.values = malloc(
-					(ptr->header.nAnimations + 1) * sizeof(Range));
+					(ptr->header.nAnimations + 1) * sizeof(Range));	//FIXME DEBUG
 			ptr->bonesdata[i].r_ranges.values[ptr->header.nAnimations][0] = 0;//No idea why the last (int,int) is always 0
 			ptr->bonesdata[i].r_ranges.values[ptr->header.nAnimations][1] = 0;
 
 			size_t r_times_size = 0;//Number of Timestamps (equal to the number of keys) for this bone
-			for (j = 0; j < lk_m2.header.nAnimations; j++) {
+			for (j = 0; j < lk_m2.bones[i].rot.Times.n; j++) {
 				r_times_size += lk_m2.animofs[i].r_times[j].n;
 			}
 
 			ptr->bones[i].rot.Times.n = r_times_size;
 
 			ptr->bonesdata[i].r_times.values = malloc(
-					r_times_size * sizeof(uint32));
+					(r_times_size + 1) * sizeof(uint32));
 
-			/*FIXME I don't know why but sometimes there are very large value and we can't store them
-			 * The size itself is probably flawed as usual size are in 1E2-1E3 range and this one is like 1E9
-			 */
-			if (r_times_size >= 100000000) {
-				fprintf(stderr, "ERROR : Rotation number too large\n");
-				fprintf(stderr, "\tSize of array : %d\n", r_times_size);
-				size_t memory = r_times_size * sizeof(Quat);
-				fprintf(stderr, "\tMemory that would have been allocated : %lu\n", (unsigned long)memory);
-			} else {
-				ptr->bonesdata[i].r_keys.values = malloc(
-						r_times_size * sizeof(Quat));
-			}
+			ptr->bonesdata[i].r_keys.values = malloc(
+					r_times_size * sizeof(Quat));
 
 			int intertime;
 
-			for (j = 0; j < ptr->header.nAnimations; j++) {
+			for (j = 0; j < lk_m2.bones[i].rot.Times.n; j++) {//FIXME changed nAnimation to rot.times.n
 				intertime = times_index;
-				if (lk_m2.animofs[i].r_times[j].n > 0
-						& (r_times_size < 100000000)) {	//TIMESTAMPS & INTERPOLATION RANGE
+				if (lk_m2.animofs[i].r_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
 					ptr->bonesdata[i].r_ranges.values[j][0] = intertime;//Range : keep the records FIXME
 					int k;
 					for (k = 0; k < lk_m2.animofs[i].r_times[j].n; k++) {//Take each value for this anim and put it in the BC data
@@ -275,8 +264,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 					ptr->bonesdata[i].r_ranges.values[j][1] = intertime;
 				}
 
-				if (lk_m2.animofs[i].r_keys[j].n > 0
-						& (r_times_size < 100000000)) {	//KEYS
+				if (lk_m2.animofs[i].r_keys[j].n > 0) {	//KEYS
 					int k;
 					for (k = 0; k < lk_m2.animofs[i].r_keys[j].n; k++) {//Take each value for this anim and put it in the BC data
 						int m;
@@ -296,6 +284,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 					< final_time) {
 
 				r_times_size++;
+				ptr->bones[i].rot.Times.n++;
 
 				ptr->bonesdata[i].r_times.values[r_times_size - 1] = final_time;
 			}
@@ -312,10 +301,12 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 			ptr->bonesdata[i].s_ranges.values[ptr->header.nAnimations][0] = 0;//No idea why the last (int,int) is always 0
 			ptr->bonesdata[i].s_ranges.values[ptr->header.nAnimations][1] = 0;
 
-			int s_times_size = 0;//Number of Timestamps (equal to the number of keys) for this bone
-			for (j = 0; j < lk_m2.header.nAnimations; j++) {
+			size_t s_times_size = 0;//Number of Timestamps (equal to the number of keys) for this bone
+			for (j = 0; j < lk_m2.bones[i].scal.Times.n; j++) {
 				s_times_size += lk_m2.animofs[i].s_times[j].n;
 			}
+
+			ptr->bones[i].scal.Times.n = s_times_size;
 
 			ptr->bonesdata[i].s_times.values = malloc(
 					(s_times_size + 1) * sizeof(uint32));
@@ -325,7 +316,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 
 			int intertime;
 
-			for (j = 0; j < ptr->header.nAnimations; j++) {
+			for (j = 0; j < lk_m2.bones[i].scal.Times.n; j++) {
 				intertime = times_index;
 				if (lk_m2.animofs[i].s_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
 					ptr->bonesdata[i].s_ranges.values[j][0] = intertime;//Range : keep the records FIXME
@@ -364,9 +355,9 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 					< final_time) {
 
 				s_times_size++;	// I dont know why but there is one more Timestamp.
+				ptr->bones[i].scal.Times.n++;
 				ptr->bonesdata[i].s_times.values[s_times_size - 1] = final_time;
 			}
-			ptr->bones[i].scal.Times.n = s_times_size;
 		}
 		//END scaling
 	}
@@ -416,7 +407,6 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
 		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
 	}
-	//TODO Bonelookup
 
 	ptr->keybonelookup = malloc(ptr->header.nKeyBoneLookup * sizeof(short));
 	for (i = 0; i < ptr->header.nKeyBoneLookup; i++) {

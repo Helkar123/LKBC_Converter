@@ -96,7 +96,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 			}
 			if (lk_bone.trans.Keys.n > 0) {
 				ptr->animofs[i].t_keys = malloc(
-						lk_bone.trans.Times.n * sizeof(ArrayRef));
+						lk_bone.trans.Keys.n * sizeof(ArrayRef));
 				fseek(lk_m2_file, lk_bone.trans.Keys.ofs, SEEK_SET);
 				fread(ptr->animofs[i].t_keys, sizeof(ArrayRef),
 						lk_bone.trans.Keys.n, lk_m2_file);
@@ -111,7 +111,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 			}
 			if (lk_bone.rot.Keys.n > 0) {
 				ptr->animofs[i].r_keys = malloc(
-						lk_bone.rot.Times.n * sizeof(ArrayRef));
+						lk_bone.rot.Keys.n * sizeof(ArrayRef));
 				fseek(lk_m2_file, lk_bone.rot.Keys.ofs, SEEK_SET);
 				fread(ptr->animofs[i].r_keys, sizeof(ArrayRef),
 						lk_bone.rot.Keys.n, lk_m2_file);
@@ -126,7 +126,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 			}
 			if (lk_bone.scal.Keys.n > 0) {
 				ptr->animofs[i].s_keys = malloc(
-						lk_bone.scal.Times.n * sizeof(ArrayRef));
+						lk_bone.scal.Keys.n * sizeof(ArrayRef));
 				fseek(lk_m2_file, lk_bone.scal.Keys.ofs, SEEK_SET);
 				fread(ptr->animofs[i].s_keys, sizeof(ArrayRef),
 						lk_bone.scal.Keys.n, lk_m2_file);

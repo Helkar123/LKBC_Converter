@@ -207,7 +207,6 @@ typedef struct LKModelAnimation {
 	int16 subAnimID;
 	uint32 length;
 	float moveSpeed;
-	//uint32 loopType;
 	uint32 flags;
 	int16 probability;
 	int16 unused;
