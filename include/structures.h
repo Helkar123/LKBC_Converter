@@ -508,6 +508,7 @@ typedef struct LKM2 {
 	LKColorDef *colors;
 	ColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
+	char **texture_names;
 	Transparency *transparencies;
 	LKTextureAnimation *tex_anims;
 	AnimOfsSimple *temp_anim_ofs;
@@ -556,6 +557,7 @@ typedef struct BCM2 {
 	ColorDef *colors;
 	ColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
+	char **texture_names;
 	Transparency *transparencies;
 	TextureAnimation *tex_anims;
 	int *renderflags;

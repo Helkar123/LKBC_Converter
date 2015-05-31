@@ -430,10 +430,28 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	};
 
 	//Textures Definition
-	ptr->textures_def = malloc(ptr->header.nTextures * sizeof(ModelTextureDef));
-	fseek(lk_m2_file, ptr->header.ofsTextures, SEEK_SET);
-	fread(ptr->textures_def, sizeof(ModelTextureDef), ptr->header.nTextures,
-			lk_m2_file);
+	if (ptr->header.nTextures > 0) {
+		ptr->textures_def = malloc(
+				ptr->header.nTextures * sizeof(ModelTextureDef));
+		fseek(lk_m2_file, ptr->header.ofsTextures, SEEK_SET);
+		fread(ptr->textures_def, sizeof(ModelTextureDef), ptr->header.nTextures,
+				lk_m2_file);
+		//textures names
+		ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
+		int i;
+		for (i = 0; i < ptr->header.nTextures; i++) {
+			if (ptr->textures_def[i].type == 0) {//Filename is referenced in the m2 only when the type is 0
+				if (ptr->textures_def[i].nameLen >= 256){
+					fprintf(stderr, "nameLen too large : %d\nPlease report this issue.", ptr->textures_def[i].nameLen);
+					return -1;
+				}
+				ptr->texture_names[i] = malloc(ptr->textures_def[i].nameLen);
+				fseek(lk_m2_file, ptr->textures_def[i].nameOfs, SEEK_SET);
+				fread(ptr->texture_names[i], sizeof(char),
+						ptr->textures_def[i].nameLen, lk_m2_file);
+			}
+		}
+	}
 
 	//Transparency
 	if (ptr->header.nTransparency > 0) {

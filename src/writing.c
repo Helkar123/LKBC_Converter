@@ -174,11 +174,9 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 			if (ptr->views[i].header.nTriangles > 0) {
 				ptr->views[i].header.ofsTriangles = getPos(bc_m2_file);
 				fwrite(ptr->views[i].Triangles, sizeof(Indices),
-						ptr->views[i].header.nTriangles/3, bc_m2_file);
+						ptr->views[i].header.nTriangles / 3, bc_m2_file);
 				align(bc_m2_file);
 			}
-			/* FIXME Blank Data
-			 */
 			if (ptr->views[i].header.nProperties > 0) {
 				ptr->views[i].header.ofsProperties = getPos(bc_m2_file);
 				fwrite(ptr->views[i].Properties, sizeof(Property),
@@ -202,6 +200,29 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
 			fseek(bc_m2_file, 0, SEEK_END);
 		}
+	}
+
+	//TODO Colors
+
+	//textures
+	if (ptr->header.nTextures > 0) {
+		ptr->header.ofsTextures = getPos(bc_m2_file);
+		fwrite(ptr->textures_def, sizeof(ModelTextureDef),
+				ptr->header.ofsTextures, bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for(i=0; i <ptr->header.nTextures; i++){
+			if(ptr->textures_def[i].type == 0){
+				ptr->textures_def[i].nameOfs = getPos(bc_m2_file);
+				fwrite(ptr->texture_names[i], sizeof(char), ptr->textures_def[i].nameLen, bc_m2_file);
+				align(bc_m2_file);
+			}
+		}
+
+		fseek(bc_m2_file, ptr->header.ofsTextures, SEEK_SET);
+		fwrite(ptr->textures_def, sizeof(ModelTextureDef),
+				ptr->header.ofsTextures, bc_m2_file);
+		fseek(bc_m2_file, 0, SEEK_END);
 	}
 
 	//rewrite the header with updated offsets

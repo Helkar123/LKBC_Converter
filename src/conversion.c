@@ -209,7 +209,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 
 				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
 
-				printf("\t\tFinal Timestamp : %d\n",
+				printf("\t\tFinal Timestamp : %d\n",//FIXME DEBUG
 						ptr->bonesdata[i].t_times.values[t_times_size - 1]);
 				printf("\t\tFinal Vector : (%f,%f,%f)\n",
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
@@ -510,5 +510,18 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	}
 
 	views_converter(ptr, skins);
+
+	//TODO SubmeshAnimations/Colors
+
+	ptr->textures_def = malloc(ptr->header.nTextures * sizeof(ModelTextureDef));
+	for (i = 0; i < ptr->header.nTextures; i++) {
+		ptr->textures_def[i] = lk_m2.textures_def[i];
+		ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
+		if(ptr->textures_def[i].type == 0){
+			ptr->texture_names[i] = malloc(ptr->textures_def[i].nameLen);
+			ptr->texture_names[i] = lk_m2.texture_names[i];
+		}
+	}
+
 	return 0;
 }
