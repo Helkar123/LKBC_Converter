@@ -218,7 +218,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 					ptr->animations[ptr->header.nAnimations - 1].timeEnd;
 			if (ptr->bonesdata[i].t_times.values[t_times_size - 1]
 					< final_time) {
-				t_times_size++;	//I dont know why but there is one more Timestamp.
+				t_times_size++;
 				ptr->bones[i].trans.Times.n++;
 				ptr->bones[i].trans.Keys.n++;
 
@@ -231,6 +231,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
 			}
+			printf("\tNumber of (Timestamp,Value) : %d\n",ptr->bones[i].trans.Times.n);
 		}
 		//END translation
 
