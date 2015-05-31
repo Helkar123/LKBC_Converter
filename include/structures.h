@@ -40,6 +40,9 @@ typedef struct Vec3DArray {
 typedef struct QuatArray {
 	Quat *values;
 } QuatArray;
+typedef struct ShortArray {
+	short *values;
+} ShortArray;
 
 typedef struct LKModelHeader {
 	uint32 id;								//0x000
@@ -422,11 +425,6 @@ typedef struct Transparency {
 	AnimationBlock values;
 } Transparency;
 
-typedef struct TempOffset {
-	int temp_n;
-	int temp_ofs;
-} TempOffset;
-
 typedef struct BoundingVertice {
 	Vec3D vertice;
 } BoundingVertice;
@@ -445,12 +443,29 @@ typedef struct ColorDef {
 	AnimationBlock Opacity;
 } ColorDef;
 
-typedef struct ColorDataBlock {
-	int d1[4];
-	int d2[4];
-	int d3[4];
-	int d4[4];
+typedef struct ColorAnimOfs {
+	ArrayRef *rgb_times;
+	ArrayRef *rgb_keys;
+	ArrayRef *op_times;
+	ArrayRef *op_keys;
+} ColorAnimOfs;
 
+typedef struct LKColorDataBlock {
+	Uint32Array *rgb_times;
+	Vec3DArray *rgb_keys;
+
+	Uint32Array *op_times;
+	ShortArray *op_keys;
+} LKColorDataBlock;
+
+typedef struct ColorDataBlock {
+	RangeArray rgb_ranges;
+	Uint32Array rgb_times;
+	Vec3DArray rgb_keys;
+
+	RangeArray op_ranges;
+	Uint32Array op_times;
+	ShortArray op_keys;
 } ColorDataBlock;
 
 typedef struct LKTextureAnimation {
@@ -488,7 +503,7 @@ typedef struct Attachment {
 	AnimationBlock Data;
 } Attachment;
 
-///FILES///
+//FILES
 
 /**
  * Structure of a M2/WotLK model
@@ -506,7 +521,8 @@ typedef struct LKM2 {
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
-	ColorDataBlock *colorsdata;
+	ColorAnimOfs *coloranimofs;
+	LKColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
 	char **texture_names;
 	Transparency *transparencies;

@@ -122,11 +122,21 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		ptr->animations[i].NextAnimation = lk_m2.animations[i].NextAnimation;
 		ptr->animations[i].Index = lk_m2.animations[i].Index;
 	}
+	return 0;
+}
 
+/**
+ * Converts bones with their animations data
+ * @param ptr Pointer to BC M2 structure
+ * @param lk_m2 LK M2 structure (no need for pointer as we should not modify it)
+ * @return 0 if successful
+ */
+int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 	ptr->bones = malloc(ptr->header.nBones * sizeof(ModelBoneDef));
 
 	//BonesDataBlock
 	ptr->bonesdata = malloc(ptr->header.nBones * sizeof(BonesDataBlock));
+	int i;
 	for (i = 0; i < ptr->header.nBones; i++) {
 		printf("Bone : %d\n", i);
 
@@ -171,6 +181,11 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 						intertime++;
 					}
 					ptr->bonesdata[i].t_ranges.values[j][1] = intertime - 1;
+
+					if(intertime -1 == ptr->bonesdata[i].t_ranges.values[j][0]){//Case Bone2Anim1 : only one timestamp is written
+					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
+					}
+
 					intertime++;
 				} else {
 					ptr->bonesdata[i].t_ranges.values[j][0] = intertime - 1;
@@ -220,8 +235,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		//END translation
 
 		//rotation
-		printf("rot.Times.n = %d\n", lk_m2.bones[i].rot.Times.n);//FIXME Usually 7 or 0 but in the test model at bone 34 it's 1.. I don't know why
-		if (lk_m2.bones[i].rot.Times.n > 0) {
+		if (lk_m2.bones[i].rot.Times.n > 0) {//Usually 7 or 0 but in the test model at bone 34 it's 1.. I don't know why
 			int j;
 			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
 			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
@@ -494,6 +508,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	animations_converter(ptr, lk_m2);
 
+	bones_converter(ptr, lk_m2);
 	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
 	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
 		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];

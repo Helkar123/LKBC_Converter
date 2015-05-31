@@ -249,9 +249,21 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 }
 
 /**
+ * Read colors (also known as submesh animations)
+ * @param lk_m2_file
+ * @param ptr
+ * @return
+ */
+int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
+	//TODO implement it
+	return 0;
+}
+
+/**
  * Read texture animations. WIP
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
+ * @return 0 if successful
  */
 int read_texanims(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nTexAnims > 0) {
@@ -414,20 +426,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 //FIXME malloc()s... inside or before the "if" ?
 	//Colors
-	if (ptr->header.nColors > 0) {
-		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
-		ptr->colorsdata = malloc(ptr->header.nColors * sizeof(ColorDataBlock));
-		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
-		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors, lk_m2_file);
-
-		//Color Data Block
-		int temp_ofs[2];
-		fseek(lk_m2_file, ptr->colors[0].RGB.Times.ofs, SEEK_SET);
-		fread(&temp_ofs, sizeof(int), 2, lk_m2_file);
-		fseek(lk_m2_file, temp_ofs[1], SEEK_SET);
-		fread(ptr->colorsdata, sizeof(ColorDataBlock), ptr->header.nColors,
-				lk_m2_file);
-	};
+	read_colors(lk_m2_file, ptr);
 
 	//Textures Definition
 	if (ptr->header.nTextures > 0) {

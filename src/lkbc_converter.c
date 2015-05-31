@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
 	LKM2 lk_model;
 	read_model(lk_m2_file, &lk_model);
 
+	printf("GlobalSequence : %d\n", lk_model.globalsequences[0]);
 	FILE **skin_files;
 	skin_files = malloc(lk_model.header.nViews * sizeof(FILE *));
 	int i;
