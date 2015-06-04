@@ -16,7 +16,7 @@ typedef int Range[2];
 typedef short Quat[4];
 typedef float Vec3D[3];
 typedef float Vec2D[2];
-typedef uint16 Indices[3]; //Indices for Triangles
+typedef uint16 Triangle[3]; //Indices for Triangles
 typedef uint16 Vertex; //The vertex in the global vertex list
 typedef uint32 Property; //Bones Indices into BoneLookupTable
 
@@ -321,7 +321,7 @@ typedef struct ModelVertex {
 	uint8 bones[4];
 	Vec3D normal;
 	Vec2D texcoords;
-	int unk1, unk2;
+	Vec2D texcoords2;
 } ModelVertex;
 
 typedef struct AnimOfs {
@@ -425,14 +425,6 @@ typedef struct Transparency {
 	AnimationBlock values;
 } Transparency;
 
-typedef struct BoundingVertice {
-	Vec3D vertice;
-} BoundingVertice;
-
-typedef struct BoundingNormal {
-	Vec3D normal;
-} BoundingNormal;
-
 typedef struct LKColorDef {
 	LKAnimationBlock RGB;
 	LKAnimationBlock Opacity;
@@ -483,7 +475,7 @@ typedef struct TextureAnimation {
 typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.x
 	ViewsHeader header;
 	Vertex *Indices;
-	Indices* Triangles;
+	Triangle* Triangles;
 	Property *Properties;
 	Submesh *Submeshes;
 	TexUnit *TextureUnits;
@@ -534,9 +526,9 @@ typedef struct LKM2 {
 	short *TexUnit;
 	short *TransparencyLookup;
 	short *TexAnimLookup;
-	short *BoundingTriangles;
-	BoundingVertice *BoundingVertices;
-	BoundingNormal *BoundingNormals;
+	Triangle *BoundingTriangles;
+	Vec3D *BoundingVertices;
+	Vec3D *BoundingNormals;
 	LKAttachment *Attachments; //TODO Read it
 	uint16 *AttachLookup; //TODO Read it
 /*TODO Events, Lights, Cameras,
@@ -550,7 +542,7 @@ typedef struct LKM2 {
 typedef struct Skin {
 	SkinHeader header;
 	Vertex *Indices;
-	Indices* Triangles;
+	Triangle* Triangles;
 	Property *Properties;
 	LKSubmesh *Submeshes;
 	TexUnit *TextureUnits;
@@ -582,9 +574,9 @@ typedef struct BCM2 {
 	short *TexUnit;
 	short *TransparencyLookup;
 	short *TexAnimLookup;
-	short *BoundingTriangles;
-	BoundingVertice *BoundingVertices;
-	BoundingNormal *BoundingNormals;
+	Triangle *BoundingTriangles;
+	Vec3D *BoundingVertices;
+	Vec3D *BoundingNormals;
 	Attachment *Attachments;
 	uint16 *AttachLookup;
 /*TODO Attachments_2, Lights, Cameras,

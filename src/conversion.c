@@ -161,15 +161,55 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 			ptr->bonesdata[i].t_keys.values = malloc(
 					(t_times_size + 1) * sizeof(Vec3D));
 
-			int intertime;
-
+			int range_time = 0;
 			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
 			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
 			for (j = 0; j < lk_m2.bones[i].trans.Times.n; j++) {
 				printf("\tAnimation : %d\n", j);	//FIXME DEBUG
-				intertime = times_index;
-				if (lk_m2.animofs[i].t_times[j].n > 0) {//TIMESTAMPS & INTERPOLATION RANGE
-					ptr->bonesdata[i].t_ranges.values[j][0] = intertime;//Range : keep the records
+
+				//Interpolation range
+				if (lk_m2.animofs[i].t_times[j].n == 0) {
+					ptr->bonesdata[i].t_ranges.values[j][0] = range_time;
+					ptr->bonesdata[i].t_ranges.values[j][1] = range_time + 1;
+				} else if (lk_m2.animofs[i].t_times[j].n == 1) {//Case Bone2Anim1 : only one timestamp is written FIXME Case Bone7Anim3 : for 2 anims
+					if (j == 0) {
+						range_time = 0;
+					} else if (lk_m2.animofs[i].t_times[j + 1].n == 1) {
+						range_time = ptr->bonesdata[i].t_ranges.values[j - 1][1]
+								+ 1;
+					}
+					ptr->bonesdata[i].t_ranges.values[j][0] = range_time;
+					ptr->bonesdata[i].t_ranges.values[j][1] = range_time
+							+ lk_m2.animofs[i].t_times[j].n;
+					if (lk_m2.animofs[i].t_times[j + 1].n == 0) {
+						range_time += lk_m2.animofs[i].t_times[j].n + 1;
+					} else if (lk_m2.animofs[i].t_times[j + 1].n != 1) {
+						range_time += lk_m2.animofs[i].t_times[j].n;
+					}
+				} else {				//Usual case
+					if (j == 0) {
+						range_time = 0;
+					} else if (lk_m2.animofs[i].t_times[j - 1].n == 1) {
+						range_time =
+								ptr->bonesdata[i].t_ranges.values[j - 1][1];
+					} else {
+						range_time = ptr->bonesdata[i].t_ranges.values[j - 1][1]
+								+ 1;
+					}
+					ptr->bonesdata[i].t_ranges.values[j][0] = range_time;
+					ptr->bonesdata[i].t_ranges.values[j][1] = range_time
+							+ lk_m2.animofs[i].t_times[j].n - 1;
+					if (lk_m2.animofs[i].t_times[j + 1].n == 0) {
+						range_time = ptr->bonesdata[i].t_ranges.values[j][1];
+					}
+					if (lk_m2.animofs[i].t_times[j + 1].n == 1) {
+						range_time = ptr->bonesdata[i].t_ranges.values[j][1]
+								- 1;
+					}
+				}
+
+				//TIMESTAMPS
+				if (lk_m2.animofs[i].t_times[j].n > 0) {
 					int k;
 					for (k = 0; k < lk_m2.animofs[i].t_times[j].n; k++) {//Take each value for this anim and put it in the BC data
 						ptr->bonesdata[i].t_times.values[times_index] =
@@ -178,21 +218,11 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						printf("\t\tAdded Timestamp : %d\n",
 								ptr->bonesdata[i].t_times.values[times_index]);
 						times_index++;
-						intertime++;
 					}
-					ptr->bonesdata[i].t_ranges.values[j][1] = intertime - 1;
-
-					if(intertime -1 == ptr->bonesdata[i].t_ranges.values[j][0]){//Case Bone2Anim1 : only one timestamp is written
-					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
-					}
-
-					intertime++;
-				} else {
-					ptr->bonesdata[i].t_ranges.values[j][0] = intertime - 1;
-					ptr->bonesdata[i].t_ranges.values[j][1] = intertime;
 				}
 
-				if (lk_m2.animofs[i].t_keys[j].n > 0) {	//KEYS
+				//KEYS
+				if (lk_m2.animofs[i].t_keys[j].n > 0) {
 					int k;
 					for (k = 0; k < lk_m2.animofs[i].t_keys[j].n; k++) {//Take each value for this anim and put it in the BC data
 						int m;
@@ -224,14 +254,23 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 
 				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
 
-				printf("\t\tFinal Timestamp : %d\n",//FIXME DEBUG
+				printf("\t\tFinal Timestamp : %d\n",	//FIXME DEBUG
 						ptr->bonesdata[i].t_times.values[t_times_size - 1]);
 				printf("\t\tFinal Vector : (%f,%f,%f)\n",
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
 						ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
 			}
-			printf("\tNumber of (Timestamp,Value) : %d\n",ptr->bones[i].trans.Times.n);
+
+			//Interp Range bug fix
+			ptr->bonesdata[i].t_ranges.values[6][1] =
+					ptr->bones[i].trans.Times.n - 1;
+			printf(
+					"\t\tNew last Interpolation range : (%d,%d)\n",	//FIXME DEBUG
+					ptr->bonesdata[i].t_ranges.values[6][0],
+					ptr->bonesdata[i].t_ranges.values[6][1]);
+			printf("\tNumber of (Timestamp,Value) : %d\n",
+					ptr->bones[i].trans.Times.n);
 		}
 		//END translation
 
@@ -409,7 +448,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
  * @return 0 if successful
  */
 int views_converter(BCM2 *ptr, Skin *skins) {
-	ptr->views = malloc(ptr->header.nViews * sizeof(View));
+	ptr->views = malloc(4 * sizeof(View));	//In BC there are always 4 views
 	int i;
 	for (i = 0; i < ptr->header.nViews; i++) {
 		//header
@@ -434,9 +473,9 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 		}
 		if (ptr->views[i].header.nTriangles > 0) {
 			ptr->views[i].Triangles = malloc(
-					(ptr->views[i].header.nTriangles/3) * sizeof(Indices));
+					(ptr->views[i].header.nTriangles / 3) * sizeof(Triangle));
 			int j;
-			for (j = 0; j < (ptr->views[i].header.nTriangles/3); j++) {
+			for (j = 0; j < (ptr->views[i].header.nTriangles / 3); j++) {
 				ptr->views[i].Triangles[j][0] = skins[i].Triangles[j][0];
 				ptr->views[i].Triangles[j][1] = skins[i].Triangles[j][1];
 				ptr->views[i].Triangles[j][2] = skins[i].Triangles[j][2];
@@ -474,13 +513,20 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 				ptr->views[i].Submeshes[j].RootBone =
 						skins[i].Submeshes[j].RootBone;
 
-				ptr->views[i].Submeshes[j].Position[0]=skins[i].Submeshes[j].CenterMass[0];
-				ptr->views[i].Submeshes[j].Position[1]=skins[i].Submeshes[j].CenterMass[1];
-				ptr->views[i].Submeshes[j].Position[2]=skins[i].Submeshes[j].CenterMass[2];
-				ptr->views[i].Submeshes[j].Floats[0]=skins[i].Submeshes[j].Floats[0];
-				ptr->views[i].Submeshes[j].Floats[1]=skins[i].Submeshes[j].Floats[1];
-				ptr->views[i].Submeshes[j].Floats[2]=skins[i].Submeshes[j].Floats[2];
-				ptr->views[i].Submeshes[j].Floats[3]=skins[i].Submeshes[j].Floats[3];
+				ptr->views[i].Submeshes[j].Position[0] =
+						skins[i].Submeshes[j].CenterMass[0];
+				ptr->views[i].Submeshes[j].Position[1] =
+						skins[i].Submeshes[j].CenterMass[1];
+				ptr->views[i].Submeshes[j].Position[2] =
+						skins[i].Submeshes[j].CenterMass[2];
+				ptr->views[i].Submeshes[j].Floats[0] =
+						skins[i].Submeshes[j].Floats[0];
+				ptr->views[i].Submeshes[j].Floats[1] =
+						skins[i].Submeshes[j].Floats[1];
+				ptr->views[i].Submeshes[j].Floats[2] =
+						skins[i].Submeshes[j].Floats[2];
+				ptr->views[i].Submeshes[j].Floats[3] =
+						skins[i].Submeshes[j].Floats[3];
 			}
 		}
 
@@ -490,6 +536,112 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 }
 
 /**
+ * In WotLK, nViews is a number between 1 and 4. But in Burning Crusade, it's always 4, so there must be some kind of fake views.
+ * As the first view is always required, I assume the "non existent" views are based on the first, hence this function.
+ * @param ptr
+ * @param skins
+ * @return
+ */
+int views_filler(BCM2 *ptr) {
+	if (ptr->header.nViews < 4) {
+		int i;
+		for (i = ptr->header.nViews; i < 4; i++) {
+			//header
+			ptr->views[i].header.nIndices = ptr->views[0].header.nIndices;
+			ptr->views[i].header.ofsIndices = ptr->views[0].header.ofsIndices;
+			ptr->views[i].header.nTriangles = ptr->views[0].header.nTriangles;
+			ptr->views[i].header.ofsTriangles =
+					ptr->views[0].header.ofsTriangles;
+			ptr->views[i].header.nProperties = ptr->views[0].header.nProperties;
+			ptr->views[i].header.ofsProperties =
+					ptr->views[0].header.ofsProperties;
+			ptr->views[i].header.nSubmeshes = ptr->views[0].header.nSubmeshes;
+			ptr->views[i].header.ofsSubmeshes =
+					ptr->views[0].header.ofsSubmeshes;
+			ptr->views[i].header.nTextureUnits =
+					ptr->views[0].header.nTextureUnits;
+			ptr->views[i].header.ofsTextureUnits =
+					ptr->views[0].header.ofsTextureUnits;
+
+			if (ptr->views[i].header.nIndices > 0) {
+				ptr->views[i].Indices = malloc(
+						ptr->views[i].header.nIndices * sizeof(Vertex));
+				int j;
+				for (j = 0; j < ptr->views[i].header.nIndices; j++) {
+					ptr->views[i].Indices[j] = ptr->views[0].Indices[j];
+				}
+			}
+			if (ptr->views[i].header.nTriangles > 0) {
+				ptr->views[i].Triangles = malloc(
+						(ptr->views[i].header.nTriangles / 3)
+								* sizeof(Triangle));
+				int j;
+				for (j = 0; j < (ptr->views[i].header.nTriangles / 3); j++) {
+					ptr->views[i].Triangles[j][0] =
+							ptr->views[0].Triangles[j][0];
+					ptr->views[i].Triangles[j][1] =
+							ptr->views[0].Triangles[j][1];
+					ptr->views[i].Triangles[j][2] =
+							ptr->views[0].Triangles[j][2];
+				}
+			}
+			if (ptr->views[i].header.nProperties > 0) {
+				ptr->views[i].Properties = malloc(
+						ptr->views[i].header.nProperties * sizeof(Property));
+				int j;
+				for (j = 0; j < ptr->views[i].header.nProperties; j++) {
+					ptr->views[i].Properties[j] = ptr->views[0].Properties[j];
+				}
+			}
+			//submeshes
+			if (ptr->views[i].header.nSubmeshes > 0) {
+				ptr->views[i].Submeshes = malloc(
+						ptr->views[i].header.nSubmeshes * sizeof(Submesh));
+				int j;
+				for (j = 0; j < ptr->views[i].header.nSubmeshes; j++) {
+					ptr->views[i].Submeshes[j].ID =
+							ptr->views[0].Submeshes[j].ID;
+					ptr->views[i].Submeshes[j].StartVertex =
+							ptr->views[0].Submeshes[j].StartVertex;
+					ptr->views[i].Submeshes[j].nVertices =
+							ptr->views[0].Submeshes[j].nVertices;
+					ptr->views[i].Submeshes[j].StartTriangle =
+							ptr->views[0].Submeshes[j].StartTriangle;
+					ptr->views[i].Submeshes[j].nTriangles =
+							ptr->views[0].Submeshes[j].nTriangles;
+					ptr->views[i].Submeshes[j].nBones =
+							ptr->views[0].Submeshes[j].nBones;
+					ptr->views[i].Submeshes[j].StartBones =
+							ptr->views[0].Submeshes[j].StartBones;
+					ptr->views[i].Submeshes[j].Unknown =
+							ptr->views[0].Submeshes[j].Unknown;
+					ptr->views[i].Submeshes[j].RootBone =
+							ptr->views[0].Submeshes[j].RootBone;
+
+					ptr->views[i].Submeshes[j].Position[0] =
+							ptr->views[0].Submeshes[j].Position[0];
+					ptr->views[i].Submeshes[j].Position[1] =
+							ptr->views[0].Submeshes[j].Position[1];
+					ptr->views[i].Submeshes[j].Position[2] =
+							ptr->views[0].Submeshes[j].Position[2];
+					ptr->views[i].Submeshes[j].Floats[0] =
+							ptr->views[0].Submeshes[j].Floats[0];
+					ptr->views[i].Submeshes[j].Floats[1] =
+							ptr->views[0].Submeshes[j].Floats[1];
+					ptr->views[i].Submeshes[j].Floats[2] =
+							ptr->views[0].Submeshes[j].Floats[2];
+					ptr->views[i].Submeshes[j].Floats[3] =
+							ptr->views[0].Submeshes[j].Floats[3];
+				}
+			}
+			ptr->views[i].TextureUnits = ptr->views[0].TextureUnits;
+		}
+		ptr->header.nViews = 4;
+		return 0;
+	}
+	return -1;
+}
+/**
  * Convert a LKM2
  * @param lk_m2
  * @param skins
@@ -497,35 +649,46 @@ int views_converter(BCM2 *ptr, Skin *skins) {
  * @return
  */
 int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
+	//header
 	header_converter(ptr, lk_m2.header);
 
+	//filename
 	ptr->filename = lk_m2.filename;
 
+	//global sequences
 	ptr->globalsequences = malloc(ptr->header.nGlobalSequences * sizeof(int));
 	int i;
 	for (i = 0; i < ptr->header.nGlobalSequences; i++) {
 		ptr->globalsequences[i] = lk_m2.globalsequences[i];
 	}
 
+	//animations sequences
 	animations_converter(ptr, lk_m2);
 
+	//bones
 	bones_converter(ptr, lk_m2);
+
+	//Animlookup
 	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
 	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
 		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
 	}
 
+	//KeyboneLookup
 	ptr->keybonelookup = malloc(ptr->header.nKeyBoneLookup * sizeof(short));
 	for (i = 0; i < ptr->header.nKeyBoneLookup; i++) {
 		ptr->keybonelookup[i] = lk_m2.keybonelookup[i];
 	}
 
+	//Vertices
 	ptr->vertices = malloc(ptr->header.nVertices * sizeof(ModelVertex));
 	for (i = 0; i < ptr->header.nVertices; i++) {
 		ptr->vertices[i] = lk_m2.vertices[i];
 	}
 
+	//views
 	views_converter(ptr, skins);
+	views_filler(ptr);
 
 	//TODO SubmeshAnimations/Colors
 
@@ -533,11 +696,36 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	for (i = 0; i < ptr->header.nTextures; i++) {
 		ptr->textures_def[i] = lk_m2.textures_def[i];
 		ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
-		if(ptr->textures_def[i].type == 0){
+		if (ptr->textures_def[i].type == 0) {
 			ptr->texture_names[i] = malloc(ptr->textures_def[i].nameLen);
 			ptr->texture_names[i] = lk_m2.texture_names[i];
 		}
 	}
+	ptr->renderflags = lk_m2.renderflags;
+	ptr->BoneLookupTable = lk_m2.BoneLookupTable;
+	ptr->TexLookupTable = lk_m2.TexLookupTable;
+	ptr->TexUnit = lk_m2.TexUnit;
+	ptr->TransparencyLookup = lk_m2.TransparencyLookup;
+	ptr->TexAnimLookup = lk_m2.TexAnimLookup;
+	ptr->BoundingTriangles = lk_m2.BoundingTriangles;
+	ptr->BoundingVertices = lk_m2.BoundingVertices;
+	ptr->BoundingNormals = lk_m2.BoundingNormals;
+	ptr->AttachLookup = lk_m2.AttachLookup;
+	/*TODO
+	 Transparency;
+	 TexAnims;
+	 renderflags;
+	 BoneLookupTable;
+	 TexLookupTable;
+	 TexUnit;
+	 TransparencyLookup;
+	 TexAnimLookup;
+	 BoundingTriangles;
+	 BoundingVertice *BoundingVertices;
+	 BoundingNormals;
+	 Attachments;
+	 AttachLookup;
+	 */
 
 	return 0;
 }

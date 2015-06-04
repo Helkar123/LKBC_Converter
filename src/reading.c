@@ -31,9 +31,9 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 		//Triangles
 		if (ptr[i]->header.nTriangles > 0) {
 			ptr[i]->Triangles = malloc(
-					(ptr[i]->header.nTriangles / 3) * sizeof(Indices)); //FIXME Confused about Wiki saying the number is incorrect
+					(ptr[i]->header.nTriangles / 3) * sizeof(Triangle)); //FIXME Confused about Wiki saying the number is incorrect
 			fseek(skin_files[i], ptr[i]->header.ofsTriangles, SEEK_SET);
-			fread(ptr[i]->Triangles, sizeof(Indices),
+			fread(ptr[i]->Triangles, sizeof(Triangle),
 					ptr[i]->header.nTriangles / 3, skin_files[i]);
 		}
 
@@ -205,8 +205,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 								ptr->animofs[i].r_keys[j].n * sizeof(Quat));
 						fseek(lk_m2_file, ptr->animofs[i].r_keys[j].ofs,
 						SEEK_SET);
-						int test;
-						test = fread(ptr->bonesdata[i].r_keys[j].values,
+						fread(ptr->bonesdata[i].r_keys[j].values,
 								sizeof(Quat), ptr->animofs[i].r_keys[j].n,
 								lk_m2_file);
 					}
@@ -255,8 +254,123 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
  * @return
  */
 int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
-	//TODO implement it
-	return 0;
+	if (ptr->header.nColors > 0) {
+		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
+		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
+		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors, lk_m2_file);
+		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorAnimOfs));
+		int i;
+		for (i = 0; i < ptr->header.nColors; i++) {
+			LKColorDef lk_color = ptr->colors[i];
+			//RGB
+			if (lk_color.RGB.Times.n > 0) {
+				ptr->coloranimofs[i].rgb_times = malloc(
+						lk_color.RGB.Times.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, lk_color.RGB.Times.ofs, SEEK_SET);
+				fread(ptr->coloranimofs[i].rgb_times, sizeof(ArrayRef),
+						lk_color.RGB.Times.n, lk_m2_file);
+			}
+			if (lk_color.RGB.Keys.n > 0) {
+				ptr->coloranimofs[i].rgb_keys = malloc(
+						lk_color.RGB.Keys.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, lk_color.RGB.Keys.ofs, SEEK_SET);
+				fread(ptr->coloranimofs[i].rgb_keys, sizeof(ArrayRef),
+						lk_color.RGB.Keys.n, lk_m2_file);
+			}
+			//Opacity
+			if (lk_color.Opacity.Times.n > 0) {
+				ptr->coloranimofs[i].op_times = malloc(
+						lk_color.Opacity.Times.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, lk_color.Opacity.Times.ofs, SEEK_SET);
+				fread(ptr->coloranimofs[i].op_times, sizeof(ArrayRef),
+						lk_color.Opacity.Times.n, lk_m2_file);
+			}
+			if (lk_color.Opacity.Keys.n > 0) {
+				ptr->coloranimofs[i].op_keys = malloc(
+						lk_color.Opacity.Keys.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, lk_color.Opacity.Keys.ofs, SEEK_SET);
+				fread(ptr->coloranimofs[i].op_keys, sizeof(ArrayRef),
+						lk_color.Opacity.Keys.n, lk_m2_file);
+			}
+		}
+
+		//Store colors data (layer 2)
+		ptr->colorsdata = malloc(
+				ptr->header.nColors * sizeof(LKColorDataBlock));
+		for (i = 0; i < ptr->header.nColors; i++) {
+			LKColorDef lk_color = ptr->colors[i];
+			int j;
+			//RGB
+			if (lk_color.RGB.Times.n > 0) {
+				ptr->colorsdata[i].rgb_times = malloc(
+						lk_color.RGB.Times.n * sizeof(Uint32Array));
+				for (j = 0; j < lk_color.RGB.Times.n; j++) {
+					if (ptr->coloranimofs[i].rgb_times[j].n > 0) {
+						ptr->colorsdata[i].rgb_times[j].values = malloc(
+								ptr->coloranimofs[i].rgb_times[j].n
+										* sizeof(uint32));
+						fseek(lk_m2_file, ptr->coloranimofs[i].rgb_times[j].ofs,
+						SEEK_SET);
+						fread(ptr->colorsdata[i].rgb_times[j].values,
+								sizeof(uint32),
+								ptr->coloranimofs[i].rgb_times[j].n,
+								lk_m2_file);
+					}
+				}
+			}
+			if (ptr->colors[i].RGB.Keys.n > 0) {
+				ptr->colorsdata[i].rgb_keys = malloc(
+						lk_color.RGB.Keys.n * sizeof(Vec3DArray));
+				for (j = 0; j < lk_color.RGB.Keys.n; j++) {
+					if (ptr->coloranimofs[i].rgb_keys[j].n > 0) {
+						ptr->colorsdata[i].rgb_keys[j].values = malloc(
+								ptr->coloranimofs[i].rgb_keys[j].n
+										* sizeof(Vec3D));
+						fseek(lk_m2_file, ptr->coloranimofs[i].rgb_keys[j].ofs,
+						SEEK_SET);
+						fread(ptr->colorsdata[i].rgb_keys[j].values,
+								sizeof(Vec3D),
+								ptr->coloranimofs[i].rgb_keys[j].n, lk_m2_file);
+					}
+				}
+			}
+			//Opacity
+			if (ptr->colors[i].Opacity.Times.n > 0) {
+				ptr->colorsdata[i].op_times = malloc(
+						lk_color.Opacity.Times.n * sizeof(Uint32Array));
+				for (j = 0; j < lk_color.Opacity.Times.n; j++) {
+					if (ptr->coloranimofs[i].op_times[j].n > 0) {
+						ptr->colorsdata[i].op_times[j].values = malloc(
+								ptr->coloranimofs[i].op_times[j].n
+										* sizeof(uint32));
+						fseek(lk_m2_file, ptr->coloranimofs[i].op_times[j].ofs,
+						SEEK_SET);
+						fread(ptr->colorsdata[i].op_times[j].values,
+								sizeof(uint32),
+								ptr->coloranimofs[i].op_times[j].n, lk_m2_file);
+					}
+				}
+			}
+			if (ptr->colors[i].Opacity.Keys.n > 0) {
+				ptr->colorsdata[i].op_keys = malloc(
+						lk_color.Opacity.Keys.n * sizeof(ShortArray));
+				for (j = 0; j < lk_color.Opacity.Keys.n; j++) {
+					if (ptr->coloranimofs[i].op_keys[j].n > 0) {
+						ptr->colorsdata[i].op_keys[j].values = malloc(
+								ptr->coloranimofs[i].op_keys[j].n
+										* sizeof(short));
+						fseek(lk_m2_file, ptr->coloranimofs[i].op_keys[j].ofs,
+						SEEK_SET);
+						fread(ptr->colorsdata[i].op_keys[j].values,
+								sizeof(short),
+								ptr->coloranimofs[i].op_keys[j].n, lk_m2_file);
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	return -1;
 }
 
 /**
@@ -424,7 +538,6 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fread(ptr->vertices, sizeof(ModelVertex), ptr->header.nVertices,
 			lk_m2_file);
 
-//FIXME malloc()s... inside or before the "if" ?
 	//Colors
 	read_colors(lk_m2_file, ptr);
 
@@ -440,8 +553,10 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 		int i;
 		for (i = 0; i < ptr->header.nTextures; i++) {
 			if (ptr->textures_def[i].type == 0) {//Filename is referenced in the m2 only when the type is 0
-				if (ptr->textures_def[i].nameLen >= 256){
-					fprintf(stderr, "nameLen too large : %d\nPlease report this issue.", ptr->textures_def[i].nameLen);
+				if (ptr->textures_def[i].nameLen >= 256) {
+					fprintf(stderr,
+							"nameLen too large : %d\nPlease report this issue.",
+							ptr->textures_def[i].nameLen);
 					return -1;
 				}
 				ptr->texture_names[i] = malloc(ptr->textures_def[i].nameLen);
@@ -501,23 +616,23 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 	//BoundingTriangles
 	ptr->BoundingTriangles = malloc(
-			ptr->header.nBoundingTriangles * sizeof(short));
+			ptr->header.nBoundingTriangles/3 * sizeof(Triangle));
 	fseek(lk_m2_file, ptr->header.ofsBoundingTriangles, SEEK_SET);
-	fread(ptr->BoundingTriangles, sizeof(short), ptr->header.nBoundingTriangles,
+	fread(ptr->BoundingTriangles, sizeof(Triangle), ptr->header.nBoundingTriangles/3,
 			lk_m2_file);
 
 	//BoundingVertices
 	ptr->BoundingVertices = malloc(
-			ptr->header.nBoundingVertices * sizeof(BoundingVertice));
+			ptr->header.nBoundingVertices * sizeof(Vec3D));
 	fseek(lk_m2_file, ptr->header.ofsBoundingVertices, SEEK_SET);
-	fread(ptr->BoundingVertices, sizeof(BoundingVertice),
+	fread(ptr->BoundingVertices, sizeof(Vec3D),
 			ptr->header.nBoundingVertices, lk_m2_file);
 
 	//BoundingNormals
 	ptr->BoundingNormals = malloc(
-			ptr->header.nBoundingNormals * sizeof(BoundingNormal));
+			ptr->header.nBoundingNormals * sizeof(Vec3D));
 	fseek(lk_m2_file, ptr->header.ofsBoundingNormals, SEEK_SET);
-	fread(ptr->BoundingNormals, sizeof(BoundingNormal),
+	fread(ptr->BoundingNormals, sizeof(Vec3D),
 			ptr->header.nBoundingNormals, lk_m2_file);
 
 	//Attachment Lookup Table
