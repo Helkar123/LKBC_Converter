@@ -38,10 +38,11 @@ int write_views(FILE *bc_m2_file, BCM2 *ptr) {
 		ptr->header.ofsViews = getPos(bc_m2_file);
 		int i;
 		for (i = 0; i < ptr->header.nViews; i++) {
-			int header_offset = getPos(bc_m2_file);
 			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
-			align(bc_m2_file);
+		}
+		align(bc_m2_file);
 
+		for (i = 0; i < ptr->header.nViews; i++) {
 			if (ptr->views[i].header.nIndices > 0) {
 				ptr->views[i].header.ofsIndices = getPos(bc_m2_file);
 				fwrite(ptr->views[i].Indices, sizeof(Vertex),
@@ -73,10 +74,14 @@ int write_views(FILE *bc_m2_file, BCM2 *ptr) {
 				align(bc_m2_file);
 			}
 
-			fseek(bc_m2_file, header_offset, SEEK_SET);
-			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
-			fseek(bc_m2_file, 0, SEEK_END);
 		}
+
+		fseek(bc_m2_file, ptr->header.ofsViews, SEEK_SET);
+		for (i = 0; i < ptr->header.nViews; i++) {
+			fwrite(&ptr->views[i].header, sizeof(ViewsHeader), 1, bc_m2_file);
+		}
+		fseek(bc_m2_file, 0, SEEK_END);
+
 		return 0;
 	}
 	return -1;

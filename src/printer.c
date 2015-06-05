@@ -71,6 +71,7 @@ void print_skin(Skin skin) {
 	printf("nProperties : %d\n", skin.header.nProperties);
 	printf("nSubmeshes : %d\n", skin.header.nSubmeshes);
 	printf("nTextureUnits : %d\n", skin.header.nTextureUnits);
+	printf("\n");
 }
 
 void print_views(BCM2 model) {
@@ -93,7 +94,7 @@ void print_views(BCM2 model) {
 
 		printf("nSubmeshes : %d\n", model.views[i].header.nSubmeshes);
 		for (j = 0; j < model.views[i].header.nSubmeshes; j++) {
-			printf("[Submesh #%d]\n", j);
+			printf("\t[Submesh #%d]\n", j);
 			printf("\tID : %d\n", model.views[i].Submeshes[j].ID);
 			printf("\tStartVertex : %d\n",
 					model.views[i].Submeshes[j].StartVertex);

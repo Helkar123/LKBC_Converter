@@ -27,8 +27,8 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsAnimations = lk_header.ofsAnimations;
 	ptr->header.nAnimationLookup = lk_header.nAnimationLookup;
 	ptr->header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
-	ptr->header.nPlayableAnimationLookup = 0xcb; //Placeholder
-	ptr->header.ofsPlayableAnimationLookup = 0x00; //Determine where you insert the Data block from above
+	ptr->header.nPlayableAnimationLookup = 0x00; //FIXME Placeholder
+	ptr->header.ofsPlayableAnimationLookup = 0x00;
 	ptr->header.nBones = lk_header.nBones;
 	ptr->header.ofsBones = lk_header.ofsBones;
 	ptr->header.nKeyBoneLookup = lk_header.nKeyBoneLookup;
@@ -110,8 +110,9 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		ptr->animations[i].timeEnd = timeline;
 		ptr->animations[i].moveSpeed = lk_m2.animations[i].moveSpeed;
 		ptr->animations[i].flags = lk_m2.animations[i].flags;
+		ptr->animations[i].flags -= 0x20;//Flags difference ?
 		ptr->animations[i].probability = lk_m2.animations[i].probability;
-		ptr->animations[i].unused = lk_m2.animations[i].unused;//The Wiki says it's unused, but just in case, it's always better to convert it ;)
+		ptr->animations[i].unused = lk_m2.animations[i].unused; //The Wiki says it's unused, but just in case, it's always better to convert it ;)
 		ptr->animations[i].d1 = lk_m2.animations[i].d1;
 		ptr->animations[i].d2 = lk_m2.animations[i].d2;
 		ptr->animations[i].playSpeed = lk_m2.animations[i].playSpeed;
@@ -140,8 +141,6 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 	ptr->bonesdata = malloc(ptr->header.nBones * sizeof(BonesDataBlock));
 	int i;
 	for (i = 0; i < ptr->header.nBones; i++) {
-		printf("Bone : %d\n", i);
-
 		//translation
 		if (lk_m2.bones[i].trans.Times.n > 0) {
 			ptr->bonesdata[i].t_ranges.values = malloc(
@@ -167,8 +166,6 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 			int times_index = 0; //Not reset when we finish the extraction of timestamps from 1 animation
 			int keys_index = 0;	//Not reset when we finish the extraction of keys from 1 animation
 			for (j = 0; j < lk_m2.bones[i].trans.Times.n; j++) {
-				printf("\tAnimation : %d\n", j);	//FIXME DEBUG
-
 				//Interpolation range
 				if (lk_m2.animofs[i].t_times[j].n == 0) {
 					ptr->bonesdata[i].t_ranges.values[j][0] = range_time;
@@ -217,8 +214,6 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						ptr->bonesdata[i].t_times.values[times_index] =
 								ptr->animations[j].timeStart
 										+ lk_m2.bonesdata[i].t_times[j].values[k];//Start Timestamp + animation-relative time
-						printf("\t\tAdded Timestamp : %d\n",
-								ptr->bonesdata[i].t_times.values[times_index]);
 						times_index++;
 					}
 				}
@@ -232,17 +227,9 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 							ptr->bonesdata[i].t_keys.values[keys_index][m] =
 									lk_m2.bonesdata[i].t_keys[j].values[k][m];//Start Timestamp + animation-relative time
 						}
-						printf("\t\tAdded Vector : (%f,%f,%f)\n",
-								ptr->bonesdata[i].t_keys.values[keys_index][0],
-								ptr->bonesdata[i].t_keys.values[keys_index][1],
-								ptr->bonesdata[i].t_keys.values[keys_index][2]);
 						keys_index++;
 					}
 				}
-				printf(
-						"\t\tInterpolation range : (%d,%d)\n",	//FIXME DEBUG
-						ptr->bonesdata[i].t_ranges.values[j][0],
-						ptr->bonesdata[i].t_ranges.values[j][1]);
 			}
 
 			//Extra Timestamp&Vector if the last Time was not the TimeEnd to "loop" it
@@ -255,24 +242,11 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 				ptr->bones[i].trans.Keys.n++;
 
 				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
-
-				printf("\t\tFinal Timestamp : %d\n",	//FIXME DEBUG
-						ptr->bonesdata[i].t_times.values[t_times_size - 1]);
-				printf("\t\tFinal Vector : (%f,%f,%f)\n",
-						ptr->bonesdata[i].t_keys.values[t_times_size - 1][0],
-						ptr->bonesdata[i].t_keys.values[t_times_size - 1][1],
-						ptr->bonesdata[i].t_keys.values[t_times_size - 1][2]);
 			}
 
-			//Interp Range bug fix
+			//FIXME Interp Range bug fix
 			ptr->bonesdata[i].t_ranges.values[6][1] =
 					ptr->bones[i].trans.Times.n - 1;
-			printf(
-					"\t\tNew last Interpolation range : (%d,%d)\n",	//FIXME DEBUG
-					ptr->bonesdata[i].t_ranges.values[6][0],
-					ptr->bonesdata[i].t_ranges.values[6][1]);
-			printf("\tNumber of (Timestamp,Value) : %d\n",
-					ptr->bones[i].trans.Times.n);
 		}
 		//END translation
 
@@ -547,19 +521,23 @@ int views_converter(BCM2 *ptr, Skin *skins) {
  */
 int views_filler(BCM2 *ptr) {
 	if (ptr->header.nViews < 4) {
-		int last = ptr->header.nViews-1;//index of the last view. Schlumpf's advice to fill with the last
+		int last = ptr->header.nViews - 1;//index of the last view. Schlumpf's advice to fill with the last
 		int i;
 		for (i = ptr->header.nViews; i < 4; i++) {
 			//header
 			ptr->views[i].header.nIndices = ptr->views[last].header.nIndices;
-			ptr->views[i].header.ofsIndices = ptr->views[last].header.ofsIndices;
-			ptr->views[i].header.nTriangles = ptr->views[last].header.nTriangles;
+			ptr->views[i].header.ofsIndices =
+					ptr->views[last].header.ofsIndices;
+			ptr->views[i].header.nTriangles =
+					ptr->views[last].header.nTriangles;
 			ptr->views[i].header.ofsTriangles =
 					ptr->views[last].header.ofsTriangles;
-			ptr->views[i].header.nProperties = ptr->views[last].header.nProperties;
+			ptr->views[i].header.nProperties =
+					ptr->views[last].header.nProperties;
 			ptr->views[i].header.ofsProperties =
 					ptr->views[last].header.ofsProperties;
-			ptr->views[i].header.nSubmeshes = ptr->views[last].header.nSubmeshes;
+			ptr->views[i].header.nSubmeshes =
+					ptr->views[last].header.nSubmeshes;
 			ptr->views[i].header.ofsSubmeshes =
 					ptr->views[last].header.ofsSubmeshes;
 			ptr->views[i].header.nTextureUnits =
@@ -594,7 +572,8 @@ int views_filler(BCM2 *ptr) {
 						ptr->views[i].header.nProperties * sizeof(Property));
 				int j;
 				for (j = 0; j < ptr->views[i].header.nProperties; j++) {
-					ptr->views[i].Properties[j] = ptr->views[last].Properties[j];
+					ptr->views[i].Properties[j] =
+							ptr->views[last].Properties[j];
 				}
 			}
 			//submeshes

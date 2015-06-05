@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
 
 	LKM2 lk_model;
 	read_model(lk_m2_file, &lk_model);
-	print_anims_lk(lk_model);
 
 	FILE **skin_files;
 	skin_files = malloc(lk_model.header.nViews * sizeof(FILE *));
