@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
-	print_views(bc_model);//FIXME Debug purpose
+	print_anims_bc(bc_model);//FIXME Debug purpose
 
 	//Writing
 	char new_name[64] = "BC_";

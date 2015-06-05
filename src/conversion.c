@@ -123,7 +123,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		}
 		ptr->animations[i].rad = lk_m2.animations[i].rad;
 		ptr->animations[i].NextAnimation = lk_m2.animations[i].NextAnimation;
-		ptr->animations[i].Index = lk_m2.animations[i].Index;
+		ptr->animations[i].Index = 0;//In LK, it has the value. In TBC it seems to always be 0
 	}
 	return 0;
 }
