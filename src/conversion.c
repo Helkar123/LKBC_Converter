@@ -104,12 +104,14 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 	for (i = 0; i < ptr->header.nAnimations; i++) {
 		timeline += 3333; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
 		ptr->animations[i].animID = lk_m2.animations[i].animID;
+		ptr->animations[i].subAnimID = lk_m2.animations[i].subAnimID;
 		ptr->animations[i].timeStart = timeline;
 		timeline += lk_m2.animations[i].length;
 		ptr->animations[i].timeEnd = timeline;
 		ptr->animations[i].moveSpeed = lk_m2.animations[i].moveSpeed;
-		ptr->animations[i].loopType = 0; //FIXME I really don't know where this information disappeared in LK. There is no doc.
 		ptr->animations[i].flags = lk_m2.animations[i].flags;
+		ptr->animations[i].probability = lk_m2.animations[i].probability;
+		ptr->animations[i].unused = lk_m2.animations[i].unused;//The Wiki says it's unused, but just in case, it's always better to convert it ;)
 		ptr->animations[i].d1 = lk_m2.animations[i].d1;
 		ptr->animations[i].d2 = lk_m2.animations[i].d2;
 		ptr->animations[i].playSpeed = lk_m2.animations[i].playSpeed;
@@ -496,6 +498,7 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 			int j;
 			for (j = 0; j < ptr->views[i].header.nSubmeshes; j++) {
 				ptr->views[i].Submeshes[j].ID = skins[i].Submeshes[j].ID;
+				ptr->views[i].Submeshes[j].Level = skins[i].Submeshes[j].Level;
 				ptr->views[i].Submeshes[j].StartVertex =
 						skins[i].Submeshes[j].StartVertex;
 				ptr->views[i].Submeshes[j].nVertices =
@@ -508,7 +511,8 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 						skins[i].Submeshes[j].nBones;
 				ptr->views[i].Submeshes[j].StartBones =
 						skins[i].Submeshes[j].StartBones;
-				ptr->views[i].Submeshes[j].Unknown =
+
+				ptr->views[i].Submeshes[j].boneInfluences =
 						skins[i].Submeshes[j].boneInfluences;
 				ptr->views[i].Submeshes[j].RootBone =
 						skins[i].Submeshes[j].RootBone;
@@ -520,13 +524,13 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 				ptr->views[i].Submeshes[j].Position[2] =
 						skins[i].Submeshes[j].CenterMass[2];
 				ptr->views[i].Submeshes[j].Floats[0] =
-						skins[i].Submeshes[j].Floats[0];
+						skins[i].Submeshes[j].CenterBoundingBox[0];
 				ptr->views[i].Submeshes[j].Floats[1] =
-						skins[i].Submeshes[j].Floats[1];
+						skins[i].Submeshes[j].CenterBoundingBox[1];
 				ptr->views[i].Submeshes[j].Floats[2] =
-						skins[i].Submeshes[j].Floats[2];
+						skins[i].Submeshes[j].CenterBoundingBox[2];
 				ptr->views[i].Submeshes[j].Floats[3] =
-						skins[i].Submeshes[j].Floats[3];
+						skins[i].Submeshes[j].Radius;
 			}
 		}
 
@@ -537,38 +541,38 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 
 /**
  * In WotLK, nViews is a number between 1 and 4. But in Burning Crusade, it's always 4, so there must be some kind of fake views.
- * As the first view is always required, I assume the "non existent" views are based on the first, hence this function.
  * @param ptr
  * @param skins
  * @return
  */
 int views_filler(BCM2 *ptr) {
 	if (ptr->header.nViews < 4) {
+		int last = ptr->header.nViews-1;//index of the last view. Schlumpf's advice to fill with the last
 		int i;
 		for (i = ptr->header.nViews; i < 4; i++) {
 			//header
-			ptr->views[i].header.nIndices = ptr->views[0].header.nIndices;
-			ptr->views[i].header.ofsIndices = ptr->views[0].header.ofsIndices;
-			ptr->views[i].header.nTriangles = ptr->views[0].header.nTriangles;
+			ptr->views[i].header.nIndices = ptr->views[last].header.nIndices;
+			ptr->views[i].header.ofsIndices = ptr->views[last].header.ofsIndices;
+			ptr->views[i].header.nTriangles = ptr->views[last].header.nTriangles;
 			ptr->views[i].header.ofsTriangles =
-					ptr->views[0].header.ofsTriangles;
-			ptr->views[i].header.nProperties = ptr->views[0].header.nProperties;
+					ptr->views[last].header.ofsTriangles;
+			ptr->views[i].header.nProperties = ptr->views[last].header.nProperties;
 			ptr->views[i].header.ofsProperties =
-					ptr->views[0].header.ofsProperties;
-			ptr->views[i].header.nSubmeshes = ptr->views[0].header.nSubmeshes;
+					ptr->views[last].header.ofsProperties;
+			ptr->views[i].header.nSubmeshes = ptr->views[last].header.nSubmeshes;
 			ptr->views[i].header.ofsSubmeshes =
-					ptr->views[0].header.ofsSubmeshes;
+					ptr->views[last].header.ofsSubmeshes;
 			ptr->views[i].header.nTextureUnits =
-					ptr->views[0].header.nTextureUnits;
+					ptr->views[last].header.nTextureUnits;
 			ptr->views[i].header.ofsTextureUnits =
-					ptr->views[0].header.ofsTextureUnits;
+					ptr->views[last].header.ofsTextureUnits;
 
 			if (ptr->views[i].header.nIndices > 0) {
 				ptr->views[i].Indices = malloc(
 						ptr->views[i].header.nIndices * sizeof(Vertex));
 				int j;
 				for (j = 0; j < ptr->views[i].header.nIndices; j++) {
-					ptr->views[i].Indices[j] = ptr->views[0].Indices[j];
+					ptr->views[i].Indices[j] = ptr->views[last].Indices[j];
 				}
 			}
 			if (ptr->views[i].header.nTriangles > 0) {
@@ -578,11 +582,11 @@ int views_filler(BCM2 *ptr) {
 				int j;
 				for (j = 0; j < (ptr->views[i].header.nTriangles / 3); j++) {
 					ptr->views[i].Triangles[j][0] =
-							ptr->views[0].Triangles[j][0];
+							ptr->views[last].Triangles[j][0];
 					ptr->views[i].Triangles[j][1] =
-							ptr->views[0].Triangles[j][1];
+							ptr->views[last].Triangles[j][1];
 					ptr->views[i].Triangles[j][2] =
-							ptr->views[0].Triangles[j][2];
+							ptr->views[last].Triangles[j][2];
 				}
 			}
 			if (ptr->views[i].header.nProperties > 0) {
@@ -590,7 +594,7 @@ int views_filler(BCM2 *ptr) {
 						ptr->views[i].header.nProperties * sizeof(Property));
 				int j;
 				for (j = 0; j < ptr->views[i].header.nProperties; j++) {
-					ptr->views[i].Properties[j] = ptr->views[0].Properties[j];
+					ptr->views[i].Properties[j] = ptr->views[last].Properties[j];
 				}
 			}
 			//submeshes
@@ -600,47 +604,50 @@ int views_filler(BCM2 *ptr) {
 				int j;
 				for (j = 0; j < ptr->views[i].header.nSubmeshes; j++) {
 					ptr->views[i].Submeshes[j].ID =
-							ptr->views[0].Submeshes[j].ID;
+							ptr->views[last].Submeshes[j].ID;
+					ptr->views[i].Submeshes[j].Level =
+							ptr->views[last].Submeshes[j].Level;
 					ptr->views[i].Submeshes[j].StartVertex =
-							ptr->views[0].Submeshes[j].StartVertex;
+							ptr->views[last].Submeshes[j].StartVertex;
 					ptr->views[i].Submeshes[j].nVertices =
-							ptr->views[0].Submeshes[j].nVertices;
+							ptr->views[last].Submeshes[j].nVertices;
 					ptr->views[i].Submeshes[j].StartTriangle =
-							ptr->views[0].Submeshes[j].StartTriangle;
+							ptr->views[last].Submeshes[j].StartTriangle;
 					ptr->views[i].Submeshes[j].nTriangles =
-							ptr->views[0].Submeshes[j].nTriangles;
+							ptr->views[last].Submeshes[j].nTriangles;
 					ptr->views[i].Submeshes[j].nBones =
-							ptr->views[0].Submeshes[j].nBones;
+							ptr->views[last].Submeshes[j].nBones;
 					ptr->views[i].Submeshes[j].StartBones =
-							ptr->views[0].Submeshes[j].StartBones;
-					ptr->views[i].Submeshes[j].Unknown =
-							ptr->views[0].Submeshes[j].Unknown;
+							ptr->views[last].Submeshes[j].StartBones;
+					ptr->views[i].Submeshes[j].boneInfluences =
+							ptr->views[last].Submeshes[j].boneInfluences;
 					ptr->views[i].Submeshes[j].RootBone =
-							ptr->views[0].Submeshes[j].RootBone;
+							ptr->views[last].Submeshes[j].RootBone;
 
 					ptr->views[i].Submeshes[j].Position[0] =
-							ptr->views[0].Submeshes[j].Position[0];
+							ptr->views[last].Submeshes[j].Position[0];
 					ptr->views[i].Submeshes[j].Position[1] =
-							ptr->views[0].Submeshes[j].Position[1];
+							ptr->views[last].Submeshes[j].Position[1];
 					ptr->views[i].Submeshes[j].Position[2] =
-							ptr->views[0].Submeshes[j].Position[2];
+							ptr->views[last].Submeshes[j].Position[2];
 					ptr->views[i].Submeshes[j].Floats[0] =
-							ptr->views[0].Submeshes[j].Floats[0];
+							ptr->views[last].Submeshes[j].Floats[0];
 					ptr->views[i].Submeshes[j].Floats[1] =
-							ptr->views[0].Submeshes[j].Floats[1];
+							ptr->views[last].Submeshes[j].Floats[1];
 					ptr->views[i].Submeshes[j].Floats[2] =
-							ptr->views[0].Submeshes[j].Floats[2];
+							ptr->views[last].Submeshes[j].Floats[2];
 					ptr->views[i].Submeshes[j].Floats[3] =
-							ptr->views[0].Submeshes[j].Floats[3];
+							ptr->views[last].Submeshes[j].Floats[3];
 				}
 			}
-			ptr->views[i].TextureUnits = ptr->views[0].TextureUnits;
+			ptr->views[i].TextureUnits = ptr->views[last].TextureUnits;
 		}
 		ptr->header.nViews = 4;
 		return 0;
 	}
 	return -1;
 }
+
 /**
  * Convert a LKM2
  * @param lk_m2

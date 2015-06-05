@@ -224,12 +224,14 @@ typedef struct LKModelAnimation {
 } LKModelAnimation;
 
 typedef struct ModelAnimation {
-	uint32 animID;
+	int16 animID;
+	int16 subAnimID;
 	uint32 timeStart;
 	uint32 timeEnd;
 	float moveSpeed;
-	uint32 loopType;
-	uint32 flags;
+	uint32 flags;//LoopType
+	uint16 probability;
+	uint16 unused;
 	uint32 d1;
 	uint32 d2;
 	uint32 playSpeed;
@@ -372,7 +374,8 @@ typedef struct ViewsHeader {
 } ViewsHeader;
 
 typedef struct LKSubmesh {
-	uint32 ID;
+	uint16 ID;
+	uint16 Level;//level*(2^16)+StartThing
 	uint16 StartVertex;
 	uint16 nVertices;
 	uint16 StartTriangle;
@@ -382,18 +385,20 @@ typedef struct LKSubmesh {
 	uint16 boneInfluences;
 	uint16 RootBone;
 	Vec3D CenterMass;
-	float Floats[4];//CenterBoundingBox(Vec3D)&Radius(Float)
+	Vec3D CenterBoundingBox;
+	float Radius;
 } LKSubmesh;
 
 typedef struct Submesh {
-	uint32 ID;
+	uint16 ID;
+	uint16 Level;//level*(2^16)+StartThing EXPERIMENTAL
 	uint16 StartVertex;
 	uint16 nVertices;
 	uint16 StartTriangle;
 	uint16 nTriangles;
 	uint16 nBones;
 	uint16 StartBones;
-	uint16 Unknown;  //Amount of bones up the parent-chain affecting the submesh
+	uint16 boneInfluences;  //Amount of bones up the parent-chain affecting the submesh
 	uint16 RootBone;
 	Vec3D Position;
 	float Floats[4];

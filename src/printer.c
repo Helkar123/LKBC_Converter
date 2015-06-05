@@ -11,45 +11,101 @@
  * @param model The M2/WotLK structure.
  * Extract it from a file first with reading functions.
  */
-void print_anims(LKM2 model) {
+void print_anims_lk(LKM2 model) {
 	printf("nAnimations: %d\n", model.header.nAnimations);
 	int i;
 	for (i = 0; i < model.header.nAnimations; i++) {
-		printf("//////\n");
-		printf("Animation number %d\n", i);
-		printf("animID:%d\n subAnimID:%d\n	length:%d\n moveSpeed:%f\n",
-				model.animations[i].animID, model.animations[0].subAnimID,
-				model.animations[i].length, model.animations[0].moveSpeed);
-		printf("flags:%d\n	d1:%d\n	d2:%d\n playSpeed:%d\n rad:%f\n",
-				model.animations[i].flags, model.animations[0].d1,
-				model.animations[i].d2, model.animations[0].playSpeed,
-				model.animations[i].rad);
-		printf("NextAnim: %d\n	Index: %d\n\n",
-				model.animations[i].NextAnimation, model.animations[i].Index);
+		printf("[Animation #%d]\n", i);
+		printf("AnimID: %d\n", model.animations[i].animID);
+		printf("SubAnimID: %d\n", model.animations[i].subAnimID);
+		printf("Length: %d\n", model.animations[i].length);
+		printf("MoveSpeed: %f\n", model.animations[i].moveSpeed);
+		printf("Flags: %d\n", model.animations[i].flags);
+		printf("Probability: %d\n", model.animations[i].probability);
+		printf("Unused: %d\n", model.animations[i].unused);
+		printf("Unknown 1: %d\n", model.animations[i].d1);
+		printf("Unknown 2: %d\n", model.animations[i].d2);
+		printf("playSpeed: %d\n", model.animations[i].playSpeed);
+		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0], model.animations[i].boxA[1], model.animations[i].boxA[2]);
+		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0], model.animations[i].boxB[1], model.animations[i].boxB[2]);
+		printf("Radius: %f\n", model.animations[i].rad);
+		printf("NextAnimation: %d\n", model.animations[i].NextAnimation);
+		printf("Index: %d\n", model.animations[i].Index);
+		printf("\n");
+	}
+}
+
+/**
+ * Print animations of a M2/BC model.
+ * @param model The M2/BC structure.
+ */
+void print_anims_bc(BCM2 model) {
+	printf("nAnimations: %d\n", model.header.nAnimations);
+	int i;
+	for (i = 0; i < model.header.nAnimations; i++) {
+		printf("[Animation #%d]\n", i);
+		printf("AnimID: %d\n", model.animations[i].animID);
+		printf("SubAnimID: %d\n", model.animations[i].subAnimID);
+		printf("timeStart: %d\n", model.animations[i].timeStart);
+		printf("timeEnd: %d\n", model.animations[i].timeEnd);
+		printf("MoveSpeed: %f\n", model.animations[i].moveSpeed);
+		printf("Flags: %d\n", model.animations[i].flags);
+		printf("Probability: %d\n", model.animations[i].probability);
+		printf("Unused: %d\n", model.animations[i].unused);
+		printf("Unknown 1: %d\n", model.animations[i].d1);
+		printf("Unknown 2: %d\n", model.animations[i].d2);
+		printf("playSpeed: %d\n", model.animations[i].playSpeed);
+		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0], model.animations[i].boxA[1], model.animations[i].boxA[2]);
+		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0], model.animations[i].boxB[1], model.animations[i].boxB[2]);
+		printf("Radius: %f\n", model.animations[i].rad);
+		printf("NextAnimation: %d\n", model.animations[i].NextAnimation);
+		printf("Index: %d\n", model.animations[i].Index);
+		printf("\n");
 	}
 }
 
 void print_skin(Skin skin) {
-	printf("ID : %d\n", skin.header.ID);
-	printf("Bone influences : %d\n", skin.Submeshes[0].boneInfluences);
+	printf("[Skin #%d]\n", skin.header.ID);
+	printf("nIndices : %d\n", skin.header.nIndices);
+	printf("nTriangles : %d\n", skin.header.nTriangles);
 	printf("nProperties : %d\n", skin.header.nProperties);
-	printf("ofsProperties : %d\n", skin.header.ofsProperties);
-	printf("Property : %d\n", skin.Properties[0]);
+	printf("nSubmeshes : %d\n", skin.header.nSubmeshes);
+	printf("nTextureUnits : %d\n", skin.header.nTextureUnits);
 }
 
 void print_views(BCM2 model) {
 	int i;
 	for (i = 0; i < model.header.nViews; i++) {
+		int j;
 		printf("[View #%d]\n", i);
 		printf("nIndices : %d\n", model.views[i].header.nIndices);
+		/*
+		for (j=0;j<model.views[i].header.nIndices;j++){
+			printf("[%d]%d\n ",j,model.views[i].Indices[j]);
+		}
+		*/
 
 		printf("nTriangles %d, so the real number is %d\n",
 				model.views[i].header.nTriangles,
-				model.views[i].header.nTriangles/3);
+				model.views[i].header.nTriangles / 3);
 
 		printf("nProperties : %d\n", model.views[i].header.nProperties);
 
 		printf("nSubmeshes : %d\n", model.views[i].header.nSubmeshes);
+		for (j = 0; j < model.views[i].header.nSubmeshes; j++) {
+			printf("[Submesh #%d]\n", j);
+			printf("\tID : %d\n", model.views[i].Submeshes[j].ID);
+			printf("\tStartVertex : %d\n",
+					model.views[i].Submeshes[j].StartVertex);
+			printf("\tnVertices : %d\n", model.views[i].Submeshes[j].nVertices);
+			printf("\tnTriangles : %d\n",
+					model.views[i].Submeshes[j].nTriangles);
+			printf("\tnBones : %d\n", model.views[i].Submeshes[j].nBones);
+			printf("\tStartBones : %d\n",
+					model.views[i].Submeshes[j].StartBones);
+			printf("\tRootBone : %d\n", model.views[i].Submeshes[j].RootBone);
+			printf("\n");
+		}
 
 		printf("nTexUnit : %d\n", model.views[i].header.nTextureUnits);
 		printf("\n");
