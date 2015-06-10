@@ -31,7 +31,7 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 		//Triangles
 		if (ptr[i]->header.nTriangles > 0) {
 			ptr[i]->Triangles = malloc(
-					(ptr[i]->header.nTriangles / 3) * sizeof(Triangle)); //FIXME Confused about Wiki saying the number is incorrect
+					(ptr[i]->header.nTriangles / 3) * sizeof(Triangle));
 			fseek(skin_files[i], ptr[i]->header.ofsTriangles, SEEK_SET);
 			fread(ptr[i]->Triangles, sizeof(Triangle),
 					ptr[i]->header.nTriangles / 3, skin_files[i]);
@@ -151,7 +151,7 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 			LKModelBoneDef lk_bone = ptr->bones[i];
 			int j;
 			//Translation
-			if (lk_bone.trans.Times.n > 0) {//FIXME I think the memory allocation here is wrong, but I'm not sure.
+			if (lk_bone.trans.Times.n > 0) {
 				ptr->bonesdata[i].t_times = malloc(
 						lk_bone.trans.Times.n * sizeof(Uint32Array));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 				for (j = 0; j < lk_bone.trans.Times.n; j++) {
@@ -729,6 +729,8 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsBoundingNormals, SEEK_SET);
 	fread(ptr->BoundingNormals, sizeof(Vec3D), ptr->header.nBoundingNormals,
 			lk_m2_file);
+
+	//Attachments TODO
 
 	//Attachment Lookup Table
 	ptr->AttachLookup = malloc(ptr->header.nAttachLookup * sizeof(short));

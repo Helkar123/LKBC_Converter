@@ -20,11 +20,10 @@ typedef uint16 Triangle[3]; //Indices for Triangles
 typedef uint16 Vertex; //The vertex in the global vertex list
 typedef uint32 Property; //Bones Indices into BoneLookupTable
 
-typedef struct ArrayRef {//Can point to absolutely anything
+typedef struct ArrayRef { //Can point to absolutely anything
 	uint32 n;
 	uint32 ofs;
 } ArrayRef;
-
 
 /*Arrays with an unknown size*/
 
@@ -229,7 +228,7 @@ typedef struct ModelAnimation {
 	uint32 timeStart;
 	uint32 timeEnd;
 	float moveSpeed;
-	uint32 flags;//LoopType
+	uint32 flags;				//LoopType
 	uint16 probability;
 	uint16 unused;
 	uint32 d1;
@@ -290,7 +289,6 @@ typedef struct ModelBoneDef {
 
 	Vec3D pivot;
 } ModelBoneDef;
-
 
 typedef struct LKBonesDataBlock {
 	Uint32Array *t_times;
@@ -375,7 +373,7 @@ typedef struct ViewsHeader {
 
 typedef struct LKSubmesh {
 	uint16 ID;
-	uint16 Level;//level*(2^16)+StartThing
+	uint16 Level; //level*(2^16)+StartThing
 	uint16 StartVertex;
 	uint16 nVertices;
 	uint16 StartTriangle;
@@ -391,14 +389,14 @@ typedef struct LKSubmesh {
 
 typedef struct Submesh {
 	uint16 ID;
-	uint16 Level;//level*(2^16)+StartThing EXPERIMENTAL
+	uint16 Level; //level*(2^16)+StartThing EXPERIMENTAL
 	uint16 StartVertex;
 	uint16 nVertices;
 	uint16 StartTriangle;
 	uint16 nTriangles;
 	uint16 nBones;
 	uint16 StartBones;
-	uint16 boneInfluences;  //Amount of bones up the parent-chain affecting the submesh
+	uint16 boneInfluences; //Amount of bones up the parent-chain affecting the submesh
 	uint16 RootBone;
 	Vec3D Position;
 	float Floats[4];
@@ -534,8 +532,8 @@ typedef struct LKM2 {
 	Triangle *BoundingTriangles;
 	Vec3D *BoundingVertices;
 	Vec3D *BoundingNormals;
-	LKAttachment *Attachments; //TODO Read it
-	uint16 *AttachLookup; //TODO Read it
+	LKAttachment *Attachments;
+	uint16 *AttachLookup;
 /*TODO Events, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */

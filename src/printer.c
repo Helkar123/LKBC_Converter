@@ -68,6 +68,10 @@ void print_anims_bc(BCM2 model) {
 	}
 }
 
+/**
+ * Print a Skin structure.
+ * @param skin
+ */
 void print_skin(Skin skin) {
 	printf("[Skin #%d]\n", skin.header.ID);
 	printf("nIndices : %d\n", skin.header.nIndices);
@@ -78,6 +82,10 @@ void print_skin(Skin skin) {
 	printf("\n");
 }
 
+/**
+ * Print the Views of a BC model.
+ * @param model
+ */
 void print_views(BCM2 model) {
 	int i;
 	for (i = 0; i < model.header.nViews; i++) {
@@ -159,7 +167,23 @@ void print_bones(BCM2 model) {
 					model.bonesdata[i].r_keys.values[j][2],
 					model.bonesdata[i].r_keys.values[j][3]);
 		}
-		//printf("Scaling:\n");//TODO
+
+		/*
+		printf("Scaling:\n");
+		printf("\tNumber of Ranges: %d\n", model.bones[i].scal.Ranges.n);
+		for (j = 0; j < model.bones[i].scal.Ranges.n; j++) {
+			printf("\t\t(%d, %d)\n", model.bonesdata[i].s_ranges.values[j][0],
+					model.bonesdata[i].s_ranges.values[j][1]);
+		}
+		printf("\tNumber of Timestamps: %d", model.bones[i].scal.Times.n);
+		printf("\t Number of Keys: %d\n", model.bones[i].scal.Keys.n);
+		for (j = 0; j < model.bones[i].scal.Times.n; j++) {
+			printf("\t\t%d: (%f, %f, %f)\n", model.bonesdata[i].s_times.values[j],
+					model.bonesdata[i].s_keys.values[j][0],
+					model.bonesdata[i].s_keys.values[j][1],
+					model.bonesdata[i].s_keys.values[j][2]);
+		}
+		*/
 		printf("\n");
 	}
 }
@@ -191,6 +215,10 @@ void print_bonesdata(LKM2 model) {
 	}
 }
 
+/**
+ * Print the Vertices.
+ * @param model
+ */
 void print_vertices_lk(LKM2 model) {
 	int i;
 	for (i = 0; i < model.header.nVertices; i++) {
@@ -199,6 +227,10 @@ void print_vertices_lk(LKM2 model) {
 	}
 }
 
+/**
+ * Print the Vertices.
+ * @param model
+ */
 void print_vertices_bc(BCM2 model) {
 	int i;
 	for (i = 0; i < model.header.nVertices; i++) {

@@ -19,7 +19,7 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	//TODO version=0x107 if the model has particles
 	ptr->header.version = 0x104;
 	ptr->header.nameLength = lk_header.nameLength;
-	ptr->header.nameOfs = 0x150;
+	ptr->header.nameOfs = lk_header.nameOfs;//0x150
 	ptr->header.GlobalModelFlags = lk_header.GlobalModelFlags;
 	ptr->header.nGlobalSequences = lk_header.nGlobalSequences;
 	ptr->header.ofsGlobalSequences = lk_header.ofsGlobalSequences;
@@ -27,7 +27,7 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsAnimations = lk_header.ofsAnimations;
 	ptr->header.nAnimationLookup = lk_header.nAnimationLookup;
 	ptr->header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
-	ptr->header.nPlayableAnimationLookup = 0x00; //FIXME Placeholder
+	ptr->header.nPlayableAnimationLookup = 0x00; //TODO Placeholder. I don't know where this data is in WotLK.
 	ptr->header.ofsPlayableAnimationLookup = 0x00;
 	ptr->header.nBones = lk_header.nBones;
 	ptr->header.ofsBones = lk_header.ofsBones;
@@ -43,8 +43,6 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsTextures = lk_header.ofsTextures;
 	ptr->header.nTransparency = lk_header.nTransparency;
 	ptr->header.ofsTransparency = lk_header.ofsTransparency;
-	ptr->header.nTransparency = 0; //FIXME
-	ptr->header.ofsTransparency = 0;
 	ptr->header.nI = 0x00;
 	ptr->header.ofsI = 0x00;
 	ptr->header.nTexAnims = lk_header.nTexAnims;
@@ -81,8 +79,18 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsCameras = lk_header.ofsCameras;
 	ptr->header.nCameraLookup = lk_header.nCameraLookup;
 	ptr->header.ofsCameraLookup = lk_header.ofsCameraLookup;
+	ptr->header.nRibbonEmitters = lk_header.nRibbonEmitters;
+	ptr->header.ofsRibbonEmitters = lk_header.ofsRibbonEmitters;
+	ptr->header.nParticleEmitters = lk_header.nParticleEmitters;
+	ptr->header.ofsParticleEmitters = lk_header.ofsParticleEmitters;
+	int i = 0;
+	for (i = 0; i < 14; i++) {
+		ptr->header.floats[i] = lk_header.floats[i];
+	}
 
-	ptr->header.nAttachments = 0; //FIXME
+	ptr->header.nTransparency = 0; //FIXME Unimplemented features
+	ptr->header.ofsTransparency = 0;
+	ptr->header.nAttachments = 0;
 	ptr->header.ofsAttachments = 0;
 	ptr->header.nAttachLookup = 0;
 	ptr->header.ofsAttachLookup = 0;
@@ -94,15 +102,6 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsCameras = 0;
 	ptr->header.nCameraLookup = 0;
 	ptr->header.ofsCameraLookup = 0;
-
-	ptr->header.nRibbonEmitters = lk_header.nRibbonEmitters;
-	ptr->header.ofsRibbonEmitters = lk_header.ofsRibbonEmitters;
-	ptr->header.nParticleEmitters = lk_header.nParticleEmitters;
-	ptr->header.ofsParticleEmitters = lk_header.ofsParticleEmitters;
-	int i = 0;
-	for (i = 0; i < 14; i++) {
-		ptr->header.floats[i] = lk_header.floats[i];
-	}
 	return 0;
 }
 
@@ -310,6 +309,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 				ptr->bones[i].rot.Keys.n++;
 
 				ptr->bonesdata[i].r_times.values[r_times_size - 1] = final_time;
+				//For 3D vectors (0,0,0) is fine but it's different for 4D
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][0] = 32767;
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][1] = 32767;
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][2] = 32767;
@@ -376,7 +376,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						int m;
 						for (m = 0; m < 3; m++) {
 							ptr->bonesdata[i].s_keys.values[keys_index][m] =
-									lk_m2.bonesdata[i].s_keys[j].values[k][m];//Start Timestamp + animation-relative time
+									lk_m2.bonesdata[i].s_keys[j].values[k][m];
 						}
 						keys_index++;
 					}
@@ -527,7 +527,6 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 /**
  * In WotLK, nViews is a number between 1 and 4. But in Burning Crusade, it's always 4, so there must be some kind of fake views.
  * @param ptr
- * @param skins
  * @return
  */
 int views_filler(BCM2 *ptr) {

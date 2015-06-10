@@ -33,6 +33,12 @@ int align(FILE *file) {
 	return count;
 }
 
+/**
+ * Write Views structure from a pointed BCM2 into the specified stream.
+ * @param bc_m2_file
+ * @param ptr
+ * @return
+ */
 int write_views(FILE *bc_m2_file, BCM2 *ptr) {
 	if (ptr->header.nViews > 0) {
 		ptr->header.ofsViews = getPos(bc_m2_file);
@@ -191,16 +197,16 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
  * @param ptr A pointer to a M2/BC structure.
  */
 int write_model(FILE *bc_m2_file, BCM2 *ptr) {
-//header
+	//Header
 	fwrite(&ptr->header, sizeof(ModelHeader), 1, bc_m2_file);
 	align(bc_m2_file);
 
-//filename
+	//Filename
 	ptr->header.nameOfs = getPos(bc_m2_file);
 	fwrite(ptr->filename, sizeof(char), ptr->header.nameLength, bc_m2_file);
 	align(bc_m2_file);
 
-//animations
+	//Animations
 	if (ptr->header.nAnimations > 0) {
 		ptr->header.ofsAnimations = getPos(bc_m2_file);
 		fwrite(ptr->animations, sizeof(ModelAnimation), ptr->header.nAnimations,
@@ -208,10 +214,10 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
-//bones
+	//Bones
 	write_bones(bc_m2_file, ptr);
 
-//animlookup
+	//Animlookup
 	if (ptr->header.nAnimationLookup > 0) {
 		ptr->header.ofsAnimationLookup = getPos(bc_m2_file);
 		fwrite(ptr->AnimLookup, sizeof(int16), ptr->header.nAnimationLookup,
@@ -219,7 +225,7 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
-//keybonelookup
+	//Keybonelookup
 	if (ptr->header.nKeyBoneLookup > 0) {
 		ptr->header.ofsKeyBoneLookup = getPos(bc_m2_file);
 		fwrite(ptr->keybonelookup, sizeof(short), ptr->header.nKeyBoneLookup,
@@ -227,19 +233,19 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
-//vertices
+	//Vertices
 	if (ptr->header.nVertices > 0) {
 		ptr->header.ofsVertices = getPos(bc_m2_file);
 		fwrite(ptr->vertices, sizeof(ModelVertex), ptr->header.nVertices,
 				bc_m2_file);
 		align(bc_m2_file);
 	}
-//views
+	//Views
 	write_views(bc_m2_file, ptr);
 
-//TODO Colors
+	//TODO Colors
 
-//textures
+	//Textures
 	if (ptr->header.nTextures > 0) {
 		ptr->header.ofsTextures = getPos(bc_m2_file);
 		fwrite(ptr->textures_def, sizeof(ModelTextureDef),
@@ -261,19 +267,24 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		fseek(bc_m2_file, 0, SEEK_END);
 	}
 
-//TODO Continue
+
+	//RenderFlags
 	if (ptr->header.nRenderFlags > 0) {
 		ptr->header.ofsRenderFlags = getPos(bc_m2_file);
 		fwrite(ptr->renderflags, sizeof(int), ptr->header.nRenderFlags,
 				bc_m2_file);
 		align(bc_m2_file);
 	}
+
+	//BoneLookupTable
 	if (ptr->header.nBoneLookupTable > 0) {
 		ptr->header.ofsBoneLookupTable = getPos(bc_m2_file);
 		fwrite(ptr->BoneLookupTable, sizeof(int16),
 				ptr->header.nBoneLookupTable, bc_m2_file);
 		align(bc_m2_file);
 	}
+
+	//Lookups
 	if (ptr->header.nTexLookup > 0) {
 		ptr->header.ofsTexLookup = getPos(bc_m2_file);
 		fwrite(ptr->TexLookupTable, sizeof(short), ptr->header.nTexLookup,
@@ -298,6 +309,9 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 				bc_m2_file);
 		align(bc_m2_file);
 	}
+
+	//TODO Attachments
+
 	if (ptr->header.nAttachLookup > 0) {
 		ptr->header.ofsAttachLookup = getPos(bc_m2_file);
 		fwrite(ptr->AttachLookup, sizeof(int16), ptr->header.nAttachLookup,
@@ -305,7 +319,7 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
-//rewrite the header with updated offsets
+	//Rewrite the header with updated offsets
 	fseek(bc_m2_file, 0, SEEK_SET);
 	fwrite(&ptr->header, sizeof(ModelHeader), 1, bc_m2_file);
 
