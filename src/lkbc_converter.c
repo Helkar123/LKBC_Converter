@@ -78,7 +78,13 @@ int main(int argc, char *argv[]) {
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
-	print_anims_bc(bc_model);//FIXME Debug purpose
+
+	//FIXME Debug
+	print_bones(bc_model);
+	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
+	BCM2 genuine_model;
+	read_model_bc(genuine_m2_file, &genuine_model);
+	//print_bones(genuine_model);
 
 	//Writing
 	char new_name[64] = "BC_";

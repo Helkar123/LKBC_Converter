@@ -10,5 +10,6 @@
 #include "structures.h"
 
 int read_model(FILE *lk_m2_file, LKM2 *ptr);
+int read_model_bc(FILE *bc_m2_file, BCM2 *ptr);
 
 #endif

@@ -26,8 +26,10 @@ void print_anims_lk(LKM2 model) {
 		printf("Unknown 1: %d\n", model.animations[i].d1);
 		printf("Unknown 2: %d\n", model.animations[i].d2);
 		printf("playSpeed: %d\n", model.animations[i].playSpeed);
-		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0], model.animations[i].boxA[1], model.animations[i].boxA[2]);
-		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0], model.animations[i].boxB[1], model.animations[i].boxB[2]);
+		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0],
+				model.animations[i].boxA[1], model.animations[i].boxA[2]);
+		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0],
+				model.animations[i].boxB[1], model.animations[i].boxB[2]);
 		printf("Radius: %f\n", model.animations[i].rad);
 		printf("NextAnimation: %d\n", model.animations[i].NextAnimation);
 		printf("Index: %d\n", model.animations[i].Index);
@@ -55,8 +57,10 @@ void print_anims_bc(BCM2 model) {
 		printf("Unknown 1: %d\n", model.animations[i].d1);
 		printf("Unknown 2: %d\n", model.animations[i].d2);
 		printf("playSpeed: %d\n", model.animations[i].playSpeed);
-		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0], model.animations[i].boxA[1], model.animations[i].boxA[2]);
-		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0], model.animations[i].boxB[1], model.animations[i].boxB[2]);
+		printf("MinimumExtent: (%f,%f,%f)\n", model.animations[i].boxA[0],
+				model.animations[i].boxA[1], model.animations[i].boxA[2]);
+		printf("MaximumExtent: (%f,%f,%f)\n", model.animations[i].boxB[0],
+				model.animations[i].boxB[1], model.animations[i].boxB[2]);
 		printf("Radius: %f\n", model.animations[i].rad);
 		printf("NextAnimation: %d\n", model.animations[i].NextAnimation);
 		printf("Index: %d\n", model.animations[i].Index);
@@ -81,10 +85,10 @@ void print_views(BCM2 model) {
 		printf("[View #%d]\n", i);
 		printf("nIndices : %d\n", model.views[i].header.nIndices);
 		/*
-		for (j=0;j<model.views[i].header.nIndices;j++){
-			printf("[%d]%d\n ",j,model.views[i].Indices[j]);
-		}
-		*/
+		 for (j=0;j<model.views[i].header.nIndices;j++){
+		 printf("[%d]%d\n ",j,model.views[i].Indices[j]);
+		 }
+		 */
 
 		printf("nTriangles %d, so the real number is %d\n",
 				model.views[i].header.nTriangles,
@@ -113,6 +117,52 @@ void print_views(BCM2 model) {
 	}
 }
 
+/**
+ * Print the Bones from a BC model
+ * @param model
+ */
+void print_bones(BCM2 model) {
+	int i;
+	for (i = 0; i < model.header.nBones; i++) {
+		printf("[Bone #%d]\n", i);
+		int j;
+		/*
+		printf("Translation:\n");
+		printf("\tNumber of Ranges: %d\n", model.bones[i].trans.Ranges.n);
+		for (j = 0; j < model.bones[i].trans.Ranges.n; j++) {
+			printf("\t\t(%d, %d)\n", model.bonesdata[i].t_ranges.values[j][0],
+					model.bonesdata[i].t_ranges.values[j][1]);
+		}
+		printf("\tNumber of Timestamps: %d", model.bones[i].trans.Times.n);
+		printf("\t Number of Keys: %d\n", model.bones[i].trans.Keys.n);
+		for (j = 0; j < model.bones[i].trans.Times.n; j++) {
+			printf("\t\t%d: (%f, %f, %f)\n", model.bonesdata[i].t_times.values[j],
+					model.bonesdata[i].t_keys.values[j][0],
+					model.bonesdata[i].t_keys.values[j][1],
+					model.bonesdata[i].t_keys.values[j][2]);
+		}
+		*/
+
+		printf("Rotation:\n");
+		printf("\tNumber of Ranges: %d\n", model.bones[i].rot.Ranges.n);
+		for (j = 0; j < model.bones[i].rot.Ranges.n; j++) {
+			printf("\t\t(%d,%d)\n", model.bonesdata[i].r_ranges.values[j][0],
+					model.bonesdata[i].r_ranges.values[j][1]);
+		}
+		printf("\tNumber of Timestamps: %d", model.bones[i].rot.Times.n);
+		printf("\t Number of Keys: %d\n", model.bones[i].rot.Keys.n);
+		for (j = 0; j < model.bones[i].rot.Times.n; j++) {
+			printf("\t\t%d: (%d, %d, %d, %d)\n",
+					model.bonesdata[i].r_times.values[j],
+					model.bonesdata[i].r_keys.values[j][0],
+					model.bonesdata[i].r_keys.values[j][1],
+					model.bonesdata[i].r_keys.values[j][2],
+					model.bonesdata[i].r_keys.values[j][3]);
+		}
+		//printf("Scaling:\n");//TODO
+		printf("\n");
+	}
+}
 /**
  * ATM print Translation timestamps of every bone in a LK model
  * @param model

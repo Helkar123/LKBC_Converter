@@ -103,64 +103,78 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 			//translation
 			if (ptr->bones[i].trans.Ranges.n > 0) {
 				ptr->bones[i].trans.Ranges.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].t_ranges.values, sizeof(Range),
-						ptr->bones[i].trans.Ranges.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].trans.Ranges.n; j++) {
+					fwrite(ptr->bonesdata[i].t_ranges.values[j], sizeof(Range),
+							1, bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].trans.Times.n > 0) {
 				ptr->bones[i].trans.Times.ofs = getPos(bc_m2_file);
 				fwrite(ptr->bonesdata[i].t_times.values, sizeof(uint32),
 						ptr->bones[i].trans.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].trans.Keys.n > 0) {
 				ptr->bones[i].trans.Keys.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].t_keys.values, sizeof(Vec3D),
-						ptr->bones[i].trans.Keys.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].trans.Keys.n; j++) {
+					fwrite(ptr->bonesdata[i].t_keys.values[j], sizeof(Vec3D), 1,
+							bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
+
 			//rotation
 			if (ptr->bones[i].rot.Ranges.n > 0) {
 				ptr->bones[i].rot.Ranges.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].r_ranges.values, sizeof(Range),
-						ptr->bones[i].rot.Ranges.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].rot.Ranges.n; j++) {
+					fwrite(ptr->bonesdata[i].r_ranges.values[j], sizeof(Range),
+							1, bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].rot.Times.n > 0) {
 				ptr->bones[i].rot.Times.ofs = getPos(bc_m2_file);
 				fwrite(ptr->bonesdata[i].r_times.values, sizeof(uint32),
 						ptr->bones[i].rot.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].rot.Keys.n > 0) {
 				ptr->bones[i].rot.Keys.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].r_keys.values, sizeof(Quat),
-						ptr->bones[i].rot.Keys.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].rot.Keys.n; j++) {
+					fwrite(ptr->bonesdata[i].r_keys.values[j], sizeof(Quat), 1,
+							bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
+
 			//scaling
 			if (ptr->bones[i].scal.Ranges.n > 0) {
 				ptr->bones[i].scal.Ranges.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].s_ranges.values, sizeof(Range),
-						ptr->bones[i].scal.Ranges.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].scal.Ranges.n; j++) {
+					fwrite(ptr->bonesdata[i].s_ranges.values[j], sizeof(Range),
+							1, bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].scal.Times.n > 0) {
 				ptr->bones[i].scal.Times.ofs = getPos(bc_m2_file);
 				fwrite(ptr->bonesdata[i].s_times.values, sizeof(uint32),
 						ptr->bones[i].scal.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
-
 			if (ptr->bones[i].scal.Keys.n > 0) {
 				ptr->bones[i].scal.Keys.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].s_keys.values, sizeof(Vec3D),
-						ptr->bones[i].scal.Keys.n, bc_m2_file);
+				int j;
+				for (j = 0; j < ptr->bones[i].scal.Keys.n; j++) {
+					fwrite(ptr->bonesdata[i].s_keys.values[j], sizeof(Vec3D), 1,
+							bc_m2_file);
+				}
 				align(bc_m2_file);
 			}
 		}

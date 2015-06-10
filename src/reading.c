@@ -205,9 +205,8 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 								ptr->animofs[i].r_keys[j].n * sizeof(Quat));
 						fseek(lk_m2_file, ptr->animofs[i].r_keys[j].ofs,
 						SEEK_SET);
-						fread(ptr->bonesdata[i].r_keys[j].values,
-								sizeof(Quat), ptr->animofs[i].r_keys[j].n,
-								lk_m2_file);
+						fread(ptr->bonesdata[i].r_keys[j].values, sizeof(Quat),
+								ptr->animofs[i].r_keys[j].n, lk_m2_file);
 					}
 				}
 			}
@@ -486,6 +485,103 @@ int read_texanims(FILE *lk_m2_file, LKM2 *ptr) {
 }
 
 /**
+ * At the moment, this function is used to debug the converter by checking data on genuine BC models.
+ * @param bc_m2_file
+ * @param ptr
+ * @return
+ */
+int read_model_bc(FILE *bc_m2_file, BCM2 *ptr) {
+	//Header
+	fseek(bc_m2_file, 0, SEEK_SET);
+	fread(&ptr->header, sizeof(ModelHeader), 1, bc_m2_file);
+
+	//Animations
+	ptr->animations = malloc(ptr->header.nAnimations * sizeof(ModelAnimation));
+	fseek(bc_m2_file, ptr->header.ofsAnimations, SEEK_SET);
+	fread(ptr->animations, sizeof(ModelAnimation), ptr->header.nAnimations,
+			bc_m2_file);
+
+	//Bones
+	if (ptr->header.nBones > 0) { //I think lights and other non-geometric things don't have any
+		ptr->bones = malloc(ptr->header.nBones * sizeof(ModelBoneDef));
+		ptr->bonesdata = malloc(ptr->header.nBones * sizeof(BonesDataBlock));
+		fseek(bc_m2_file, ptr->header.ofsBones, SEEK_SET);
+		fread(ptr->bones, sizeof(ModelBoneDef), ptr->header.nBones, bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nBones; i++) {
+			//Translation
+			if (ptr->bones[i].trans.Ranges.n > 0) {
+				ptr->bonesdata[i].t_ranges.values = malloc(
+						ptr->bones[i].trans.Ranges.n * sizeof(Range));
+				fseek(bc_m2_file, ptr->bones[i].trans.Ranges.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].t_ranges.values, sizeof(Range),
+						ptr->bones[i].trans.Ranges.n, bc_m2_file);
+			}
+			if (ptr->bones[i].trans.Times.n > 0) {
+				ptr->bonesdata[i].t_times.values = malloc(
+						ptr->bones[i].trans.Times.n * sizeof(uint32));
+				fseek(bc_m2_file, ptr->bones[i].trans.Times.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].t_times.values, sizeof(uint32),
+						ptr->bones[i].trans.Times.n, bc_m2_file);
+			}
+			if (ptr->bones[i].trans.Keys.n > 0) {
+				ptr->bonesdata[i].t_keys.values = malloc(
+						ptr->bones[i].trans.Keys.n * sizeof(Vec3D));
+				fseek(bc_m2_file, ptr->bones[i].trans.Keys.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].t_keys.values, sizeof(Vec3D),
+						ptr->bones[i].trans.Keys.n, bc_m2_file);
+			}
+			//Rotation
+			if (ptr->bones[i].rot.Ranges.n > 0) {
+				ptr->bonesdata[i].r_ranges.values = malloc(
+						ptr->bones[i].rot.Ranges.n * sizeof(Range));
+				fseek(bc_m2_file, ptr->bones[i].rot.Ranges.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].r_ranges.values, sizeof(Range),
+						ptr->bones[i].rot.Ranges.n, bc_m2_file);
+			}
+			if (ptr->bones[i].rot.Times.n > 0) {
+				ptr->bonesdata[i].r_times.values = malloc(
+						ptr->bones[i].rot.Times.n * sizeof(uint32));
+				fseek(bc_m2_file, ptr->bones[i].rot.Times.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].r_times.values, sizeof(uint32),
+						ptr->bones[i].rot.Times.n, bc_m2_file);
+			}
+			if (ptr->bones[i].rot.Keys.n > 0) {
+				ptr->bonesdata[i].r_keys.values = malloc(
+						ptr->bones[i].rot.Keys.n * sizeof(Quat));
+				fseek(bc_m2_file, ptr->bones[i].rot.Keys.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].r_keys.values, sizeof(Quat),
+						ptr->bones[i].rot.Keys.n, bc_m2_file);
+			}
+			//Scaling
+			if (ptr->bones[i].scal.Ranges.n > 0) {
+				ptr->bonesdata[i].s_ranges.values = malloc(
+						ptr->bones[i].scal.Ranges.n * sizeof(Range));
+				fseek(bc_m2_file, ptr->bones[i].scal.Ranges.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].s_ranges.values, sizeof(Range),
+						ptr->bones[i].scal.Ranges.n, bc_m2_file);
+			}
+			if (ptr->bones[i].scal.Times.n > 0) {
+				ptr->bonesdata[i].s_times.values = malloc(
+						ptr->bones[i].scal.Times.n * sizeof(uint32));
+				fseek(bc_m2_file, ptr->bones[i].scal.Times.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].s_times.values, sizeof(uint32),
+						ptr->bones[i].scal.Times.n, bc_m2_file);
+			}
+			if (ptr->bones[i].scal.Keys.n > 0) {
+				ptr->bonesdata[i].s_keys.values = malloc(
+						ptr->bones[i].scal.Keys.n * sizeof(Vec3D));
+				fseek(bc_m2_file, ptr->bones[i].scal.Keys.ofs, SEEK_SET);
+				fread(ptr->bonesdata[i].s_keys.values, sizeof(Vec3D),
+						ptr->bones[i].scal.Keys.n, bc_m2_file);
+			}
+		}
+		return 0;
+	}
+	return -1;
+}
+
+/**
  * Each substructure in the M2 has a variable size except the header.
  * Memory for each substructure must therefore be allocated at reading depending on header values.
  * @param lk_m2_file The file to read data.
@@ -552,7 +648,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 		ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
 		int i;
 		for (i = 0; i < ptr->header.nTextures; i++) {
-			if (ptr->textures_def[i].type == 0) {//Filename is referenced in the m2 only when the type is 0
+			if (ptr->textures_def[i].type == 0) { //Filename is referenced in the m2 only when the type is 0
 				if (ptr->textures_def[i].nameLen >= 256) {
 					fprintf(stderr,
 							"nameLen too large : %d\nPlease report this issue.",
@@ -616,24 +712,23 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 	//BoundingTriangles
 	ptr->BoundingTriangles = malloc(
-			ptr->header.nBoundingTriangles/3 * sizeof(Triangle));
+			ptr->header.nBoundingTriangles / 3 * sizeof(Triangle));
 	fseek(lk_m2_file, ptr->header.ofsBoundingTriangles, SEEK_SET);
-	fread(ptr->BoundingTriangles, sizeof(Triangle), ptr->header.nBoundingTriangles/3,
-			lk_m2_file);
+	fread(ptr->BoundingTriangles, sizeof(Triangle),
+			ptr->header.nBoundingTriangles / 3, lk_m2_file);
 
 	//BoundingVertices
 	ptr->BoundingVertices = malloc(
 			ptr->header.nBoundingVertices * sizeof(Vec3D));
 	fseek(lk_m2_file, ptr->header.ofsBoundingVertices, SEEK_SET);
-	fread(ptr->BoundingVertices, sizeof(Vec3D),
-			ptr->header.nBoundingVertices, lk_m2_file);
+	fread(ptr->BoundingVertices, sizeof(Vec3D), ptr->header.nBoundingVertices,
+			lk_m2_file);
 
 	//BoundingNormals
-	ptr->BoundingNormals = malloc(
-			ptr->header.nBoundingNormals * sizeof(Vec3D));
+	ptr->BoundingNormals = malloc(ptr->header.nBoundingNormals * sizeof(Vec3D));
 	fseek(lk_m2_file, ptr->header.ofsBoundingNormals, SEEK_SET);
-	fread(ptr->BoundingNormals, sizeof(Vec3D),
-			ptr->header.nBoundingNormals, lk_m2_file);
+	fread(ptr->BoundingNormals, sizeof(Vec3D), ptr->header.nBoundingNormals,
+			lk_m2_file);
 
 	//Attachment Lookup Table
 	ptr->AttachLookup = malloc(ptr->header.nAttachLookup * sizeof(short));
