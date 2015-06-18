@@ -128,62 +128,71 @@ void print_views(BCM2 model) {
 /**
  * Print the Bones from a BC model
  * @param model
+ * @param flags What is printed depends on the three lower bits. Order : translation, rotation, scaling.
+ * Example (prints translation and scaling) : 0b101, so it's 5. Values go from 0 to 7.
  */
-void print_bones(BCM2 model) {
+void print_bones(BCM2 model, char flags) {
 	int i;
 	for (i = 0; i < model.header.nBones; i++) {
 		printf("[Bone #%d]\n", i);
 		int j;
-		/*
-		printf("Translation:\n");
-		printf("\tNumber of Ranges: %d\n", model.bones[i].trans.Ranges.n);
-		for (j = 0; j < model.bones[i].trans.Ranges.n; j++) {
-			printf("\t\t(%d, %d)\n", model.bonesdata[i].t_ranges.values[j][0],
-					model.bonesdata[i].t_ranges.values[j][1]);
-		}
-		printf("\tNumber of Timestamps: %d", model.bones[i].trans.Times.n);
-		printf("\t Number of Keys: %d\n", model.bones[i].trans.Keys.n);
-		for (j = 0; j < model.bones[i].trans.Times.n; j++) {
-			printf("\t\t%d: (%f, %f, %f)\n", model.bonesdata[i].t_times.values[j],
-					model.bonesdata[i].t_keys.values[j][0],
-					model.bonesdata[i].t_keys.values[j][1],
-					model.bonesdata[i].t_keys.values[j][2]);
-		}
-		*/
-
-		printf("Rotation:\n");
-		printf("\tNumber of Ranges: %d\n", model.bones[i].rot.Ranges.n);
-		for (j = 0; j < model.bones[i].rot.Ranges.n; j++) {
-			printf("\t\t(%d,%d)\n", model.bonesdata[i].r_ranges.values[j][0],
-					model.bonesdata[i].r_ranges.values[j][1]);
-		}
-		printf("\tNumber of Timestamps: %d", model.bones[i].rot.Times.n);
-		printf("\t Number of Keys: %d\n", model.bones[i].rot.Keys.n);
-		for (j = 0; j < model.bones[i].rot.Times.n; j++) {
-			printf("\t\t%d: (%d, %d, %d, %d)\n",
-					model.bonesdata[i].r_times.values[j],
-					model.bonesdata[i].r_keys.values[j][0],
-					model.bonesdata[i].r_keys.values[j][1],
-					model.bonesdata[i].r_keys.values[j][2],
-					model.bonesdata[i].r_keys.values[j][3]);
+		if (flags & 4) {
+			printf("Translation:\n");
+			printf("\tNumber of Ranges: %d\n", model.bones[i].trans.Ranges.n);
+			for (j = 0; j < model.bones[i].trans.Ranges.n; j++) {
+				printf("\t\t(%d, %d)\n",
+						model.bonesdata[i].t_ranges.values[j][0],
+						model.bonesdata[i].t_ranges.values[j][1]);
+			}
+			printf("\tNumber of Timestamps: %d", model.bones[i].trans.Times.n);
+			printf("\t Number of Keys: %d\n", model.bones[i].trans.Keys.n);
+			for (j = 0; j < model.bones[i].trans.Times.n; j++) {
+				printf("\t\t%d: (%f, %f, %f)\n",
+						model.bonesdata[i].t_times.values[j],
+						model.bonesdata[i].t_keys.values[j][0],
+						model.bonesdata[i].t_keys.values[j][1],
+						model.bonesdata[i].t_keys.values[j][2]);
+			}
 		}
 
-		/*
-		printf("Scaling:\n");
-		printf("\tNumber of Ranges: %d\n", model.bones[i].scal.Ranges.n);
-		for (j = 0; j < model.bones[i].scal.Ranges.n; j++) {
-			printf("\t\t(%d, %d)\n", model.bonesdata[i].s_ranges.values[j][0],
-					model.bonesdata[i].s_ranges.values[j][1]);
+		if (flags & 2) {
+			printf("Rotation:\n");
+			printf("\tNumber of Ranges: %d\n", model.bones[i].rot.Ranges.n);
+			for (j = 0; j < model.bones[i].rot.Ranges.n; j++) {
+				printf("\t\t(%d,%d)\n",
+						model.bonesdata[i].r_ranges.values[j][0],
+						model.bonesdata[i].r_ranges.values[j][1]);
+			}
+			printf("\tNumber of Timestamps: %d", model.bones[i].rot.Times.n);
+			printf("\t Number of Keys: %d\n", model.bones[i].rot.Keys.n);
+			for (j = 0; j < model.bones[i].rot.Times.n; j++) {
+				printf("\t\t%d: (%d, %d, %d, %d)\n",
+						model.bonesdata[i].r_times.values[j],
+						model.bonesdata[i].r_keys.values[j][0],
+						model.bonesdata[i].r_keys.values[j][1],
+						model.bonesdata[i].r_keys.values[j][2],
+						model.bonesdata[i].r_keys.values[j][3]);
+			}
 		}
-		printf("\tNumber of Timestamps: %d", model.bones[i].scal.Times.n);
-		printf("\t Number of Keys: %d\n", model.bones[i].scal.Keys.n);
-		for (j = 0; j < model.bones[i].scal.Times.n; j++) {
-			printf("\t\t%d: (%f, %f, %f)\n", model.bonesdata[i].s_times.values[j],
-					model.bonesdata[i].s_keys.values[j][0],
-					model.bonesdata[i].s_keys.values[j][1],
-					model.bonesdata[i].s_keys.values[j][2]);
+
+		if (flags & 1) {
+			printf("Scaling:\n");
+			printf("\tNumber of Ranges: %d\n", model.bones[i].scal.Ranges.n);
+			for (j = 0; j < model.bones[i].scal.Ranges.n; j++) {
+				printf("\t\t(%d, %d)\n",
+						model.bonesdata[i].s_ranges.values[j][0],
+						model.bonesdata[i].s_ranges.values[j][1]);
+			}
+			printf("\tNumber of Timestamps: %d", model.bones[i].scal.Times.n);
+			printf("\t Number of Keys: %d\n", model.bones[i].scal.Keys.n);
+			for (j = 0; j < model.bones[i].scal.Times.n; j++) {
+				printf("\t\t%d: (%f, %f, %f)\n",
+						model.bonesdata[i].s_times.values[j],
+						model.bonesdata[i].s_keys.values[j][0],
+						model.bonesdata[i].s_keys.values[j][1],
+						model.bonesdata[i].s_keys.values[j][2]);
+			}
 		}
-		*/
 		printf("\n");
 	}
 }

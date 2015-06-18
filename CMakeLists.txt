@@ -28,4 +28,5 @@ endif(DOXYGEN_FOUND)
 #unit tests
 include(tests/tests.cmake)
 
+#files
 add_executable(lkbc_converter src/lkbc_converter.c src/reading.c src/conversion.c src/writing.c src/printer.c)

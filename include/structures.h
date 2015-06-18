@@ -389,7 +389,7 @@ typedef struct LKSubmesh {
 
 typedef struct Submesh {
 	uint16 ID;
-	uint16 Level; //level*(2^16)+StartThing EXPERIMENTAL
+	uint16 Level; //EXPERIMENTAL : No mention of this in the Wiki, but the LK level might have always been there.
 	uint16 StartVertex;
 	uint16 nVertices;
 	uint16 StartTriangle;

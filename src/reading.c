@@ -14,54 +14,53 @@
  */
 int read_skins(FILE **skin_files, Skin **ptr, int n) {
 	int i;
+	*ptr=malloc(n*sizeof(Skin));
 	for (i = 0; i < n; i++) {
-		ptr[i] = malloc(sizeof(Skin));
 		//Header
 		fseek(skin_files[i], 0, SEEK_SET);
-		fread(&ptr[i]->header, sizeof(SkinHeader), 1, skin_files[i]);
-
+		fread(&(*ptr)[i].header, sizeof(SkinHeader), 1, skin_files[i]);
 		//Indices
-		if (ptr[i]->header.nIndices > 0) {
-			ptr[i]->Indices = malloc(ptr[i]->header.nIndices * sizeof(Vertex));
-			fseek(skin_files[i], ptr[i]->header.ofsIndices, SEEK_SET);
-			fread(ptr[i]->Indices, sizeof(Vertex), ptr[i]->header.nIndices,
+		if ((*ptr)[i].header.nIndices > 0) {
+			(*ptr)[i].Indices = malloc((*ptr)[i].header.nIndices * sizeof(Vertex));
+			fseek(skin_files[i], (*ptr)[i].header.ofsIndices, SEEK_SET);
+			fread((*ptr)[i].Indices, sizeof(Vertex), (*ptr)[i].header.nIndices,
 					skin_files[i]);
 		}
 
 		//Triangles
-		if (ptr[i]->header.nTriangles > 0) {
-			ptr[i]->Triangles = malloc(
-					(ptr[i]->header.nTriangles / 3) * sizeof(Triangle));
-			fseek(skin_files[i], ptr[i]->header.ofsTriangles, SEEK_SET);
-			fread(ptr[i]->Triangles, sizeof(Triangle),
-					ptr[i]->header.nTriangles / 3, skin_files[i]);
+		if ((*ptr)[i].header.nTriangles > 0) {
+			(*ptr)[i].Triangles = malloc(
+					((*ptr)[i].header.nTriangles / 3) * sizeof(Triangle));
+			fseek(skin_files[i], (*ptr)[i].header.ofsTriangles, SEEK_SET);
+			fread((*ptr)[i].Triangles, sizeof(Triangle),
+					(*ptr)[i].header.nTriangles / 3, skin_files[i]);
 		}
 
 		//Properties
-		if (ptr[i]->header.nProperties > 0) {
-			ptr[i]->Properties = malloc(
-					ptr[i]->header.nProperties * sizeof(Property));
-			fseek(skin_files[i], ptr[i]->header.ofsProperties, SEEK_SET);
-			fread(ptr[i]->Properties, sizeof(Property),
-					ptr[i]->header.nProperties, skin_files[i]);
+		if ((*ptr)[i].header.nProperties > 0) {
+			(*ptr)[i].Properties = malloc(
+					(*ptr)[i].header.nProperties * sizeof(Property));
+			fseek(skin_files[i], (*ptr)[i].header.ofsProperties, SEEK_SET);
+			fread((*ptr)[i].Properties, sizeof(Property),
+					(*ptr)[i].header.nProperties, skin_files[i]);
 		}
 
 		//Submeshes
-		if (ptr[i]->header.nSubmeshes > 0) {
-			ptr[i]->Submeshes = malloc(
-					ptr[i]->header.nSubmeshes * sizeof(LKSubmesh));
-			fseek(skin_files[i], ptr[i]->header.ofsSubmeshes, SEEK_SET);
-			fread(ptr[i]->Submeshes, sizeof(LKSubmesh),
-					ptr[i]->header.nSubmeshes, skin_files[i]);
+		if ((*ptr)[i].header.nSubmeshes > 0) {
+			(*ptr)[i].Submeshes = malloc(
+					(*ptr)[i].header.nSubmeshes * sizeof(LKSubmesh));
+			fseek(skin_files[i], (*ptr)[i].header.ofsSubmeshes, SEEK_SET);
+			fread((*ptr)[i].Submeshes, sizeof(LKSubmesh),
+					(*ptr)[i].header.nSubmeshes, skin_files[i]);
 		}
 
 		//TexUnits
-		if (ptr[i]->header.nTextureUnits > 0) {
-			ptr[i]->TextureUnits = malloc(
-					ptr[i]->header.nTextureUnits * sizeof(TexUnit));
-			fseek(skin_files[i], ptr[i]->header.ofsTextureUnits, SEEK_SET);
-			fread(ptr[i]->TextureUnits, sizeof(TexUnit),
-					ptr[i]->header.nTextureUnits, skin_files[i]);
+		if ((*ptr)[i].header.nTextureUnits > 0) {
+			(*ptr)[i].TextureUnits = malloc(
+					(*ptr)[i].header.nTextureUnits * sizeof(TexUnit));
+			fseek(skin_files[i], (*ptr)[i].header.ofsTextureUnits, SEEK_SET);
+			fread((*ptr)[i].TextureUnits, sizeof(TexUnit),
+					(*ptr)[i].header.nTextureUnits, skin_files[i]);
 		}
 	}
 	return 0;
@@ -377,6 +376,7 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
  * @return 0 if successful
+ * @author Stan84
  */
 int read_texanims(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nTexAnims > 0) {

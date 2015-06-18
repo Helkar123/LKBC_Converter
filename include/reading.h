@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "structures.h"
 
+int read_skins(FILE **skin_files, Skin **ptr, int n);
 int read_model(FILE *lk_m2_file, LKM2 *ptr);
 int read_model_bc(FILE *bc_m2_file, BCM2 *ptr);
 

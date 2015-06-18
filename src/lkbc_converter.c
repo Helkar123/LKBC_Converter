@@ -74,17 +74,25 @@ int main(int argc, char *argv[]) {
 
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
+	printf("Model successfully read.\n");
 
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
+	printf("Conversion complete.\n");
 
 	//FIXME Debug
-	print_bones(bc_model);
+	print_bones(bc_model, 3);
+	/*
 	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
+	if (genuine_m2_file == NULL) {
+		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
+		return -1;
+	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
-	//print_bones(genuine_model);
+	print_bones(genuine_model, 3);
+	*/
 
 	//Writing
 	char new_name[64] = "BC_";
@@ -93,6 +101,7 @@ int main(int argc, char *argv[]) {
 	FILE *bc_m2_file = fopen(new_name, "w+b");
 
 	write_model(bc_m2_file, &bc_model);
+	printf("Model successfully written.\n");
 
 	//Closing files
 	printf("Closing streams...\n");
