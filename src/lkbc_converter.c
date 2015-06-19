@@ -76,13 +76,15 @@ int main(int argc, char *argv[]) {
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 	printf("Model successfully read.\n");
 
+	fprintf(stderr,"LK texture name : %s\n",lk_model.texture_names[1]);
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
 	printf("Conversion complete.\n");
+	fprintf(stderr,"BC texture name : %s\n",bc_model.texture_names[1]);
 
 	//FIXME Debug
-	print_bones(bc_model, 3);
+	//print_bones(bc_model, 3);
 	/*
 	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
 	if (genuine_m2_file == NULL) {

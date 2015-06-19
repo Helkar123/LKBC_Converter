@@ -19,6 +19,7 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 		//Header
 		fseek(skin_files[i], 0, SEEK_SET);
 		fread(&(*ptr)[i].header, sizeof(SkinHeader), 1, skin_files[i]);
+
 		//Indices
 		if ((*ptr)[i].header.nIndices > 0) {
 			(*ptr)[i].Indices = malloc((*ptr)[i].header.nIndices * sizeof(Vertex));
@@ -649,6 +650,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 		int i;
 		for (i = 0; i < ptr->header.nTextures; i++) {
 			if (ptr->textures_def[i].type == 0) { //Filename is referenced in the m2 only when the type is 0
+				fprintf(stderr, "MARK READING: %d\n",i);//FIXME Debug mark
 				if (ptr->textures_def[i].nameLen >= 256) {
 					fprintf(stderr,
 							"nameLen too large : %d\nPlease report this issue.",

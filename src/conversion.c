@@ -689,9 +689,9 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	//TODO SubmeshAnimations/Colors
 
 	ptr->textures_def = malloc(ptr->header.nTextures * sizeof(ModelTextureDef));
+	ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
 	for (i = 0; i < ptr->header.nTextures; i++) {
 		ptr->textures_def[i] = lk_m2.textures_def[i];
-		ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
 		if (ptr->textures_def[i].type == 0) {
 			ptr->texture_names[i] = malloc(ptr->textures_def[i].nameLen);
 			ptr->texture_names[i] = lk_m2.texture_names[i];
