@@ -254,7 +254,6 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		int i;
 		for (i = 0; i < ptr->header.nTextures; i++) {
 			if (ptr->textures_def[i].type == 0) {
-	fprintf(stderr, "MARK WRITING: %d\n",i);//FIXME Debug mark
 				ptr->textures_def[i].nameOfs = getPos(bc_m2_file);
 				fwrite(ptr->texture_names[i], sizeof(char),
 						ptr->textures_def[i].nameLen, bc_m2_file);

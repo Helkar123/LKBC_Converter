@@ -231,6 +231,11 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 				ptr->bones[i].trans.Keys.n++;
 
 				ptr->bonesdata[i].t_times.values[t_times_size - 1] = final_time;
+
+				//FIXME Experimental last value
+				ptr->bonesdata[i].t_keys.values[t_times_size - 1][0] = ptr->bonesdata[i].t_keys.values[t_times_size - 2][0];
+				ptr->bonesdata[i].t_keys.values[t_times_size - 1][1] = ptr->bonesdata[i].t_keys.values[t_times_size - 2][1];
+				ptr->bonesdata[i].t_keys.values[t_times_size - 1][2] = ptr->bonesdata[i].t_keys.values[t_times_size - 2][2];
 			}
 		}
 		//END translation
@@ -309,11 +314,19 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 				ptr->bones[i].rot.Keys.n++;
 
 				ptr->bonesdata[i].r_times.values[r_times_size - 1] = final_time;
+
+				//FIXME Experimental last value
+				ptr->bonesdata[i].r_keys.values[r_times_size - 1][0] = ptr->bonesdata[i].r_keys.values[r_times_size - 2][0];
+				ptr->bonesdata[i].r_keys.values[r_times_size - 1][1] = ptr->bonesdata[i].r_keys.values[r_times_size - 2][1];
+				ptr->bonesdata[i].r_keys.values[r_times_size - 1][2] = ptr->bonesdata[i].r_keys.values[r_times_size - 2][2];
+				ptr->bonesdata[i].r_keys.values[r_times_size - 1][3] = ptr->bonesdata[i].r_keys.values[r_times_size - 2][3];
 				//For 3D vectors (0,0,0) is fine but it's different for 4D
+				/*
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][0] = 32767;
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][1] = 32767;
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][2] = 32767;
 				ptr->bonesdata[i].r_keys.values[r_times_size - 1][3] = -1;
+				*/
 			}
 		}
 		//END rotation
@@ -393,6 +406,12 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 				ptr->bones[i].scal.Keys.n++;
 
 				ptr->bonesdata[i].s_times.values[s_times_size - 1] = final_time;
+
+				//FIXME Experimental last value
+				ptr->bonesdata[i].s_keys.values[s_times_size - 1][0] = ptr->bonesdata[i].s_keys.values[s_times_size - 2][0];
+				ptr->bonesdata[i].s_keys.values[s_times_size - 1][1] = ptr->bonesdata[i].s_keys.values[s_times_size - 2][1];
+				ptr->bonesdata[i].s_keys.values[s_times_size - 1][2] = ptr->bonesdata[i].s_keys.values[s_times_size - 2][2];
+
 			}
 
 			/*FIXME Interp Range bug fix (Possibly useless now)
