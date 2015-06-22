@@ -76,25 +76,23 @@ int main(int argc, char *argv[]) {
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 	printf("Model successfully read.\n");
 
-	fprintf(stderr,"LK texture name : %s\n",lk_model.texture_names[1]);
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
 	printf("Conversion complete.\n");
-	fprintf(stderr,"BC texture name : %s\n",bc_model.texture_names[1]);
 
-	//FIXME Debug
-	//print_bones(bc_model, 3);
-	/*
-	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
+	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
+	FILE *genuine_m2_file = fopen("MountedKnightGenuine.m2", "r+b");
 	if (genuine_m2_file == NULL) {
 		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
 		return -1;
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
-	print_bones(genuine_model, 3);
-	*/
+	//print_anims_bc(bc_model);
+	print_bones(bc_model, 2);
+	//print_anims_bc(genuine_model);
+	//print_bones(genuine_model, 2);
 
 	//Writing
 	char new_name[64] = "BC_";
