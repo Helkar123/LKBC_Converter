@@ -143,6 +143,145 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 	return 0;
 }
 
+/*
+int convert_animblock(BCM2 *ptr, LKM2 lk_m2, LKAnimationBlock LKBlock, AnimationBlock *ptrBlock) {
+		if (LKBlock.Times.n > 1) {
+			ptrBlock->Ranges.n = ptr->header.nAnimations + 1;
+			ptr->bonesdata[i].s_ranges.values = malloc(
+					ptrBlock->Ranges.n * sizeof(Range));
+			ptr->bonesdata[i].s_ranges.values[ptr->header.nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+			ptr->bonesdata[i].s_ranges.values[ptr->header.nAnimations][1] = 0;
+
+			size_t keyframes_size = 0; //Number of (Timestamp, key) tuples
+			int j;
+			for (j = 0; j < lk_m2.bones[i].scal.Times.n; j++) {
+				if (lk_m2.animofs[i].s_times[j].n > 1) {
+					keyframes_size += lk_m2.animofs[i].s_times[j].n;
+				} else if (lk_m2.animofs[i].s_times[j].n == 1) {
+					if (j == 0) {
+						keyframes_size += 2;
+					} else {
+						keyframes_size += 1;
+					}
+				} else { //n=0
+					keyframes_size += 2;
+				}
+			}
+
+			ptr->bones[i].scal.Times.n = keyframes_size;
+			ptr->bones[i].scal.Keys.n = keyframes_size;
+
+			ptr->bonesdata[i].s_times.values = malloc(
+					(keyframes_size) * sizeof(uint32));
+
+			ptr->bonesdata[i].s_keys.values = malloc(
+					(keyframes_size) * sizeof(Vec3D));
+
+			int range_time = 0;
+			int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+			for (j = 0; j < lk_m2.bones[i].scal.Times.n; j++) {
+				//Interpolation range
+				if (lk_m2.animofs[i].s_times[j].n == 0) {
+					ptr->bonesdata[i].s_ranges.values[j][0] = range_time;
+					range_time++;
+					ptr->bonesdata[i].s_ranges.values[j][1] = range_time;
+					range_time++;
+				} else if (lk_m2.animofs[i].s_times[j].n == 1) {
+					if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
+						ptr->bonesdata[i].s_ranges.values[j][0] = range_time;
+						range_time++;
+						ptr->bonesdata[i].s_ranges.values[j][1] = range_time;
+						range_time++;
+					} else {
+						ptr->bonesdata[i].s_ranges.values[j][0] =
+								ptr->bonesdata[i].s_ranges.values[j - 1][1];
+						ptr->bonesdata[i].s_ranges.values[j][1] = range_time;
+						range_time++;
+					}
+				} else {				//n > 1
+					ptr->bonesdata[i].s_ranges.values[j][0] = range_time;
+					range_time += lk_m2.animofs[i].s_times[j].n - 1;
+					ptr->bonesdata[i].s_ranges.values[j][1] = range_time;
+					range_time++;
+				}
+
+				//Keyframes
+				if (lk_m2.animofs[i].s_times[j].n > 1) {//s_times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
+					int k;
+					for (k = 0; k < lk_m2.animofs[i].s_times[j].n; k++) {//Take each value for this anim and put it in the BC data
+						//TIMESTAMP
+						ptr->bonesdata[i].s_times.values[keyframes_index] =
+								ptr->animations[j].timeStart
+										+ lk_m2.bonesdata[i].s_times[j].values[k];//Start Time + animation-relative time
+						//KEY
+						int m;
+						for (m = 0; m < 3; m++) {
+							ptr->bonesdata[i].s_keys.values[keyframes_index][m] =
+									lk_m2.bonesdata[i].s_keys[j].values[k][m];
+						}
+						keyframes_index++;
+					}
+				} else if (lk_m2.animofs[i].s_times[j].n == 1) {
+					if (j > 0) {
+						//TIMESTAMP
+						ptr->bonesdata[i].s_times.values[keyframes_index] =
+								ptr->animations[j].timeEnd;
+						//KEY
+						int m;
+						for (m = 0; m < 3; m++) {
+							ptr->bonesdata[i].s_keys.values[keyframes_index][m] =
+									lk_m2.bonesdata[i].s_keys[j].values[0][m];
+						}
+						keyframes_index++;
+					} else {						//First animation (j=0)
+						//TIMESTAMP
+						ptr->bonesdata[i].s_times.values[keyframes_index] =
+								ptr->animations[j].timeStart;
+						ptr->bonesdata[i].s_times.values[keyframes_index + 1] =
+								ptr->animations[j].timeEnd;
+						//KEY
+						int m;
+						for (m = 0; m < 3; m++) {
+							ptr->bonesdata[i].s_keys.values[keyframes_index][m] =
+									lk_m2.bonesdata[i].s_keys[j].values[0][m];
+							ptr->bonesdata[i].s_keys.values[keyframes_index + 1][m] =
+									lk_m2.bonesdata[i].s_keys[j].values[0][m];
+						}
+						keyframes_index += 2;
+					}
+				} else {						//n=0
+					//TIMESTAMP
+					ptr->bonesdata[i].s_times.values[keyframes_index] =
+							ptr->animations[j].timeStart;
+					ptr->bonesdata[i].s_times.values[keyframes_index + 1] =
+							ptr->animations[j].timeEnd;
+					//KEY
+					int m;
+					for (m = 0; m < 3; m++) {
+						ptr->bonesdata[i].s_keys.values[keyframes_index][m] = 0;
+						ptr->bonesdata[i].s_keys.values[keyframes_index + 1][m] =
+								0;
+					}
+					keyframes_index += 2;
+				}
+			}
+		} else if (lk_m2.bones[i].scal.Times.n == 1) {//Constant value across all animations for the bone
+			ptr->bones[i].scal.Ranges.n = 0;
+			ptr->bonesdata[i].s_times.values = malloc(sizeof(uint32));
+			ptr->bonesdata[i].s_keys.values = malloc(sizeof(Vec3D));
+			ptr->bonesdata[i].s_times.values[0] =
+					lk_m2.bonesdata[i].s_times[0].values[0];
+			int m;
+			for (m = 0; m < 3; m++) {
+				ptr->bonesdata[i].s_keys.values[0][m] =
+						lk_m2.bonesdata[i].s_keys[0].values[0][m];
+			}
+		}
+		//END scaling
+}
+*/
+
+
 /**
  * Converts bones with their animations data
  * @param ptr Pointer to BC M2 structure
@@ -302,8 +441,10 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 					keyframes_size += 2;
 				}
 			}
-			fprintf(stderr, "NUMBER OF KEYFRAMES : %d\n", keyframes_size);
-			if (keyframes_size == 2) {//Fix rotation b34
+
+			fprintf(stderr, "BONE : %d\nNUMBER OF KEYFRAMES : %d\n\n", i,
+					keyframes_size);
+			if (keyframes_size == 2) { //Fix rotation b34
 				ptr->bones[i].rot.Ranges.n = 0;
 			}
 
@@ -402,14 +543,15 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						ptr->bonesdata[i].r_keys.values[keyframes_index + 1][m] =
 								-32767;
 					}
-					ptr->bonesdata[i].r_keys.values[keyframes_index][m] = -1;
+					ptr->bonesdata[i].r_keys.values[keyframes_index][0] = -1;
+					ptr->bonesdata[i].r_keys.values[keyframes_index][1] = -1;
 					keyframes_index += 2;
 				}
 			}
 		}
 		//END rotation
 		//scaling
-		if (lk_m2.bones[i].scal.Times.n > 0) {
+		if (lk_m2.bones[i].scal.Times.n > 1) {
 			ptr->bones[i].scal.Ranges.n = ptr->header.nAnimations + 1;
 			ptr->bonesdata[i].s_ranges.values = malloc(
 					ptr->bones[i].scal.Ranges.n * sizeof(Range));
@@ -506,7 +648,7 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 						//KEY
 						int m;
 						for (m = 0; m < 3; m++) {
-							ptr->bonesdata[i].t_keys.values[keyframes_index][m] =
+							ptr->bonesdata[i].s_keys.values[keyframes_index][m] =
 									lk_m2.bonesdata[i].s_keys[j].values[0][m];
 							ptr->bonesdata[i].s_keys.values[keyframes_index + 1][m] =
 									lk_m2.bonesdata[i].s_keys[j].values[0][m];
@@ -528,6 +670,17 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 					}
 					keyframes_index += 2;
 				}
+			}
+		} else if (lk_m2.bones[i].scal.Times.n == 1) {//Constant value across all animations for the bone
+			ptr->bones[i].scal.Ranges.n = 0;
+			ptr->bonesdata[i].s_times.values = malloc(sizeof(uint32));
+			ptr->bonesdata[i].s_keys.values = malloc(sizeof(Vec3D));
+			ptr->bonesdata[i].s_times.values[0] =
+					lk_m2.bonesdata[i].s_times[0].values[0];
+			int m;
+			for (m = 0; m < 3; m++) {
+				ptr->bonesdata[i].s_keys.values[0][m] =
+						lk_m2.bonesdata[i].s_keys[0].values[0][m];
 			}
 		}
 		//END scaling
