@@ -89,8 +89,9 @@ int main(int argc, char *argv[]) {
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
+	//print_bonesdata(lk_model);
 	//print_anims_bc(bc_model);
-	print_bones(bc_model, 2);
+	//print_bones(bc_model, 2);
 	//print_anims_bc(genuine_model);
 	//print_bones(genuine_model, 2);
 

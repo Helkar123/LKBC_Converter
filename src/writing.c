@@ -111,14 +111,14 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].trans.Ranges.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].trans.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].t_ranges.values[j], sizeof(Range),
+					fwrite(ptr->bonesdata[i].trans.ranges[j], sizeof(Range),
 							1, bc_m2_file);
 				}
 				align(bc_m2_file);
 			}
 			if (ptr->bones[i].trans.Times.n > 0) {
 				ptr->bones[i].trans.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].t_times.values, sizeof(uint32),
+				fwrite(ptr->bonesdata[i].trans.times, sizeof(uint32),
 						ptr->bones[i].trans.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
@@ -126,7 +126,7 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].trans.Keys.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].trans.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].t_keys.values[j], sizeof(Vec3D), 1,
+					fwrite(ptr->bonesdata[i].trans.keys[j], sizeof(Vec3D), 1,
 							bc_m2_file);
 				}
 				align(bc_m2_file);
@@ -137,14 +137,14 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].rot.Ranges.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].rot.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].r_ranges.values[j], sizeof(Range),
+					fwrite(ptr->bonesdata[i].rot.ranges[j], sizeof(Range),
 							1, bc_m2_file);
 				}
 				align(bc_m2_file);
 			}
 			if (ptr->bones[i].rot.Times.n > 0) {
 				ptr->bones[i].rot.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].r_times.values, sizeof(uint32),
+				fwrite(ptr->bonesdata[i].rot.times, sizeof(uint32),
 						ptr->bones[i].rot.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
@@ -152,7 +152,7 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].rot.Keys.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].rot.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].r_keys.values[j], sizeof(Quat), 1,
+					fwrite(ptr->bonesdata[i].rot.keys[j], sizeof(Quat), 1,
 							bc_m2_file);
 				}
 				align(bc_m2_file);
@@ -163,14 +163,14 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].scal.Ranges.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].scal.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].s_ranges.values[j], sizeof(Range),
+					fwrite(ptr->bonesdata[i].scal.ranges[j], sizeof(Range),
 							1, bc_m2_file);
 				}
 				align(bc_m2_file);
 			}
 			if (ptr->bones[i].scal.Times.n > 0) {
 				ptr->bones[i].scal.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].s_times.values, sizeof(uint32),
+				fwrite(ptr->bonesdata[i].scal.times, sizeof(uint32),
 						ptr->bones[i].scal.Times.n, bc_m2_file);
 				align(bc_m2_file);
 			}
@@ -178,7 +178,7 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->bones[i].scal.Keys.ofs = getPos(bc_m2_file);
 				int j;
 				for (j = 0; j < ptr->bones[i].scal.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].s_keys.values[j], sizeof(Vec3D), 1,
+					fwrite(ptr->bonesdata[i].scal.keys[j], sizeof(Vec3D), 1,
 							bc_m2_file);
 				}
 				align(bc_m2_file);

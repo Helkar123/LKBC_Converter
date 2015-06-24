@@ -290,7 +290,30 @@ typedef struct ModelBoneDef {
 	Vec3D pivot;
 } ModelBoneDef;
 
+typedef struct Vec3D_LKSubBlock{
+	uint32 *times;
+	Vec3D *keys;
+}Vec3D_LKSubBlock;
+typedef struct Quat_LKSubBlock{
+	uint32 *times;
+	Quat *keys;
+}Quat_LKSubBlock;
+typedef struct Vec3D_SubBlock{
+	Range *ranges;
+	uint32 *times;
+	Vec3D *keys;
+}Vec3D_SubBlock;
+typedef struct Quat_SubBlock{
+	Range *ranges;
+	uint32 *times;
+	Quat *keys;
+}Quat_SubBlock;
+
 typedef struct LKBonesDataBlock {
+	Vec3D_LKSubBlock *trans;
+	Quat_LKSubBlock *rot;
+	Vec3D_LKSubBlock *scal;
+	/*Before refactoring
 	Uint32Array *t_times;
 	Vec3DArray *t_keys;
 
@@ -299,9 +322,14 @@ typedef struct LKBonesDataBlock {
 
 	Uint32Array *s_times;
 	Vec3DArray *s_keys;
+	*/
 } LKBonesDataBlock;
 
 typedef struct BonesDataBlock {
+	Vec3D_SubBlock trans;
+	Quat_SubBlock rot;
+	Vec3D_SubBlock scal;
+	/*Before refactoring
 	RangeArray t_ranges;
 	Uint32Array t_times;
 	Vec3DArray t_keys;
@@ -313,6 +341,7 @@ typedef struct BonesDataBlock {
 	RangeArray s_ranges;
 	Uint32Array s_times;
 	Vec3DArray s_keys;
+	*/
 } BonesDataBlock;
 
 typedef struct ModelVertex {
@@ -324,23 +353,32 @@ typedef struct ModelVertex {
 	Vec2D texcoords2;
 } ModelVertex;
 
-typedef struct AnimOfs {
+typedef struct AnimRefs{
+	ArrayRef *times;
+	ArrayRef *keys;
+}AnimRefs;
+typedef struct RefBlock {
+	AnimRefs trans;
+	AnimRefs rot;
+	AnimRefs scal;
+	/*
 	ArrayRef *t_times;
 	ArrayRef *t_keys;
 	ArrayRef *r_times;
 	ArrayRef *r_keys;
 	ArrayRef *s_times;
 	ArrayRef *s_keys;
-} AnimOfs;
+	*/
+} RefBlock;
 
-typedef struct AnimOfsSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
+typedef struct RefBlockSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
 	ArrayRef t_keys;
 	ArrayRef r_times;
 	ArrayRef r_keys;
 	ArrayRef s_times;
 	ArrayRef s_keys;
-} AnimOfsSimple;
+} RefBlockSimple;
 
 typedef struct SkinHeader {
 	uint32 ID;
@@ -438,12 +476,12 @@ typedef struct ColorDef {
 	AnimationBlock Opacity;
 } ColorDef;
 
-typedef struct ColorAnimOfs {
+typedef struct ColorRefBlock {
 	ArrayRef *rgb_times;
 	ArrayRef *rgb_keys;
 	ArrayRef *op_times;
 	ArrayRef *op_keys;
-} ColorAnimOfs;
+} ColorRefBlock;
 
 typedef struct LKColorDataBlock {
 	Uint32Array *rgb_times;
@@ -511,18 +549,18 @@ typedef struct LKM2 {
 	int16 *AnimLookup;
 
 	LKModelBoneDef *bones;
-	AnimOfs *animofs; //bones layer 1
+	RefBlock *animofs; //bones layer 1
 	LKBonesDataBlock *bonesdata; //bones layer 2
 	short *keybonelookup;
 	ModelVertex *vertices;
 	LKColorDef *colors;
-	ColorAnimOfs *coloranimofs;
+	ColorRefBlock *coloranimofs;
 	LKColorDataBlock *colorsdata;
 	ModelTextureDef *textures_def;
 	char **texture_names;
 	Transparency *transparencies;
 	LKTextureAnimation *tex_anims;
-	AnimOfsSimple *temp_anim_ofs;
+	RefBlockSimple *temp_anim_ofs;
 	int *renderflags;
 	int16 *BoneLookupTable;
 	short *TexLookupTable;

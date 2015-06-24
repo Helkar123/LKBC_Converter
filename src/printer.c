@@ -141,17 +141,17 @@ void print_bones(BCM2 model, char flags) {
 			printf("\tNumber of Ranges: %d\n", model.bones[i].trans.Ranges.n);
 			for (j = 0; j < model.bones[i].trans.Ranges.n; j++) {
 				printf("\t\t(%d, %d)\n",
-						model.bonesdata[i].t_ranges.values[j][0],
-						model.bonesdata[i].t_ranges.values[j][1]);
+						model.bonesdata[i].trans.ranges[j][0],
+						model.bonesdata[i].trans.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].trans.Times.n);
 			printf("\t Number of Keys: %d\n", model.bones[i].trans.Keys.n);
 			for (j = 0; j < model.bones[i].trans.Times.n; j++) {
 				printf("\t\t%d: (%f, %f, %f)\n",
-						model.bonesdata[i].t_times.values[j],
-						model.bonesdata[i].t_keys.values[j][0],
-						model.bonesdata[i].t_keys.values[j][1],
-						model.bonesdata[i].t_keys.values[j][2]);
+						model.bonesdata[i].trans.times[j],
+						model.bonesdata[i].trans.keys[j][0],
+						model.bonesdata[i].trans.keys[j][1],
+						model.bonesdata[i].trans.keys[j][2]);
 			}
 		}
 
@@ -160,18 +160,18 @@ void print_bones(BCM2 model, char flags) {
 			printf("\tNumber of Ranges: %d\n", model.bones[i].rot.Ranges.n);
 			for (j = 0; j < model.bones[i].rot.Ranges.n; j++) {
 				printf("\t\t(%d,%d)\n",
-						model.bonesdata[i].r_ranges.values[j][0],
-						model.bonesdata[i].r_ranges.values[j][1]);
+						model.bonesdata[i].rot.ranges[j][0],
+						model.bonesdata[i].rot.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].rot.Times.n);
 			printf("\t Number of Keys: %d\n", model.bones[i].rot.Keys.n);
 			for (j = 0; j < model.bones[i].rot.Times.n; j++) {
 				printf("\t\t%d: (%d, %d, %d, %d)\n",
-						model.bonesdata[i].r_times.values[j],
-						model.bonesdata[i].r_keys.values[j][0],
-						model.bonesdata[i].r_keys.values[j][1],
-						model.bonesdata[i].r_keys.values[j][2],
-						model.bonesdata[i].r_keys.values[j][3]);
+						model.bonesdata[i].rot.times[j],
+						model.bonesdata[i].rot.keys[j][0],
+						model.bonesdata[i].rot.keys[j][1],
+						model.bonesdata[i].rot.keys[j][2],
+						model.bonesdata[i].rot.keys[j][3]);
 			}
 		}
 
@@ -180,17 +180,17 @@ void print_bones(BCM2 model, char flags) {
 			printf("\tNumber of Ranges: %d\n", model.bones[i].scal.Ranges.n);
 			for (j = 0; j < model.bones[i].scal.Ranges.n; j++) {
 				printf("\t\t(%d, %d)\n",
-						model.bonesdata[i].s_ranges.values[j][0],
-						model.bonesdata[i].s_ranges.values[j][1]);
+						model.bonesdata[i].scal.ranges[j][0],
+						model.bonesdata[i].scal.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].scal.Times.n);
 			printf("\t Number of Keys: %d\n", model.bones[i].scal.Keys.n);
 			for (j = 0; j < model.bones[i].scal.Times.n; j++) {
 				printf("\t\t%d: (%f, %f, %f)\n",
-						model.bonesdata[i].s_times.values[j],
-						model.bonesdata[i].s_keys.values[j][0],
-						model.bonesdata[i].s_keys.values[j][1],
-						model.bonesdata[i].s_keys.values[j][2]);
+						model.bonesdata[i].scal.times[j],
+						model.bonesdata[i].scal.keys[j][0],
+						model.bonesdata[i].scal.keys[j][1],
+						model.bonesdata[i].scal.keys[j][2]);
 			}
 		}
 		printf("\n");
@@ -207,16 +207,17 @@ void print_bonesdata(LKM2 model) {
 		int j;
 		printf("LKBone : %d\n", i);
 		//Translation
-		if (lk_bone.trans.Keys.n > 0) {
-			for (j = 0; j < lk_bone.trans.Keys.n; j++) {
+		if (lk_bone.rot.Keys.n > 0) {
+			for (j = 0; j < lk_bone.rot.Keys.n; j++) {
 				printf("\t LKAnimation : %d\n", j);
-				if (model.animofs[i].t_keys[j].n > 0) {
+				if (model.animofs[i].rot.keys[j].n > 0) {
 					int k;
-					for (k = 0; k < model.animofs[i].t_keys[j].n; k++) {
-						printf("\t\tLKValue : (%f,%f,%f)\n",
-								model.bonesdata[i].t_keys[j].values[k][0],
-								model.bonesdata[i].t_keys[j].values[k][1],
-								model.bonesdata[i].t_keys[j].values[k][2]);
+					for (k = 0; k < model.animofs[i].rot.keys[j].n; k++) {
+						printf("\t\tLKValue : (%d,%d,%d,%d)\n",
+								model.bonesdata[i].rot[j].keys[k][0],
+								model.bonesdata[i].rot[j].keys[k][1],
+								model.bonesdata[i].rot[j].keys[k][2],
+								model.bonesdata[i].rot[j].keys[k][3]);
 					}
 				}
 			}
