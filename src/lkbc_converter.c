@@ -43,14 +43,19 @@ char* skin_name(char *m2_name, int number) {
  * Main function
  */
 int main(int argc, char *argv[]) {
-	printf("LKBC_Converter by Koward (Work in progress)\n");
+	printf("============================\n");
+	printf("= LKBC_Converter by Koward =\n");
+	printf("============================\n");
+	printf("\tNote : models with .anim files are unsupported.\n");
+	printf("\tThe converter will crash or produce a flawed m2 if you try them.\n");
+	printf("\n");
 	if (argc < 2) {
 		fprintf(stderr, "No M2 file specified.\n");
 		return -1;
 	}
 
 	//Reading files
-	printf("Opening M2/WotLK file : %s\n", argv[1]);
+	printf("Opening M2/WotLK file : \t%s\n", argv[1]);
 	FILE *lk_m2_file = fopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
@@ -64,7 +69,7 @@ int main(int argc, char *argv[]) {
 	skin_files = malloc(lk_model.header.nViews * sizeof(FILE *));
 	int i;
 	for (i = 0; i < lk_model.header.nViews; i++) {
-		printf("Opening Skin file : %s\n", skin_name(argv[1], i));
+		printf("Opening Skin file : \t\t%s\n", skin_name(argv[1], i));
 		skin_files[i] = fopen(skin_name(argv[1], i), "r+b");
 		if (skin_files[i] == NULL) {
 			fprintf(stderr, "SKIN/LK number %d opening error \r\n", i);
@@ -74,14 +79,15 @@ int main(int argc, char *argv[]) {
 
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
-	printf("Model successfully read.\n");
+	printf("Model successfully read.\n\n");
 
 	//Converting
 	BCM2 bc_model;
 	lk_to_bc(lk_model, skins, &bc_model);
-	printf("Conversion complete.\n");
+	printf("Conversion complete.\n\n");
 
 	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
+	/*
 	FILE *genuine_m2_file = fopen("MountedKnightGenuine.m2", "r+b");
 	if (genuine_m2_file == NULL) {
 		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
@@ -89,11 +95,7 @@ int main(int argc, char *argv[]) {
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
-	//print_bonesdata(lk_model);
-	//print_anims_bc(bc_model);
-	//print_bones(bc_model, 2);
-	//print_anims_bc(genuine_model);
-	//print_bones(genuine_model, 2);
+	*/
 
 	//Writing
 	char new_name[64] = "BC_";
@@ -105,6 +107,7 @@ int main(int argc, char *argv[]) {
 	printf("Model successfully written.\n");
 
 	//Closing files
+	printf("\n");
 	printf("Closing streams...\n");
 	for (i = 0; i < lk_model.header.nViews; i++) {
 		fclose(skin_files[i]);
