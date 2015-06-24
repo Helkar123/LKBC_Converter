@@ -93,6 +93,57 @@ int write_views(FILE *bc_m2_file, BCM2 *ptr) {
 	return -1;
 }
 
+void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Vec3D_SubBlock *ptrDataBlock) {
+	if (ptrBlock->Ranges.n > 0) {
+		ptrBlock->Ranges.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Ranges.n; j++) {
+			fwrite(ptrDataBlock->ranges[j], sizeof(Range), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+	if (ptrBlock->Times.n > 0) {
+		ptrBlock->Times.ofs = getPos(bc_m2_file);
+		fwrite(ptrDataBlock->times, sizeof(uint32), ptrBlock->Times.n,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+	if (ptrBlock->Keys.n > 0) {
+		ptrBlock->Keys.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Keys.n; j++) {
+			fwrite(ptrDataBlock->keys[j], sizeof(Vec3D), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+}
+void write_QuatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Quat_SubBlock *ptrDataBlock) {
+	if (ptrBlock->Ranges.n > 0) {
+		ptrBlock->Ranges.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Ranges.n; j++) {
+			fwrite(ptrDataBlock->ranges[j], sizeof(Range), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+	if (ptrBlock->Times.n > 0) {
+		ptrBlock->Times.ofs = getPos(bc_m2_file);
+		fwrite(ptrDataBlock->times, sizeof(uint32), ptrBlock->Times.n,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+	if (ptrBlock->Keys.n > 0) {
+		ptrBlock->Keys.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Keys.n; j++) {
+			fwrite(ptrDataBlock->keys[j], sizeof(Quat), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+}
+
 /**
  * Write bones. Good example of writing a structure with Animations Blocks inside.
  * @param bc_m2_file The file to write data.
@@ -106,83 +157,24 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
+			AnimationBlock *ptrBlock;
+			Vec3D_SubBlock *Vec3D_ptrDataBlock;
+			Quat_SubBlock *Quat_ptrDataBlock;
+
 			//translation
-			if (ptr->bones[i].trans.Ranges.n > 0) {
-				ptr->bones[i].trans.Ranges.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].trans.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].trans.ranges[j], sizeof(Range),
-							1, bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].trans.Times.n > 0) {
-				ptr->bones[i].trans.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].trans.times, sizeof(uint32),
-						ptr->bones[i].trans.Times.n, bc_m2_file);
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].trans.Keys.n > 0) {
-				ptr->bones[i].trans.Keys.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].trans.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].trans.keys[j], sizeof(Vec3D), 1,
-							bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
+			ptrBlock = &ptr->bones[i].trans;
+			Vec3D_ptrDataBlock = &ptr->bonesdata[i].trans;
+			write_Vec3DAnimBlock(bc_m2_file, ptrBlock, Vec3D_ptrDataBlock);
 
 			//rotation
-			if (ptr->bones[i].rot.Ranges.n > 0) {
-				ptr->bones[i].rot.Ranges.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].rot.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].rot.ranges[j], sizeof(Range),
-							1, bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].rot.Times.n > 0) {
-				ptr->bones[i].rot.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].rot.times, sizeof(uint32),
-						ptr->bones[i].rot.Times.n, bc_m2_file);
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].rot.Keys.n > 0) {
-				ptr->bones[i].rot.Keys.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].rot.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].rot.keys[j], sizeof(Quat), 1,
-							bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
+			ptrBlock = &ptr->bones[i].rot;
+			Quat_ptrDataBlock = &ptr->bonesdata[i].rot;
+			write_QuatAnimBlock(bc_m2_file, ptrBlock, Quat_ptrDataBlock);
 
 			//scaling
-			if (ptr->bones[i].scal.Ranges.n > 0) {
-				ptr->bones[i].scal.Ranges.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].scal.Ranges.n; j++) {
-					fwrite(ptr->bonesdata[i].scal.ranges[j], sizeof(Range),
-							1, bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].scal.Times.n > 0) {
-				ptr->bones[i].scal.Times.ofs = getPos(bc_m2_file);
-				fwrite(ptr->bonesdata[i].scal.times, sizeof(uint32),
-						ptr->bones[i].scal.Times.n, bc_m2_file);
-				align(bc_m2_file);
-			}
-			if (ptr->bones[i].scal.Keys.n > 0) {
-				ptr->bones[i].scal.Keys.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptr->bones[i].scal.Keys.n; j++) {
-					fwrite(ptr->bonesdata[i].scal.keys[j], sizeof(Vec3D), 1,
-							bc_m2_file);
-				}
-				align(bc_m2_file);
-			}
+			ptrBlock = &ptr->bones[i].scal;
+			Vec3D_ptrDataBlock = &ptr->bonesdata[i].scal;
+			write_Vec3DAnimBlock(bc_m2_file, ptrBlock, Vec3D_ptrDataBlock);
 		}
 	}
 	fseek(bc_m2_file, ptr->header.ofsBones, SEEK_SET);
@@ -266,7 +258,6 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 				ptr->header.nTextures, bc_m2_file);
 		fseek(bc_m2_file, 0, SEEK_END);
 	}
-
 
 	//RenderFlags
 	if (ptr->header.nRenderFlags > 0) {

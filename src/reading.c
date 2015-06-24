@@ -173,7 +173,6 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		ptr->bonesdata = malloc(ptr->header.nBones * sizeof(LKBonesDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
-
 			LKAnimationBlock *ptrBlock;
 			AnimRefs *ptrAnimRefs;
 			Vec3D_LKSubBlock **Vec3D_ptrDataBlock;
