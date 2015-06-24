@@ -14,7 +14,7 @@
  */
 int read_skins(FILE **skin_files, Skin **ptr, int n) {
 	int i;
-	*ptr=malloc(n*sizeof(Skin));
+	*ptr = malloc(n * sizeof(Skin));
 	for (i = 0; i < n; i++) {
 		//Header
 		fseek(skin_files[i], 0, SEEK_SET);
@@ -22,7 +22,8 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 
 		//Indices
 		if ((*ptr)[i].header.nIndices > 0) {
-			(*ptr)[i].Indices = malloc((*ptr)[i].header.nIndices * sizeof(Vertex));
+			(*ptr)[i].Indices = malloc(
+					(*ptr)[i].header.nIndices * sizeof(Vertex));
 			fseek(skin_files[i], (*ptr)[i].header.ofsIndices, SEEK_SET);
 			fread((*ptr)[i].Indices, sizeof(Vertex), (*ptr)[i].header.nIndices,
 					skin_files[i]);
@@ -91,82 +92,43 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		 */
 
 		//Store animofs (layer 1)
-		//You will access each ArrayRef by animofs[n of the bone].(t/r/s)_(times/keys).(n/ofs)
 		//This allows later to read the real animation data, by following each ArrayRef.
 		ptr->animofs = malloc(ptr->header.nBones * sizeof(RefBlock));//1 LKRefBlock per bone
+		//Store bones data (layer 2)
+		ptr->bonesdata = malloc(ptr->header.nBones * sizeof(LKBonesDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
-			LKModelBoneDef lk_bone = ptr->bones[i];
 			//Translation
-			if (lk_bone.trans.Times.n > 0) {
+			if (ptr->bones[i].trans.Times.n > 0) {
 				ptr->animofs[i].trans.times = malloc(
-						lk_bone.trans.Times.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.trans.Times.ofs, SEEK_SET);
+						ptr->bones[i].trans.Times.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].trans.Times.ofs, SEEK_SET);
 				fread(ptr->animofs[i].trans.times, sizeof(ArrayRef),
-						lk_bone.trans.Times.n, lk_m2_file);
-			}
-			if (lk_bone.trans.Keys.n > 0) {
-				ptr->animofs[i].trans.keys = malloc(
-						lk_bone.trans.Keys.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.trans.Keys.ofs, SEEK_SET);
-				fread(ptr->animofs[i].trans.keys, sizeof(ArrayRef),
-						lk_bone.trans.Keys.n, lk_m2_file);
-			}
-			//Rotation
-			if (lk_bone.rot.Times.n > 0) {
-				ptr->animofs[i].rot.times = malloc(
-						lk_bone.rot.Times.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.rot.Times.ofs, SEEK_SET);
-				fread(ptr->animofs[i].rot.times, sizeof(ArrayRef),
-						lk_bone.rot.Times.n, lk_m2_file);
-			}
-			if (lk_bone.rot.Keys.n > 0) {
-				ptr->animofs[i].rot.keys = malloc(
-						lk_bone.rot.Keys.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.rot.Keys.ofs, SEEK_SET);
-				fread(ptr->animofs[i].rot.keys, sizeof(ArrayRef),
-						lk_bone.rot.Keys.n, lk_m2_file);
-			}
-			//Scaling
-			if (lk_bone.scal.Times.n > 0) {
-				ptr->animofs[i].scal.times = malloc(
-						lk_bone.scal.Times.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.scal.Times.ofs, SEEK_SET);
-				fread(ptr->animofs[i].scal.times, sizeof(ArrayRef),
-						lk_bone.scal.Times.n, lk_m2_file);
-			}
-			if (lk_bone.scal.Keys.n > 0) {
-				ptr->animofs[i].scal.keys = malloc(
-						lk_bone.scal.Keys.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_bone.scal.Keys.ofs, SEEK_SET);
-				fread(ptr->animofs[i].scal.keys, sizeof(ArrayRef),
-						lk_bone.scal.Keys.n, lk_m2_file);
-			}
-		}
+						ptr->bones[i].trans.Times.n, lk_m2_file);
 
-		//Store bones data (layer 2)
-		//bonesdata[n of the bone].(t/r/s)_(times/keys)[index based on ntimes].values[index based on its n in animofs]
-		ptr->bonesdata = malloc(ptr->header.nBones * sizeof(LKBonesDataBlock));
-		for (i = 0; i < ptr->header.nBones; i++) {
-			LKModelBoneDef lk_bone = ptr->bones[i];
-			int j;
-			//Translation
-			if (lk_bone.trans.Times.n > 0) {//==trans.Keys.n
+				ptr->animofs[i].trans.keys = malloc(
+						ptr->bones[i].trans.Keys.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].trans.Keys.ofs, SEEK_SET);
+				fread(ptr->animofs[i].trans.keys, sizeof(ArrayRef),
+						ptr->bones[i].trans.Keys.n, lk_m2_file);
+
 				ptr->bonesdata[i].trans = malloc(
-						lk_bone.trans.Times.n * sizeof(Vec3D_LKSubBlock));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
-				for (j = 0; j < lk_bone.trans.Times.n; j++) {
+						ptr->bones[i].trans.Times.n * sizeof(Vec3D_LKSubBlock));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+				int j;
+				for (j = 0; j < ptr->bones[i].trans.Times.n; j++) {
 					if (ptr->animofs[i].trans.times[j].n > 0) {
 						ptr->bonesdata[i].trans[j].times = malloc(
-								ptr->animofs[i].trans.times[j].n * sizeof(uint32));	//The number of elements was found previously in this function (stored in animofs)
+								ptr->animofs[i].trans.times[j].n
+										* sizeof(uint32));//The number of elements was found previously in this function (stored in animofs)
 						fseek(lk_m2_file, ptr->animofs[i].trans.times[j].ofs,
 						SEEK_SET);
-						fread(ptr->bonesdata[i].trans[j].times,
-								sizeof(uint32), ptr->animofs[i].trans.times[j].n,
-								lk_m2_file);
+						fread(ptr->bonesdata[i].trans[j].times, sizeof(uint32),
+								ptr->animofs[i].trans.times[j].n, lk_m2_file);
 					}
 					if (ptr->animofs[i].trans.keys[j].n > 0) {
 						ptr->bonesdata[i].trans[j].keys = malloc(
-								ptr->animofs[i].trans.keys[j].n * sizeof(Vec3D));
+								ptr->animofs[i].trans.keys[j].n
+										* sizeof(Vec3D));
 						fseek(lk_m2_file, ptr->animofs[i].trans.keys[j].ofs,
 						SEEK_SET);
 						fread(ptr->bonesdata[i].trans[j].keys, sizeof(Vec3D),
@@ -175,18 +137,31 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 				}
 			}
 			//Rotation
-			if (lk_bone.rot.Times.n > 0) {//==rot.Keys.n
+			if (ptr->bones[i].rot.Times.n > 0) {
+				ptr->animofs[i].rot.times = malloc(
+						ptr->bones[i].rot.Times.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].rot.Times.ofs, SEEK_SET);
+				fread(ptr->animofs[i].rot.times, sizeof(ArrayRef),
+						ptr->bones[i].rot.Times.n, lk_m2_file);
+
+				ptr->animofs[i].rot.keys = malloc(
+						ptr->bones[i].rot.Keys.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].rot.Keys.ofs, SEEK_SET);
+				fread(ptr->animofs[i].rot.keys, sizeof(ArrayRef),
+						ptr->bones[i].rot.Keys.n, lk_m2_file);
+
 				ptr->bonesdata[i].rot = malloc(
-						lk_bone.rot.Times.n * sizeof(Quat_LKSubBlock));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
-				for (j = 0; j < lk_bone.rot.Times.n; j++) {
+						ptr->bones[i].rot.Times.n * sizeof(Quat_LKSubBlock));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+				int j;
+				for (j = 0; j < ptr->bones[i].rot.Times.n; j++) {
 					if (ptr->animofs[i].rot.times[j].n > 0) {
 						ptr->bonesdata[i].rot[j].times = malloc(
-								ptr->animofs[i].rot.times[j].n * sizeof(uint32));	//The number of elements was found previously in this function (stored in animofs)
+								ptr->animofs[i].rot.times[j].n
+										* sizeof(uint32));//The number of elements was found previously in this function (stored in animofs)
 						fseek(lk_m2_file, ptr->animofs[i].rot.times[j].ofs,
 						SEEK_SET);
-						fread(ptr->bonesdata[i].rot[j].times,
-								sizeof(uint32), ptr->animofs[i].rot.times[j].n,
-								lk_m2_file);
+						fread(ptr->bonesdata[i].rot[j].times, sizeof(uint32),
+								ptr->animofs[i].rot.times[j].n, lk_m2_file);
 					}
 					if (ptr->animofs[i].rot.keys[j].n > 0) {
 						ptr->bonesdata[i].rot[j].keys = malloc(
@@ -199,18 +174,31 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 				}
 			}
 			//Scaling
-			if (lk_bone.scal.Times.n > 0) {//==scal.Keys.n
+			if (ptr->bones[i].scal.Times.n > 0) {
+				ptr->animofs[i].scal.times = malloc(
+						ptr->bones[i].scal.Times.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].scal.Times.ofs, SEEK_SET);
+				fread(ptr->animofs[i].scal.times, sizeof(ArrayRef),
+						ptr->bones[i].scal.Times.n, lk_m2_file);
+
+				ptr->animofs[i].scal.keys = malloc(
+						ptr->bones[i].scal.Keys.n * sizeof(ArrayRef));
+				fseek(lk_m2_file, ptr->bones[i].scal.Keys.ofs, SEEK_SET);
+				fread(ptr->animofs[i].scal.keys, sizeof(ArrayRef),
+						ptr->bones[i].scal.Keys.n, lk_m2_file);
+
 				ptr->bonesdata[i].scal = malloc(
-						lk_bone.scal.Times.n * sizeof(Vec3D_LKSubBlock));//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
-				for (j = 0; j < lk_bone.scal.Times.n; j++) {
+						ptr->bones[i].scal.Times.n * sizeof(Vec3D_LKSubBlock));	//Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+				int j;
+				for (j = 0; j < ptr->bones[i].scal.Times.n; j++) {
 					if (ptr->animofs[i].scal.times[j].n > 0) {
 						ptr->bonesdata[i].scal[j].times = malloc(
-								ptr->animofs[i].scal.times[j].n * sizeof(uint32));	//The number of elements was found previously in this function (stored in animofs)
+								ptr->animofs[i].scal.times[j].n
+										* sizeof(uint32));//The number of elements was found previously in this function (stored in animofs)
 						fseek(lk_m2_file, ptr->animofs[i].scal.times[j].ofs,
 						SEEK_SET);
-						fread(ptr->bonesdata[i].scal[j].times,
-								sizeof(uint32), ptr->animofs[i].scal.times[j].n,
-								lk_m2_file);
+						fread(ptr->bonesdata[i].scal[j].times, sizeof(uint32),
+								ptr->animofs[i].scal.times[j].n, lk_m2_file);
 					}
 					if (ptr->animofs[i].scal.keys[j].n > 0) {
 						ptr->bonesdata[i].scal[j].keys = malloc(
