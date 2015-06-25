@@ -144,25 +144,43 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 }
 
 /**
- * Converts an AnimBlock of 3D Vectors values from LK to BC.
- * @param LKBlock Layer 0.
- * @param AnimRefs Layer 1 (ArrayRefs with n&ofs to data).
- * @param LKDataBlock Layer 2 (Data).
- * @param ptrBlock Layer 0.
- * @param ptrDataBlock Layer 1 (Data).
- * @param animations
- * @param nAnimations
+ * Compute interpolation ranges
+ * @param AnimRefs
+ * @param ptrDataBlock
+ * @param ptrRange Pointer to range_time.
+ * @param j Animation index.
  */
-void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
-		Vec3D_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
-		Vec3D_SubBlock *ptrDataBlock, ModelAnimation *animations,
-		int nAnimations) {
-	if (LKBlock.Times.n > 1) {
-		ptrBlock->Ranges.n = nAnimations + 1;
-		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
-		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
-		ptrDataBlock->ranges[nAnimations][1] = 0;
+void compute_ranges(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
+		Range **ptrRangeList) {
+	int range_time = 0;
+	int j;
+	for (j = 0; j < LKBlock.Times.n; j++) {
+		if (AnimRefs.times[j].n == 0) {
+			(*ptrRangeList)[j][0] = range_time;
+			range_time++;
+			(*ptrRangeList)[j][1] = range_time;
+			range_time++;
+		} else if (AnimRefs.times[j].n == 1) {
+			if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
+				(*ptrRangeList)[j][0] = range_time;
+				range_time++;
+				(*ptrRangeList)[j][1] = range_time;
+				range_time++;
+			} else {
+				(*ptrRangeList)[j][0] = (*ptrRangeList)[j - 1][1];
+				(*ptrRangeList)[j][1] = range_time;
+				range_time++;
+			}
+		} else {				//n > 1
+			(*ptrRangeList)[j][0] = range_time;
+			range_time += AnimRefs.times[j].n - 1;
+			(*ptrRangeList)[j][1] = range_time;
+			range_time++;
+		}
+	}
+}
 
+int get_keyframes_number(LKAnimationBlock LKBlock, AnimRefs AnimRefs){
 		size_t keyframes_size = 0; //Number of (Timestamp, key) tuples
 		int j;
 		for (j = 0; j < LKBlock.Times.n; j++) {
@@ -178,6 +196,31 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 				keyframes_size += 2;
 			}
 		}
+		return keyframes_size;
+}
+/**
+ * Converts an AnimBlock of 3D Vectors values from LK to BC.
+ * @param LKBlock Layer 0.
+ * @param AnimRefs Layer 1 (ArrayRefs with n&ofs to data).
+ * @param LKDataBlock Layer 2 (Data).
+ * @param ptrBlock Layer 0.
+ * @param ptrDataBlock Layer 1 (Data).
+ * @param animations
+ * @param nAnimations
+ */
+void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
+		Vec3D_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
+		Vec3D_SubBlock *ptrDataBlock, ModelAnimation *animations,
+		int nAnimations) {
+	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
+		ptrBlock->Ranges.n = nAnimations + 1;
+		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
+		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+
+		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
 
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
@@ -186,35 +229,11 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 
 		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(Vec3D));
 
-		int range_time = 0;
 		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		int j;
 		for (j = 0; j < LKBlock.Times.n; j++) {
-			//Interpolation range
-			if (AnimRefs.times[j].n == 0) {
-				ptrDataBlock->ranges[j][0] = range_time;
-				range_time++;
-				ptrDataBlock->ranges[j][1] = range_time;
-				range_time++;
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
-					ptrDataBlock->ranges[j][0] = range_time;
-					range_time++;
-					ptrDataBlock->ranges[j][1] = range_time;
-					range_time++;
-				} else {
-					ptrDataBlock->ranges[j][0] = ptrDataBlock->ranges[j - 1][1];
-					ptrDataBlock->ranges[j][1] = range_time;
-					range_time++;
-				}
-			} else {				//n > 1
-				ptrDataBlock->ranges[j][0] = range_time;
-				range_time += AnimRefs.times[j].n - 1;
-				ptrDataBlock->ranges[j][1] = range_time;
-				range_time++;
-			}
-
 			//Keyframes
-			if (AnimRefs.times[j].n > 1) {//scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
+			if (AnimRefs.times[j].n > 1) { //scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
 				int k;
 				for (k = 0; k < AnimRefs.times[j].n; k++) {	//Take each value for this anim and put it in the BC data
 					//TIMESTAMP
@@ -297,26 +316,14 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		Quat_SubBlock *ptrDataBlock, ModelAnimation *animations,
 		int nAnimations) {
 	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
 		ptrBlock->Ranges.n = nAnimations + 1;
 		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
 		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
 
-		size_t keyframes_size = 0; //Number of (Timestamp, key) tuples
-		int j;
-		for (j = 0; j < LKBlock.Times.n; j++) {
-			if (AnimRefs.times[j].n > 1) {
-				keyframes_size += AnimRefs.times[j].n;
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j == 0) {
-					keyframes_size += 2;
-				} else {
-					keyframes_size += 1;
-				}
-			} else { //n=0
-				keyframes_size += 2;
-			}
-		}
+		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
 
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
@@ -325,35 +332,11 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 
 		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(Quat));
 
-		int range_time = 0;
 		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		int j;
 		for (j = 0; j < LKBlock.Times.n; j++) {
-			//Interpolation range
-			if (AnimRefs.times[j].n == 0) {
-				ptrDataBlock->ranges[j][0] = range_time;
-				range_time++;
-				ptrDataBlock->ranges[j][1] = range_time;
-				range_time++;
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
-					ptrDataBlock->ranges[j][0] = range_time;
-					range_time++;
-					ptrDataBlock->ranges[j][1] = range_time;
-					range_time++;
-				} else {
-					ptrDataBlock->ranges[j][0] = ptrDataBlock->ranges[j - 1][1];
-					ptrDataBlock->ranges[j][1] = range_time;
-					range_time++;
-				}
-			} else {				//n > 1
-				ptrDataBlock->ranges[j][0] = range_time;
-				range_time += AnimRefs.times[j].n - 1;
-				ptrDataBlock->ranges[j][1] = range_time;
-				range_time++;
-			}
-
 			//Keyframes
-			if (AnimRefs.times[j].n > 1) {//scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
+			if (AnimRefs.times[j].n > 1) { //scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
 				int k;
 				for (k = 0; k < AnimRefs.times[j].n; k++) {	//Take each value for this anim and put it in the BC data
 					//TIMESTAMP
@@ -406,8 +389,8 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->keys[keyframes_index][m] = -32767;
 					ptrDataBlock->keys[keyframes_index + 1][m] = -32767;
 				}
-					ptrDataBlock->keys[keyframes_index][m] = -1;
-					ptrDataBlock->keys[keyframes_index + 1][m] = -1;
+				ptrDataBlock->keys[keyframes_index][m] = -1;
+				ptrDataBlock->keys[keyframes_index + 1][m] = -1;
 				keyframes_index += 2;
 			}
 		}

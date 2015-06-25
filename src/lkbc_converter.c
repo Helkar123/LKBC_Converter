@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
 	*/
+	print_bones(bc_model, 4);
 
 	//Writing
 	char new_name[64] = "BC_";

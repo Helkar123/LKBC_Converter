@@ -68,10 +68,8 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 	return 0;
 }
 
-void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, Vec3D_LKSubBlock **ptrDataBlock) {
-	if (ptrBlock->Times.n > 0) {
-		//Layer 1
+void read_layer1(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
+		AnimRefs *ptrAnimRefs){
 		ptrAnimRefs->times = malloc(ptrBlock->Times.n * sizeof(ArrayRef));
 		fseek(lk_m2_file, ptrBlock->Times.ofs, SEEK_SET);
 		fread(ptrAnimRefs->times, sizeof(ArrayRef), ptrBlock->Times.n,
@@ -81,7 +79,12 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		fseek(lk_m2_file, ptrBlock->Keys.ofs, SEEK_SET);
 		fread(ptrAnimRefs->keys, sizeof(ArrayRef), ptrBlock->Keys.n,
 				lk_m2_file);
-
+}
+void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
+		AnimRefs *ptrAnimRefs, Vec3D_LKSubBlock **ptrDataBlock) {
+	if (ptrBlock->Times.n > 0) {
+		//Layer 1
+		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
 		//Layer 2
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Vec3D_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
@@ -110,16 +113,7 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		AnimRefs *ptrAnimRefs, Quat_LKSubBlock **ptrDataBlock) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
-		ptrAnimRefs->times = malloc(ptrBlock->Times.n * sizeof(ArrayRef));
-		fseek(lk_m2_file, ptrBlock->Times.ofs, SEEK_SET);
-		fread(ptrAnimRefs->times, sizeof(ArrayRef), ptrBlock->Times.n,
-				lk_m2_file);
-
-		ptrAnimRefs->keys = malloc(ptrBlock->Keys.n * sizeof(ArrayRef));
-		fseek(lk_m2_file, ptrBlock->Keys.ofs, SEEK_SET);
-		fread(ptrAnimRefs->keys, sizeof(ArrayRef), ptrBlock->Keys.n,
-				lk_m2_file);
-
+		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
 		//Layer 2
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Quat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
@@ -138,6 +132,35 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
 				SEEK_SET);
 				fread((*ptrDataBlock)[j].keys, sizeof(Quat),
+						ptrAnimRefs->keys[j].n, lk_m2_file);
+			}
+		}
+	}
+}
+
+void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
+		AnimRefs *ptrAnimRefs, Short_LKSubBlock **ptrDataBlock) {
+	if (ptrBlock->Times.n > 0) {
+		//Layer 1
+		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
+		//Layer 2
+		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Short_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+		int j;
+		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if (ptrAnimRefs->times[j].n > 0) {
+				(*ptrDataBlock)[j].times = malloc(
+						ptrAnimRefs->times[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
+				fseek(lk_m2_file, ptrAnimRefs->times[j].ofs,
+				SEEK_SET);
+				fread((*ptrDataBlock)[j].times, sizeof(uint32),
+						ptrAnimRefs->times[j].n, lk_m2_file);
+			}
+			if (ptrAnimRefs->keys[j].n > 0) {
+				(*ptrDataBlock)[j].keys = malloc(
+						ptrAnimRefs->keys[j].n * sizeof(short));
+				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
+				SEEK_SET);
+				fread((*ptrDataBlock)[j].keys, sizeof(short),
 						ptrAnimRefs->keys[j].n, lk_m2_file);
 			}
 		}
@@ -212,116 +235,29 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nColors > 0) {
 		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
 		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
-		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors, lk_m2_file);
+		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors,
+				lk_m2_file);
 		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorRefBlock));
+		ptr->colorsdata = malloc(ptr->header.nColors * sizeof(LKColorDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nColors; i++) {
-			LKColorDef lk_color = ptr->colors[i];
-			//RGB
-			if (lk_color.RGB.Times.n > 0) {
-				ptr->coloranimofs[i].rgb_times = malloc(
-						lk_color.RGB.Times.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_color.RGB.Times.ofs, SEEK_SET);
-				fread(ptr->coloranimofs[i].rgb_times, sizeof(ArrayRef),
-						lk_color.RGB.Times.n, lk_m2_file);
-			}
-			if (lk_color.RGB.Keys.n > 0) {
-				ptr->coloranimofs[i].rgb_keys = malloc(
-						lk_color.RGB.Keys.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_color.RGB.Keys.ofs, SEEK_SET);
-				fread(ptr->coloranimofs[i].rgb_keys, sizeof(ArrayRef),
-						lk_color.RGB.Keys.n, lk_m2_file);
-			}
-			//Opacity
-			if (lk_color.Opacity.Times.n > 0) {
-				ptr->coloranimofs[i].op_times = malloc(
-						lk_color.Opacity.Times.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_color.Opacity.Times.ofs, SEEK_SET);
-				fread(ptr->coloranimofs[i].op_times, sizeof(ArrayRef),
-						lk_color.Opacity.Times.n, lk_m2_file);
-			}
-			if (lk_color.Opacity.Keys.n > 0) {
-				ptr->coloranimofs[i].op_keys = malloc(
-						lk_color.Opacity.Keys.n * sizeof(ArrayRef));
-				fseek(lk_m2_file, lk_color.Opacity.Keys.ofs, SEEK_SET);
-				fread(ptr->coloranimofs[i].op_keys, sizeof(ArrayRef),
-						lk_color.Opacity.Keys.n, lk_m2_file);
-			}
-		}
+			LKAnimationBlock *ptrBlock;
+			AnimRefs *ptrAnimRefs;
+			Vec3D_LKSubBlock **Vec3D_ptrDataBlock;
+			Short_LKSubBlock **Short_ptrDataBlock;
 
-		//Store colors data (layer 2)
-		ptr->colorsdata = malloc(
-				ptr->header.nColors * sizeof(LKColorDataBlock));
-		for (i = 0; i < ptr->header.nColors; i++) {
-			LKColorDef lk_color = ptr->colors[i];
-			int j;
 			//RGB
-			if (lk_color.RGB.Times.n > 0) {
-				ptr->colorsdata[i].rgb_times = malloc(
-						lk_color.RGB.Times.n * sizeof(Uint32Array));
-				for (j = 0; j < lk_color.RGB.Times.n; j++) {
-					if (ptr->coloranimofs[i].rgb_times[j].n > 0) {
-						ptr->colorsdata[i].rgb_times[j].values = malloc(
-								ptr->coloranimofs[i].rgb_times[j].n
-										* sizeof(uint32));
-						fseek(lk_m2_file, ptr->coloranimofs[i].rgb_times[j].ofs,
-						SEEK_SET);
-						fread(ptr->colorsdata[i].rgb_times[j].values,
-								sizeof(uint32),
-								ptr->coloranimofs[i].rgb_times[j].n,
-								lk_m2_file);
-					}
-				}
-			}
-			if (ptr->colors[i].RGB.Keys.n > 0) {
-				ptr->colorsdata[i].rgb_keys = malloc(
-						lk_color.RGB.Keys.n * sizeof(Vec3DArray));
-				for (j = 0; j < lk_color.RGB.Keys.n; j++) {
-					if (ptr->coloranimofs[i].rgb_keys[j].n > 0) {
-						ptr->colorsdata[i].rgb_keys[j].values = malloc(
-								ptr->coloranimofs[i].rgb_keys[j].n
-										* sizeof(Vec3D));
-						fseek(lk_m2_file, ptr->coloranimofs[i].rgb_keys[j].ofs,
-						SEEK_SET);
-						fread(ptr->colorsdata[i].rgb_keys[j].values,
-								sizeof(Vec3D),
-								ptr->coloranimofs[i].rgb_keys[j].n, lk_m2_file);
-					}
-				}
-			}
+			ptrBlock = &ptr->colors[i].rgb;
+			ptrAnimRefs = &ptr->coloranimofs[i].rgb;
+			Vec3D_ptrDataBlock = &ptr->colorsdata[i].rgb;
+			read_Vec3DAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
+					Vec3D_ptrDataBlock);
 			//Opacity
-			if (ptr->colors[i].Opacity.Times.n > 0) {
-				ptr->colorsdata[i].op_times = malloc(
-						lk_color.Opacity.Times.n * sizeof(Uint32Array));
-				for (j = 0; j < lk_color.Opacity.Times.n; j++) {
-					if (ptr->coloranimofs[i].op_times[j].n > 0) {
-						ptr->colorsdata[i].op_times[j].values = malloc(
-								ptr->coloranimofs[i].op_times[j].n
-										* sizeof(uint32));
-						fseek(lk_m2_file, ptr->coloranimofs[i].op_times[j].ofs,
-						SEEK_SET);
-						fread(ptr->colorsdata[i].op_times[j].values,
-								sizeof(uint32),
-								ptr->coloranimofs[i].op_times[j].n, lk_m2_file);
-					}
-				}
-			}
-			if (ptr->colors[i].Opacity.Keys.n > 0) {
-				ptr->colorsdata[i].op_keys = malloc(
-						lk_color.Opacity.Keys.n * sizeof(ShortArray));
-				for (j = 0; j < lk_color.Opacity.Keys.n; j++) {
-					if (ptr->coloranimofs[i].op_keys[j].n > 0) {
-						ptr->colorsdata[i].op_keys[j].values = malloc(
-								ptr->coloranimofs[i].op_keys[j].n
-										* sizeof(short));
-						fseek(lk_m2_file, ptr->coloranimofs[i].op_keys[j].ofs,
-						SEEK_SET);
-						fread(ptr->colorsdata[i].op_keys[j].values,
-								sizeof(short),
-								ptr->coloranimofs[i].op_keys[j].n, lk_m2_file);
-					}
-				}
-			}
+			ptrBlock = &ptr->colors[i].opacity;
+			ptrAnimRefs = &ptr->coloranimofs[i].opacity;
+			Short_ptrDataBlock = &ptr->colorsdata[i].opacity;
+			read_ShortAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
+					Short_ptrDataBlock);
 		}
 		return 0;
 	}
