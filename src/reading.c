@@ -69,16 +69,25 @@ int read_skins(FILE **skin_files, Skin **ptr, int n) {
 }
 
 void read_layer1(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs){
-		ptrAnimRefs->times = malloc(ptrBlock->Times.n * sizeof(ArrayRef));
-		fseek(lk_m2_file, ptrBlock->Times.ofs, SEEK_SET);
-		fread(ptrAnimRefs->times, sizeof(ArrayRef), ptrBlock->Times.n,
-				lk_m2_file);
+		AnimRefs *ptrAnimRefs) {
+	ptrAnimRefs->times = malloc(ptrBlock->Times.n * sizeof(ArrayRef));
+	fseek(lk_m2_file, ptrBlock->Times.ofs, SEEK_SET);
+	fread(ptrAnimRefs->times, sizeof(ArrayRef), ptrBlock->Times.n, lk_m2_file);
 
-		ptrAnimRefs->keys = malloc(ptrBlock->Keys.n * sizeof(ArrayRef));
-		fseek(lk_m2_file, ptrBlock->Keys.ofs, SEEK_SET);
-		fread(ptrAnimRefs->keys, sizeof(ArrayRef), ptrBlock->Keys.n,
+	ptrAnimRefs->keys = malloc(ptrBlock->Keys.n * sizeof(ArrayRef));
+	fseek(lk_m2_file, ptrBlock->Keys.ofs, SEEK_SET);
+	fread(ptrAnimRefs->keys, sizeof(ArrayRef), ptrBlock->Keys.n, lk_m2_file);
+}
+
+void read_times(FILE *lk_m2_file, AnimRefs *ptrAnimRefs, uint32 **ptrTimeList,
+		int j) {
+	if (ptrAnimRefs->times[j].n > 0) {
+		(*ptrTimeList) = malloc(ptrAnimRefs->times[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
+		fseek(lk_m2_file, ptrAnimRefs->times[j].ofs,
+		SEEK_SET);
+		fread((*ptrTimeList), sizeof(uint32), ptrAnimRefs->times[j].n,
 				lk_m2_file);
+	}
 }
 void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		AnimRefs *ptrAnimRefs, Vec3D_LKSubBlock **ptrDataBlock) {
@@ -89,14 +98,7 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Vec3D_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
-			if (ptrAnimRefs->times[j].n > 0) {
-				(*ptrDataBlock)[j].times = malloc(
-						ptrAnimRefs->times[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
-				fseek(lk_m2_file, ptrAnimRefs->times[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].times, sizeof(uint32),
-						ptrAnimRefs->times[j].n, lk_m2_file);
-			}
+			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
 						ptrAnimRefs->keys[j].n * sizeof(Vec3D));
@@ -118,14 +120,7 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Quat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
-			if (ptrAnimRefs->times[j].n > 0) {
-				(*ptrDataBlock)[j].times = malloc(
-						ptrAnimRefs->times[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
-				fseek(lk_m2_file, ptrAnimRefs->times[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].times, sizeof(uint32),
-						ptrAnimRefs->times[j].n, lk_m2_file);
-			}
+			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
 						ptrAnimRefs->keys[j].n * sizeof(Quat));
@@ -147,14 +142,7 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Short_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
-			if (ptrAnimRefs->times[j].n > 0) {
-				(*ptrDataBlock)[j].times = malloc(
-						ptrAnimRefs->times[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
-				fseek(lk_m2_file, ptrAnimRefs->times[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].times, sizeof(uint32),
-						ptrAnimRefs->times[j].n, lk_m2_file);
-			}
+			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
 						ptrAnimRefs->keys[j].n * sizeof(short));
@@ -166,8 +154,30 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		}
 	}
 }
+
+void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
+		AnimRefs *ptrAnimRefs, Int_LKSubBlock **ptrDataBlock) {
+	if (ptrBlock->Times.n > 0) {
+		//Layer 1
+		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
+		//Layer 2
+		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Int_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+		int j;
+		for (j = 0; j < ptrBlock->Times.n; j++) {
+			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
+			if (ptrAnimRefs->keys[j].n > 0) {
+				(*ptrDataBlock)[j].keys = malloc(
+						ptrAnimRefs->keys[j].n * sizeof(int));
+				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
+				SEEK_SET);
+				fread((*ptrDataBlock)[j].keys, sizeof(int),
+						ptrAnimRefs->keys[j].n, lk_m2_file);
+			}
+		}
+	}
+}
 /**
- * Read model bones with animations. WIP
+ * Read model bones with animations.
  * @param lk_m2_file The file to read data.
  * @param ptr Pointer to a M2/WotLK structure.
  * i is a bone number, j is an animation number
@@ -196,29 +206,35 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		ptr->bonesdata = malloc(ptr->header.nBones * sizeof(LKBonesDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
-			LKAnimationBlock *ptrBlock;
-			AnimRefs *ptrAnimRefs;
-			Vec3D_LKSubBlock **Vec3D_ptrDataBlock;
-			Quat_LKSubBlock **Quat_ptrDataBlock;
-
 			//Translation
-			ptrBlock = &ptr->bones[i].trans;
-			ptrAnimRefs = &ptr->animofs[i].trans;
-			Vec3D_ptrDataBlock = &ptr->bonesdata[i].trans;
-			read_Vec3DAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
-					Vec3D_ptrDataBlock);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].trans, &ptr->animofs[i].trans,
+					&ptr->bonesdata[i].trans);
 			//Rotation
-			ptrBlock = &ptr->bones[i].rot;
-			ptrAnimRefs = &ptr->animofs[i].rot;
-			Quat_ptrDataBlock = &ptr->bonesdata[i].rot;
-			read_QuatAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
-					Quat_ptrDataBlock);
+			read_QuatAnimBlock(lk_m2_file, &ptr->bones[i].rot, &ptr->animofs[i].rot,
+					&ptr->bonesdata[i].rot);
 			//Scaling
-			ptrBlock = &ptr->bones[i].scal;
-			ptrAnimRefs = &ptr->animofs[i].scal;
-			Vec3D_ptrDataBlock = &ptr->bonesdata[i].scal;
-			read_Vec3DAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
-					Vec3D_ptrDataBlock);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].scal, &ptr->animofs[i].scal,
+					&ptr->bonesdata[i].scal);
+		}
+		return 0;
+	}
+	return -1;
+}
+
+int read_attachments(FILE *lk_m2_file, LKM2 *ptr) {
+	if (ptr->header.nAttachments > 0) { //I think lights and other non-geometric things don't have any
+		ptr->attachments = malloc(ptr->header.nAttachments * sizeof(LKAttachment));
+		fseek(lk_m2_file, ptr->header.ofsAttachments, SEEK_SET);
+		fread(ptr->attachments, sizeof(LKAttachment), ptr->header.nAttachments,
+				lk_m2_file);
+
+		ptr->attachmentsanimofs = malloc(ptr->header.nAttachments * sizeof(AttachmentsRefBlock));//1 LKRefBlock per bone
+		ptr->attachmentsdata = malloc(ptr->header.nAttachments * sizeof(LKAttachmentsDataBlock));
+		int i;
+		for (i = 0; i < ptr->header.nAttachments; i++) {
+			//Data
+			read_IntAnimBlock(lk_m2_file, &ptr->attachments[i].data, &ptr->attachmentsanimofs[i].data,
+					&ptr->attachmentsdata[i].data);
 		}
 		return 0;
 	}
@@ -232,32 +248,22 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
  * @return
  */
 int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
-	if (ptr->header.nColors > 0) {
+	if (ptr->header.nColors > 0) { //I think lights and other non-geometric things don't have any
 		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
 		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
 		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors,
 				lk_m2_file);
-		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorRefBlock));
+
+		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorRefBlock));//1 LKRefBlock per bone
 		ptr->colorsdata = malloc(ptr->header.nColors * sizeof(LKColorDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nColors; i++) {
-			LKAnimationBlock *ptrBlock;
-			AnimRefs *ptrAnimRefs;
-			Vec3D_LKSubBlock **Vec3D_ptrDataBlock;
-			Short_LKSubBlock **Short_ptrDataBlock;
-
 			//RGB
-			ptrBlock = &ptr->colors[i].rgb;
-			ptrAnimRefs = &ptr->coloranimofs[i].rgb;
-			Vec3D_ptrDataBlock = &ptr->colorsdata[i].rgb;
-			read_Vec3DAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
-					Vec3D_ptrDataBlock);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->colors[i].rgb, &ptr->coloranimofs[i].rgb,
+					&ptr->colorsdata[i].rgb);
 			//Opacity
-			ptrBlock = &ptr->colors[i].opacity;
-			ptrAnimRefs = &ptr->coloranimofs[i].opacity;
-			Short_ptrDataBlock = &ptr->colorsdata[i].opacity;
-			read_ShortAnimBlock(lk_m2_file, ptrBlock, ptrAnimRefs,
-					Short_ptrDataBlock);
+			read_ShortAnimBlock(lk_m2_file, &ptr->colors[i].opacity, &ptr->coloranimofs[i].opacity,
+					&ptr->colorsdata[i].opacity);
 		}
 		return 0;
 	}
@@ -623,7 +629,8 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fread(ptr->BoundingNormals, sizeof(Vec3D), ptr->header.nBoundingNormals,
 			lk_m2_file);
 
-	//TODO Attachments
+	//Attachments
+	read_attachments(lk_m2_file, ptr);
 
 	//Attachment Lookup Table
 	ptr->AttachLookup = malloc(ptr->header.nAttachLookup * sizeof(short));

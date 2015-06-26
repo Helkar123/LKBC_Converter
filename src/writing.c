@@ -93,22 +93,26 @@ int write_views(FILE *bc_m2_file, BCM2 *ptr) {
 	return -1;
 }
 
-void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
-		Vec3D_SubBlock *ptrDataBlock) {
+void write_rangestimes(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Range **ptrRangeList, uint32 **ptrTimeList) {
 	if (ptrBlock->Ranges.n > 0) {
 		ptrBlock->Ranges.ofs = getPos(bc_m2_file);
 		int j;
 		for (j = 0; j < ptrBlock->Ranges.n; j++) {
-			fwrite(ptrDataBlock->ranges[j], sizeof(Range), 1, bc_m2_file);
+			fwrite((*ptrRangeList)[j], sizeof(Range), 1, bc_m2_file);
 		}
 		align(bc_m2_file);
 	}
 	if (ptrBlock->Times.n > 0) {
 		ptrBlock->Times.ofs = getPos(bc_m2_file);
-		fwrite(ptrDataBlock->times, sizeof(uint32), ptrBlock->Times.n,
-				bc_m2_file);
+		fwrite((*ptrTimeList), sizeof(uint32), ptrBlock->Times.n, bc_m2_file);
 		align(bc_m2_file);
 	}
+}
+void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Vec3D_SubBlock *ptrDataBlock) {
+	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
+			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
 		int j;
@@ -120,25 +124,39 @@ void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 }
 void write_QuatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 		Quat_SubBlock *ptrDataBlock) {
-	if (ptrBlock->Ranges.n > 0) {
-		ptrBlock->Ranges.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Ranges.n; j++) {
-			fwrite(ptrDataBlock->ranges[j], sizeof(Range), 1, bc_m2_file);
-		}
-		align(bc_m2_file);
-	}
-	if (ptrBlock->Times.n > 0) {
-		ptrBlock->Times.ofs = getPos(bc_m2_file);
-		fwrite(ptrDataBlock->times, sizeof(uint32), ptrBlock->Times.n,
-				bc_m2_file);
-		align(bc_m2_file);
-	}
+	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
+			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
 		int j;
 		for (j = 0; j < ptrBlock->Keys.n; j++) {
 			fwrite(ptrDataBlock->keys[j], sizeof(Quat), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+}
+void write_IntAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Int_SubBlock *ptrDataBlock) {
+	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
+			&ptrDataBlock->times);
+	if (ptrBlock->Keys.n > 0) {
+		ptrBlock->Keys.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Keys.n; j++) {
+			fwrite(&ptrDataBlock->keys[j], sizeof(int), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+}
+void write_ShortAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		Short_SubBlock *ptrDataBlock) {
+	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
+			&ptrDataBlock->times);
+	if (ptrBlock->Keys.n > 0) {
+		ptrBlock->Keys.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Keys.n; j++) {
+			fwrite(&ptrDataBlock->keys[j], sizeof(short), 1, bc_m2_file);
 		}
 		align(bc_m2_file);
 	}
@@ -157,28 +175,62 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
-			AnimationBlock *ptrBlock;
-			Vec3D_SubBlock *Vec3D_ptrDataBlock;
-			Quat_SubBlock *Quat_ptrDataBlock;
-
 			//translation
-			ptrBlock = &ptr->bones[i].trans;
-			Vec3D_ptrDataBlock = &ptr->bonesdata[i].trans;
-			write_Vec3DAnimBlock(bc_m2_file, ptrBlock, Vec3D_ptrDataBlock);
+			write_Vec3DAnimBlock(bc_m2_file, &ptr->bones[i].trans,
+					&ptr->bonesdata[i].trans);
 
 			//rotation
-			ptrBlock = &ptr->bones[i].rot;
-			Quat_ptrDataBlock = &ptr->bonesdata[i].rot;
-			write_QuatAnimBlock(bc_m2_file, ptrBlock, Quat_ptrDataBlock);
+			write_QuatAnimBlock(bc_m2_file, &ptr->bones[i].rot,
+					&ptr->bonesdata[i].rot);
 
 			//scaling
-			ptrBlock = &ptr->bones[i].scal;
-			Vec3D_ptrDataBlock = &ptr->bonesdata[i].scal;
-			write_Vec3DAnimBlock(bc_m2_file, ptrBlock, Vec3D_ptrDataBlock);
+			write_Vec3DAnimBlock(bc_m2_file, &ptr->bones[i].scal,
+					&ptr->bonesdata[i].scal);
 		}
 	}
 	fseek(bc_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fwrite(ptr->bones, sizeof(ModelBoneDef), ptr->header.nBones, bc_m2_file);
+	fseek(bc_m2_file, 0, SEEK_END);
+	return 0;
+}
+
+int write_attachments(FILE *bc_m2_file, BCM2 *ptr) {
+	if (ptr->header.nAttachments > 0) {
+		ptr->header.ofsAttachments = getPos(bc_m2_file);
+		fwrite(ptr->attachments, sizeof(Attachment), ptr->header.nAttachments,
+				bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nAttachments; i++) {
+			//data
+			write_IntAnimBlock(bc_m2_file, &ptr->attachments[i].data,
+					&ptr->attachmentsdata[i].data);
+		}
+	}
+	fseek(bc_m2_file, ptr->header.ofsAttachments, SEEK_SET);
+	fwrite(ptr->attachments, sizeof(Attachment), ptr->header.nAttachments, bc_m2_file);
+	fseek(bc_m2_file, 0, SEEK_END);
+	return 0;
+}
+
+int write_colors(FILE *bc_m2_file, BCM2 *ptr) {
+	if (ptr->header.nColors > 0) {
+		ptr->header.ofsColors = getPos(bc_m2_file);
+		fwrite(ptr->colors, sizeof(ColorDef), ptr->header.nColors,
+				bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nColors; i++) {
+			//RGB
+			write_Vec3DAnimBlock(bc_m2_file, &ptr->colors[i].rgb,
+					&ptr->colorsdata[i].rgb);
+			//Opacity
+			write_ShortAnimBlock(bc_m2_file, &ptr->colors[i].opacity,
+					&ptr->colorsdata[i].opacity);
+		}
+	}
+	fseek(bc_m2_file, ptr->header.ofsColors, SEEK_SET);
+	fwrite(ptr->colors, sizeof(ColorDef), ptr->header.nColors, bc_m2_file);
 	fseek(bc_m2_file, 0, SEEK_END);
 	return 0;
 }
@@ -235,7 +287,8 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 	//Views
 	write_views(bc_m2_file, ptr);
 
-	//TODO Colors
+	//Colors
+	write_colors(bc_m2_file, ptr);
 
 	//Textures
 	if (ptr->header.nTextures > 0) {
@@ -301,7 +354,8 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
-	//TODO Attachments
+	//Attachments
+	write_attachments(bc_m2_file, ptr);
 
 	if (ptr->header.nAttachLookup > 0) {
 		ptr->header.ofsAttachLookup = getPos(bc_m2_file);

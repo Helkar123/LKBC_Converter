@@ -88,10 +88,8 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 		ptr->header.floats[i] = lk_header.floats[i];
 	}
 
-	ptr->header.nTransparency = 0; //FIXME Unimplemented features
+	ptr->header.nTransparency = 0; //TODO Unimplemented features
 	ptr->header.ofsTransparency = 0;
-	ptr->header.nAttachments = 0;
-	ptr->header.ofsAttachments = 0;
 	ptr->header.nAttachLookup = 0;
 	ptr->header.ofsAttachLookup = 0;
 	ptr->header.nAttachments_2 = 0;
@@ -221,12 +219,9 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
 
 		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
-
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
-
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
-
 		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(Vec3D));
 
 		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
@@ -324,12 +319,9 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
 
 		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
-
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
-
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
-
 		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(Quat));
 
 		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
@@ -406,6 +398,155 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 	}
 }
 
+void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
+		Int_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
+		Int_SubBlock *ptrDataBlock, ModelAnimation *animations,
+		int nAnimations) {
+	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
+		ptrBlock->Ranges.n = nAnimations + 1;
+		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
+		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+
+		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		ptrBlock->Times.n = keyframes_size;
+		ptrBlock->Keys.n = keyframes_size;
+		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
+		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(int));
+
+		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		int j;
+		for (j = 0; j < LKBlock.Times.n; j++) {
+			//Keyframes
+			if (AnimRefs.times[j].n > 1) { //scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
+				int k;
+				for (k = 0; k < AnimRefs.times[j].n; k++) {	//Take each value for this anim and put it in the BC data
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart + LKDataBlock[j].times[k]; //Start Time + animation-relative time
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[k];
+					keyframes_index++;
+				}
+			} else if (AnimRefs.times[j].n == 1) {
+				if (j > 0) {
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeEnd;
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[0];
+					keyframes_index++;
+				} else {						//First animation (j=0)
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart;
+					ptrDataBlock->times[keyframes_index + 1] =
+							animations[j].timeEnd;
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[0];
+						ptrDataBlock->keys[keyframes_index + 1] =
+								LKDataBlock[j].keys[0];
+					keyframes_index += 2;
+				}
+			} else {						//n=0
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+					ptrDataBlock->keys[keyframes_index] = 0;
+					ptrDataBlock->keys[keyframes_index + 1] = 0;
+				keyframes_index += 2;
+			}
+		}
+	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
+		ptrBlock->Ranges.n = 0;
+		ptrDataBlock->times = malloc(sizeof(uint32));
+		ptrDataBlock->keys = malloc(sizeof(int));
+		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
+		ptrDataBlock->keys[0] = LKDataBlock[0].keys[0];
+	}
+}
+void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
+		Short_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
+		Short_SubBlock *ptrDataBlock, ModelAnimation *animations,
+		int nAnimations) {
+	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
+		ptrBlock->Ranges.n = nAnimations + 1;
+		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
+		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+
+		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		ptrBlock->Times.n = keyframes_size;
+		ptrBlock->Keys.n = keyframes_size;
+		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
+		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(short));
+
+		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		int j;
+		for (j = 0; j < LKBlock.Times.n; j++) {
+			//Keyframes
+			if (AnimRefs.times[j].n > 1) { //scal.times[j].n = s_keys[j].n (everything is symmetric since it's a keyframe tuple)
+				int k;
+				for (k = 0; k < AnimRefs.times[j].n; k++) {	//Take each value for this anim and put it in the BC data
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart + LKDataBlock[j].times[k]; //Start Time + animation-relative time
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[k];
+					keyframes_index++;
+				}
+			} else if (AnimRefs.times[j].n == 1) {
+				if (j > 0) {
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeEnd;
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[0];
+					keyframes_index++;
+				} else {						//First animation (j=0)
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart;
+					ptrDataBlock->times[keyframes_index + 1] =
+							animations[j].timeEnd;
+					//KEY
+						ptrDataBlock->keys[keyframes_index] =
+								LKDataBlock[j].keys[0];
+						ptrDataBlock->keys[keyframes_index + 1] =
+								LKDataBlock[j].keys[0];
+					keyframes_index += 2;
+				}
+			} else {						//n=0
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+					ptrDataBlock->keys[keyframes_index] = 0;
+					ptrDataBlock->keys[keyframes_index + 1] = 0;
+				keyframes_index += 2;
+			}
+		}
+	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
+		ptrBlock->Ranges.n = 0;
+		ptrDataBlock->times = malloc(sizeof(uint32));
+		ptrDataBlock->keys = malloc(sizeof(short));
+		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
+		ptrDataBlock->keys[0] = LKDataBlock[0].keys[0];
+	}
+}
+
 /**
  * Converts bones with their animations data
  * @param ptr Pointer to BC M2 structure
@@ -420,50 +561,20 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 	int i;
 	for (i = 0; i < ptr->header.nBones; i++) {
 		//INIT
-		AnimRefs AnimRefs;
-		AnimationBlock *ptrBlock;
 		ModelAnimation *animations = ptr->animations;
 		int nAnimations = ptr->header.nAnimations;
-		LKAnimationBlock LKBlock;
-		//initialization for Vec3D animation blocks
-		Vec3D_LKSubBlock *Vec3D_LKDataBlock;
-		Vec3D_SubBlock *Vec3D_ptrDataBlock;
-		//initialization for Quat animation blocks
-		Quat_LKSubBlock *Quat_LKDataBlock;
-		Quat_SubBlock *Quat_ptrDataBlock;
 
 		//translation
-		LKBlock = lk_m2.bones[i].trans;
-		AnimRefs = lk_m2.animofs[i].trans;
-		Vec3D_LKDataBlock = lk_m2.bonesdata[i].trans;
-		ptrBlock = &ptr->bones[i].trans;
-		Vec3D_ptrDataBlock = &ptr->bonesdata[i].trans;
-
-		convert_Vec3DAnimBlock(LKBlock, AnimRefs, Vec3D_LKDataBlock, ptrBlock,
-				Vec3D_ptrDataBlock, animations, nAnimations);
-		//END translation
+		convert_Vec3DAnimBlock(lk_m2.bones[i].trans, lk_m2.animofs[i].trans, lk_m2.bonesdata[i].trans, &ptr->bones[i].trans,
+				&ptr->bonesdata[i].trans, animations, nAnimations);
 
 		//rotation
-		LKBlock = lk_m2.bones[i].rot;
-		AnimRefs = lk_m2.animofs[i].rot;
-		Quat_LKDataBlock = lk_m2.bonesdata[i].rot;
-		ptrBlock = &ptr->bones[i].rot;
-		Quat_ptrDataBlock = &ptr->bonesdata[i].rot;
-
-		convert_QuatAnimBlock(LKBlock, AnimRefs, Quat_LKDataBlock, ptrBlock,
-				Quat_ptrDataBlock, animations, nAnimations);
-		//END rotation
+		convert_QuatAnimBlock(lk_m2.bones[i].rot, lk_m2.animofs[i].rot, lk_m2.bonesdata[i].rot, &ptr->bones[i].rot,
+				&ptr->bonesdata[i].rot, animations, nAnimations);
 
 		//scaling
-		LKBlock = lk_m2.bones[i].scal;
-		AnimRefs = lk_m2.animofs[i].scal;
-		Vec3D_LKDataBlock = lk_m2.bonesdata[i].scal;
-		ptrBlock = &ptr->bones[i].scal;
-		Vec3D_ptrDataBlock = &ptr->bonesdata[i].scal;
-
-		convert_Vec3DAnimBlock(LKBlock, AnimRefs, Vec3D_LKDataBlock, ptrBlock,
-				Vec3D_ptrDataBlock, animations, nAnimations);
-		//END scaling
+		convert_Vec3DAnimBlock(lk_m2.bones[i].scal, lk_m2.animofs[i].scal, lk_m2.bonesdata[i].scal, &ptr->bones[i].scal,
+				&ptr->bonesdata[i].scal, animations, nAnimations);
 	}
 
 	//Bones
@@ -487,6 +598,62 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 		for (j = 0; j < 3; j++) {
 			ptr->bones[i].pivot[j] = lk_m2.bones[i].pivot[j];
 		}
+	}
+	return 0;
+}
+
+int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
+	ptr->attachments = malloc(ptr->header.nAttachments * sizeof(Attachment));
+	ptr->attachmentsdata = malloc(ptr->header.nAttachments * sizeof(AttachmentsDataBlock));
+	int i;
+	for (i = 0; i < ptr->header.nAttachments; i++) {
+		//INIT
+		ModelAnimation *animations = ptr->animations;
+		int nAnimations = ptr->header.nAnimations;
+
+		//data
+		convert_IntAnimBlock(lk_m2.attachments[i].data, lk_m2.attachmentsanimofs[i].data, lk_m2.attachmentsdata[i].data, &ptr->attachments[i].data,
+				&ptr->attachmentsdata[i].data, animations, nAnimations);
+	}
+
+	for (i = 0; i < ptr->header.nAttachments; i++) {
+		ptr->attachments[i].ID = lk_m2.attachments[i].ID;
+		ptr->attachments[i].bone = lk_m2.attachments[i].bone;
+		int j;
+		for (j = 0; j < 3; j++) {
+			ptr->attachments[i].position[j] = lk_m2.attachments[i].position[j];
+		}
+		//data
+		ptr->attachments[i].data.type = lk_m2.attachments[i].data.type;
+		ptr->attachments[i].data.seq = lk_m2.attachments[i].data.seq;
+	}
+	return 0;
+}
+
+int colors_converter(BCM2 *ptr, LKM2 lk_m2) {
+	ptr->colors = malloc(ptr->header.nColors * sizeof(ColorDef));
+	ptr->colorsdata = malloc(ptr->header.nColors * sizeof(ColorDataBlock));
+	int i;
+	for (i = 0; i < ptr->header.nColors; i++) {
+		//INIT
+		ModelAnimation *animations = ptr->animations;
+		int nAnimations = ptr->header.nAnimations;
+
+		//RGB
+		convert_Vec3DAnimBlock(lk_m2.colors[i].rgb, lk_m2.coloranimofs[i].rgb, lk_m2.colorsdata[i].rgb, &ptr->colors[i].rgb,
+				&ptr->colorsdata[i].rgb, animations, nAnimations);
+		//Opacity
+		convert_ShortAnimBlock(lk_m2.colors[i].opacity, lk_m2.coloranimofs[i].opacity, lk_m2.colorsdata[i].opacity, &ptr->colors[i].opacity,
+				&ptr->colorsdata[i].opacity, animations, nAnimations);
+	}
+
+	for (i = 0; i < ptr->header.nColors; i++) {
+		//RGB
+		ptr->colors[i].rgb.type = lk_m2.colors[i].rgb.type;
+		ptr->colors[i].rgb.seq = lk_m2.colors[i].rgb.seq;
+		//Opacity
+		ptr->colors[i].opacity.type = lk_m2.colors[i].opacity.type;
+		ptr->colors[i].opacity.seq = lk_m2.colors[i].opacity.seq;
 	}
 	return 0;
 }
@@ -749,7 +916,8 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	views_converter(ptr, skins);
 	views_filler(ptr);
 
-	//TODO SubmeshAnimations/Colors
+	//SubmeshAnimations/Colors
+	colors_converter(ptr, lk_m2);
 
 	ptr->textures_def = malloc(ptr->header.nTextures * sizeof(ModelTextureDef));
 	ptr->texture_names = malloc(ptr->header.nTextures * sizeof(char *));
@@ -769,6 +937,10 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	ptr->BoundingTriangles = lk_m2.BoundingTriangles;
 	ptr->BoundingVertices = lk_m2.BoundingVertices;
 	ptr->BoundingNormals = lk_m2.BoundingNormals;
+
+	//Attachments
+	attachments_converter(ptr, lk_m2);
+
 	ptr->AttachLookup = lk_m2.AttachLookup;
 	/*TODO
 	 Transparency;

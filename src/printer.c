@@ -129,7 +129,7 @@ void print_views(BCM2 model) {
  * Print the Bones from a BC model
  * @param model
  * @param flags What is printed depends on the three lower bits. Order : translation, rotation, scaling.
- * Example (prints translation and scaling) : 0b101, so it's 5. Values go from 0 to 7.
+ * Example (prints translation and scaling) : 0b101, so it's 5. Values go from 0(0b000, nothing) to 7(0b111, everything).
  */
 void print_bones(BCM2 model, char flags) {
 	int i;

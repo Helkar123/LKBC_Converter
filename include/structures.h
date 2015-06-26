@@ -261,7 +261,7 @@ typedef struct AnimationBlock {
 	ArrayRef Keys;  //links to i elements
 } AnimationBlock;
 
-
+//SubBlocks
 typedef struct Vec3D_LKSubBlock{
 	uint32 *times;
 	Vec3D *keys;
@@ -292,11 +292,31 @@ typedef struct Short_SubBlock{
 	short *keys;
 }Short_SubBlock;
 
+typedef struct Int_LKSubBlock{
+	uint32 *times;
+	int *keys;
+}Int_LKSubBlock;
+typedef struct Int_SubBlock{
+	Range *ranges;
+	uint32 *times;
+	int *keys;
+}Int_SubBlock;
+
 typedef struct AnimRefs{
 	ArrayRef *times;
 	ArrayRef *keys;
 }AnimRefs;
 
+typedef struct ModelVertex {
+	Vec3D pos;
+	uint8 weights[4];
+	uint8 bones[4];
+	Vec3D normal;
+	Vec2D texcoords;
+	Vec2D texcoords2;
+} ModelVertex;
+
+//Bones
 typedef struct LKModelBoneDef {
 	int32 animid;
 	uint32 flags;
@@ -324,13 +344,11 @@ typedef struct ModelBoneDef {
 
 	Vec3D pivot;
 } ModelBoneDef;
-
 typedef struct RefBlock {
 	AnimRefs trans;
 	AnimRefs rot;
 	AnimRefs scal;
 } RefBlock;
-
 typedef struct LKBonesDataBlock {
 	Vec3D_LKSubBlock *trans;
 	Quat_LKSubBlock *rot;
@@ -342,15 +360,30 @@ typedef struct BonesDataBlock {
 	Vec3D_SubBlock scal;
 } BonesDataBlock;
 
-typedef struct ModelVertex {
-	Vec3D pos;
-	uint8 weights[4];
-	uint8 bones[4];
-	Vec3D normal;
-	Vec2D texcoords;
-	Vec2D texcoords2;
-} ModelVertex;
+//Attachments
+typedef struct LKAttachment {
+	uint32 ID;
+	uint32 bone;
+	Vec3D position;
+	LKAnimationBlock data;
+} LKAttachment;
+typedef struct Attachment {
+	uint32 ID;
+	uint32 bone;
+	Vec3D position;
+	AnimationBlock data;
+} Attachment;
+typedef struct AttachmentsRefBlock {
+	AnimRefs data;
+} AttachmentsRefBlock;
+typedef struct LKAttachmentsDataBlock {
+	Int_LKSubBlock *data;
+} LKAttachmentsDataBlock;
+typedef struct AttachmentsDataBlock {
+	Int_SubBlock data;
+} AttachmentsDataBlock;
 
+//Colors
 typedef struct LKColorDef {
 	LKAnimationBlock rgb;
 	LKAnimationBlock opacity;
@@ -359,12 +392,10 @@ typedef struct ColorDef {
 	AnimationBlock rgb;
 	AnimationBlock opacity;
 } ColorDef;
-
 typedef struct ColorRefBlock {
 	AnimRefs rgb;
 	AnimRefs opacity;
 } ColorRefBlock;
-
 typedef struct LKColorDataBlock {
 	Vec3D_LKSubBlock *rgb;
 	Short_LKSubBlock *opacity;
@@ -374,6 +405,7 @@ typedef struct ColorDataBlock {
 	Short_SubBlock opacity;
 } ColorDataBlock;
 
+//TODO TexAnims
 typedef struct RefBlockSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
 	ArrayRef t_keys;
@@ -491,19 +523,6 @@ typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.
 	TexUnit *TextureUnits;
 } View;
 
-typedef struct LKAttachment {
-	uint32 ID;
-	uint32 bone;
-	Vec3D position;
-	LKAnimationBlock Data;
-} LKAttachment;
-
-typedef struct Attachment {
-	uint32 ID;
-	uint32 bone;
-	Vec3D position;
-	AnimationBlock Data;
-} Attachment;
 
 //FILES
 
@@ -542,7 +561,11 @@ typedef struct LKM2 {
 	Triangle *BoundingTriangles;
 	Vec3D *BoundingVertices;
 	Vec3D *BoundingNormals;
-	LKAttachment *Attachments;
+
+	LKAttachment *attachments;
+	AttachmentsRefBlock *attachmentsanimofs;
+	LKAttachmentsDataBlock *attachmentsdata;
+
 	uint16 *AttachLookup;
 /*TODO Events, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
@@ -594,7 +617,10 @@ typedef struct BCM2 {
 	Triangle *BoundingTriangles;
 	Vec3D *BoundingVertices;
 	Vec3D *BoundingNormals;
-	Attachment *Attachments;
+
+	Attachment *attachments;
+	AttachmentsDataBlock *attachmentsdata;
+
 	uint16 *AttachLookup;
 /*TODO Attachments_2, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
