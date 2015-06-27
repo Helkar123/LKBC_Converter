@@ -235,6 +235,25 @@ int write_colors(FILE *bc_m2_file, BCM2 *ptr) {
 	return 0;
 }
 
+int write_transparency(FILE *bc_m2_file, BCM2 *ptr) {
+	if (ptr->header.nTransparency > 0) {
+		ptr->header.ofsTransparency = getPos(bc_m2_file);
+		fwrite(ptr->transparencyrefs, sizeof(Transparency), ptr->header.nTransparency,
+				bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nTransparency; i++) {
+			//Alpha
+			write_ShortAnimBlock(bc_m2_file, &ptr->transparencyrefs[i].alpha,
+					&ptr->transparencydata[i].alpha);
+		}
+	}
+	fseek(bc_m2_file, ptr->header.ofsTransparency, SEEK_SET);
+	fwrite(ptr->transparencyrefs, sizeof(Transparency), ptr->header.nTransparency, bc_m2_file);
+	fseek(bc_m2_file, 0, SEEK_END);
+	return 0;
+}
+
 /**
  * Write a M2/BC file from its corresponding structure
  * @param bc_m2_file The file to write data.
@@ -286,6 +305,9 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 	}
 	//Views
 	write_views(bc_m2_file, ptr);
+
+	//Transparency
+	write_transparency(bc_m2_file, ptr);
 
 	//Colors
 	write_colors(bc_m2_file, ptr);

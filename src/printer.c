@@ -140,8 +140,7 @@ void print_bones(BCM2 model, char flags) {
 			printf("Translation:\n");
 			printf("\tNumber of Ranges: %d\n", model.bones[i].trans.Ranges.n);
 			for (j = 0; j < model.bones[i].trans.Ranges.n; j++) {
-				printf("\t\t(%d, %d)\n",
-						model.bonesdata[i].trans.ranges[j][0],
+				printf("\t\t(%d, %d)\n", model.bonesdata[i].trans.ranges[j][0],
 						model.bonesdata[i].trans.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].trans.Times.n);
@@ -159,8 +158,7 @@ void print_bones(BCM2 model, char flags) {
 			printf("Rotation:\n");
 			printf("\tNumber of Ranges: %d\n", model.bones[i].rot.Ranges.n);
 			for (j = 0; j < model.bones[i].rot.Ranges.n; j++) {
-				printf("\t\t(%d,%d)\n",
-						model.bonesdata[i].rot.ranges[j][0],
+				printf("\t\t(%d,%d)\n", model.bonesdata[i].rot.ranges[j][0],
 						model.bonesdata[i].rot.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].rot.Times.n);
@@ -179,8 +177,7 @@ void print_bones(BCM2 model, char flags) {
 			printf("Scaling:\n");
 			printf("\tNumber of Ranges: %d\n", model.bones[i].scal.Ranges.n);
 			for (j = 0; j < model.bones[i].scal.Ranges.n; j++) {
-				printf("\t\t(%d, %d)\n",
-						model.bonesdata[i].scal.ranges[j][0],
+				printf("\t\t(%d, %d)\n", model.bonesdata[i].scal.ranges[j][0],
 						model.bonesdata[i].scal.ranges[j][1]);
 			}
 			printf("\tNumber of Timestamps: %d", model.bones[i].scal.Times.n);
@@ -194,6 +191,55 @@ void print_bones(BCM2 model, char flags) {
 			}
 		}
 		printf("\n");
+	}
+}
+
+void print_transparency_bc(BCM2 model) {
+	printf("Number of transparency references : %d\n",
+			model.header.nTransparency);
+	int i;
+	for (i = 0; i < model.header.nTransparency; i++) {
+		printf("[Transparency #%d]\n", i);
+		int j;
+		printf("Alpha:\n");
+		printf("\tNumber of Ranges: %d\n",
+				model.transparencyrefs[i].alpha.Ranges.n);
+		for (j = 0; j < model.transparencyrefs[i].alpha.Ranges.n; j++) {
+			printf("\t\t(%d, %d)\n",
+					model.transparencydata[i].alpha.ranges[j][0],
+					model.transparencydata[i].alpha.ranges[j][1]);
+		}
+		printf("\tNumber of Timestamps: %d",
+				model.transparencyrefs[i].alpha.Times.n);
+		printf("\t Number of Keys: %d\n",
+				model.transparencyrefs[i].alpha.Keys.n);
+		for (j = 0; j < model.transparencyrefs[i].alpha.Times.n; j++) {
+			printf("\t\t%d: %d\n", model.transparencydata[i].alpha.times[j],
+					model.transparencydata[i].alpha.keys[j]);
+		}
+		printf("\n");
+	}
+}
+void print_transparency_lk(LKM2 model) {
+	int i;
+	for (i = 0; i < model.header.nTransparency; i++) {
+		int j;
+		printf("[Transparency #%d]\n", i);
+		//Translation
+		if (model.transparencyrefs[i].alpha.Keys.n > 0) {
+			for (j = 0; j < model.transparencyrefs[i].alpha.Keys.n; j++) {
+				printf("\t LKAnimation : %d\n", j);
+				if (model.transparencyanimofs[i].alpha.keys[j].n > 0) {
+					int k;
+					for (k = 0;
+							k < model.transparencyanimofs[i].alpha.keys[j].n;
+							k++) {
+						printf("\t\tLKValue : %d\n",
+								model.transparencydata[i].alpha[j].keys[k]);
+					}
+				}
+			}
+		}
 	}
 }
 /**

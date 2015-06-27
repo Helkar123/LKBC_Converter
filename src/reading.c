@@ -270,6 +270,26 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 	return -1;
 }
 
+int read_transparency(FILE *lk_m2_file, LKM2 *ptr) {
+	if (ptr->header.nTransparency > 0) {
+		ptr->transparencyrefs = malloc(ptr->header.nTransparency * sizeof(LKTransparency));
+		fseek(lk_m2_file, ptr->header.ofsTransparency, SEEK_SET);
+		fread(ptr->transparencyrefs, sizeof(LKTransparency), ptr->header.nTransparency,
+				lk_m2_file);
+
+		ptr->transparencyanimofs = malloc(ptr->header.nTransparency * sizeof(TransparencyRefBlock));//1 LKRefBlock per bone
+		ptr->transparencydata = malloc(ptr->header.nTransparency * sizeof(LKTransparencyDataBlock));
+		int i;
+		for (i = 0; i < ptr->header.nTransparency; i++) {
+			//Alpha
+			read_ShortAnimBlock(lk_m2_file, &ptr->transparencyrefs[i].alpha, &ptr->transparencyanimofs[i].alpha,
+					&ptr->transparencydata[i].alpha);
+		}
+		return 0;
+	}
+	return -1;
+}
+
 /**
  * Read texture animations. WIP
  * @param lk_m2_file The file to read data.
@@ -563,13 +583,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	}
 
 	//Transparency
-	if (ptr->header.nTransparency > 0) {
-		ptr->transparencies = malloc(
-				ptr->header.nTransparency * sizeof(Transparency));
-		fseek(lk_m2_file, ptr->header.ofsTransparency, SEEK_SET);
-		fread(ptr->transparencies, sizeof(Transparency),
-				ptr->header.nTransparency, lk_m2_file);
-	}
+	read_transparency(lk_m2_file, ptr);
 
 	//TexAnims
 	read_texanims(lk_m2_file, ptr);

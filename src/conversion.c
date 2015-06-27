@@ -88,8 +88,7 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 		ptr->header.floats[i] = lk_header.floats[i];
 	}
 
-	ptr->header.nTransparency = 0; //TODO Unimplemented features
-	ptr->header.ofsTransparency = 0;
+	//TODO Unimplemented features
 	ptr->header.nAttachLookup = 0;
 	ptr->header.ofsAttachLookup = 0;
 	ptr->header.nAttachments_2 = 0;
@@ -286,6 +285,8 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		}
 	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
 		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrBlock->Keys.n = 1;
 		ptrDataBlock->times = malloc(sizeof(uint32));
 		ptrDataBlock->keys = malloc(sizeof(Vec3D));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
@@ -388,6 +389,8 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		}
 	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
 		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrBlock->Keys.n = 1;
 		ptrDataBlock->times = malloc(sizeof(uint32));
 		ptrDataBlock->keys = malloc(sizeof(Quat));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
@@ -466,6 +469,8 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		}
 	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
 		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrBlock->Keys.n = 1;
 		ptrDataBlock->times = malloc(sizeof(uint32));
 		ptrDataBlock->keys = malloc(sizeof(int));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
@@ -540,6 +545,8 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		}
 	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
 		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrBlock->Keys.n = 1;
 		ptrDataBlock->times = malloc(sizeof(uint32));
 		ptrDataBlock->keys = malloc(sizeof(short));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
@@ -575,11 +582,9 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 		//scaling
 		convert_Vec3DAnimBlock(lk_m2.bones[i].scal, lk_m2.animofs[i].scal, lk_m2.bonesdata[i].scal, &ptr->bones[i].scal,
 				&ptr->bonesdata[i].scal, animations, nAnimations);
-	}
 
 	//Bones
 	//numbers in animblocks are already done in the Data procedure
-	for (i = 0; i < ptr->header.nBones; i++) {
 		ptr->bones[i].animid = lk_m2.bones[i].animid;
 		ptr->bones[i].flags = lk_m2.bones[i].flags;
 		ptr->bones[i].parent = lk_m2.bones[i].parent;
@@ -614,9 +619,7 @@ int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
 		//data
 		convert_IntAnimBlock(lk_m2.attachments[i].data, lk_m2.attachmentsanimofs[i].data, lk_m2.attachmentsdata[i].data, &ptr->attachments[i].data,
 				&ptr->attachmentsdata[i].data, animations, nAnimations);
-	}
 
-	for (i = 0; i < ptr->header.nAttachments; i++) {
 		ptr->attachments[i].ID = lk_m2.attachments[i].ID;
 		ptr->attachments[i].bone = lk_m2.attachments[i].bone;
 		int j;
@@ -645,15 +648,32 @@ int colors_converter(BCM2 *ptr, LKM2 lk_m2) {
 		//Opacity
 		convert_ShortAnimBlock(lk_m2.colors[i].opacity, lk_m2.coloranimofs[i].opacity, lk_m2.colorsdata[i].opacity, &ptr->colors[i].opacity,
 				&ptr->colorsdata[i].opacity, animations, nAnimations);
-	}
-
-	for (i = 0; i < ptr->header.nColors; i++) {
 		//RGB
 		ptr->colors[i].rgb.type = lk_m2.colors[i].rgb.type;
 		ptr->colors[i].rgb.seq = lk_m2.colors[i].rgb.seq;
 		//Opacity
 		ptr->colors[i].opacity.type = lk_m2.colors[i].opacity.type;
 		ptr->colors[i].opacity.seq = lk_m2.colors[i].opacity.seq;
+	}
+	return 0;
+}
+
+int transparency_converter(BCM2 *ptr, LKM2 lk_m2) {
+	ptr->transparencyrefs = malloc(ptr->header.nTransparency * sizeof(Transparency));
+	ptr->transparencydata = malloc(ptr->header.nTransparency * sizeof(TransparencyDataBlock));
+	int i;
+	for (i = 0; i < ptr->header.nTransparency; i++) {
+		//INIT
+		ModelAnimation *animations = ptr->animations;
+		int nAnimations = ptr->header.nAnimations;
+
+		//Alpha
+		convert_ShortAnimBlock(lk_m2.transparencyrefs[i].alpha, lk_m2.transparencyanimofs[i].alpha, lk_m2.transparencydata[i].alpha, &ptr->transparencyrefs[i].alpha,
+				&ptr->transparencydata[i].alpha, animations, nAnimations);
+
+		//Alpha
+		ptr->transparencyrefs[i].alpha.type = lk_m2.transparencyrefs[i].alpha.type;
+		ptr->transparencyrefs[i].alpha.seq = lk_m2.transparencyrefs[i].alpha.seq;
 	}
 	return 0;
 }
@@ -928,6 +948,10 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 			ptr->texture_names[i] = lk_m2.texture_names[i];
 		}
 	}
+
+	//Transparency
+	transparency_converter(ptr, lk_m2);
+
 	ptr->renderflags = lk_m2.renderflags;
 	ptr->BoneLookupTable = lk_m2.BoneLookupTable;
 	ptr->TexLookupTable = lk_m2.TexLookupTable;
@@ -943,7 +967,6 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	ptr->AttachLookup = lk_m2.AttachLookup;
 	/*TODO
-	 Transparency;
 	 TexAnims;
 	 renderflags;
 	 BoneLookupTable;

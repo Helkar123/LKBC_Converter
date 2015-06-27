@@ -88,22 +88,21 @@ int main(int argc, char *argv[]) {
 
 	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
 	/*
-	FILE *genuine_m2_file = fopen("MountedKnightGenuine.m2", "r+b");
+	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
 	if (genuine_m2_file == NULL) {
 		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
 		return -1;
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
+	print_bones(genuine_model, 7);
 	*/
-	print_bones(bc_model, 4);
 
 	//Writing
 	char new_name[64] = "BC_";
 	strcat(new_name, argv[1]);
 	printf("Output name : %s\n", new_name);
 	FILE *bc_m2_file = fopen(new_name, "w+b");
-
 	write_model(bc_m2_file, &bc_model);
 	printf("Model successfully written.\n");
 

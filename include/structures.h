@@ -405,6 +405,23 @@ typedef struct ColorDataBlock {
 	Short_SubBlock opacity;
 } ColorDataBlock;
 
+//Transparency
+typedef struct LKTransparency {
+	LKAnimationBlock alpha;
+} LKTransparency;
+typedef struct Transparency {
+	AnimationBlock alpha;
+} Transparency;
+typedef struct TransparencyRefBlock{
+	AnimRefs alpha;
+}TransparencyRefBlock;
+typedef struct LKTransparencyDataBlock {
+	Short_LKSubBlock *alpha;
+} LKTransparencyDataBlock;
+typedef struct TransparencyDataBlock {
+	Short_SubBlock alpha;
+} TransparencyDataBlock;
+
 //TODO TexAnims
 typedef struct RefBlockSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
@@ -497,9 +514,6 @@ typedef struct ModelTextureDef {
 	uint32 nameOfs;
 } ModelTextureDef;
 
-typedef struct Transparency {
-	AnimationBlock alpha;
-} Transparency;
 
 
 typedef struct LKTextureAnimation {
@@ -549,7 +563,11 @@ typedef struct LKM2 {
 
 	ModelTextureDef *textures_def;
 	char **texture_names;
-	Transparency *transparencies;
+
+	LKTransparency *transparencyrefs;
+	TransparencyRefBlock *transparencyanimofs;
+	LKTransparencyDataBlock *transparencydata;
+
 	LKTextureAnimation *tex_anims;
 	RefBlockSimple *temp_anim_ofs;
 	int *renderflags;
@@ -606,7 +624,10 @@ typedef struct BCM2 {
 
 	ModelTextureDef *textures_def;
 	char **texture_names;
-	Transparency *transparencies;
+
+	Transparency *transparencyrefs;
+	TransparencyDataBlock *transparencydata;
+
 	TextureAnimation *tex_anims;
 	int *renderflags;
 	int16 *BoneLookupTable;
