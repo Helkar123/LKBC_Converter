@@ -21,6 +21,10 @@ typedef uint16 Vertex; //The vertex in the global vertex list
 typedef uint32 Property; //Bones Indices into BoneLookupTable
 typedef Vec3D BigFloat[3];
 
+typedef struct PlayAnimRecord {
+	int16 ID;
+	int16 flags;
+}PlayAnimRecord;
 typedef struct ArrayRef { //Can point to absolutely anything
 	uint32 n;
 	uint32 ofs;
@@ -709,6 +713,7 @@ typedef struct BCM2 {
 	unsigned int *globalsequences;
 	ModelAnimation *animations;
 	int16 *AnimLookup;
+	PlayAnimRecord *PlayAnimLookup;
 
 	ModelBoneDef *bones;
 	BonesDataBlock *bonesdata;

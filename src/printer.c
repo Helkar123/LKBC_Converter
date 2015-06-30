@@ -389,3 +389,10 @@ void print_vertices_bc(BCM2 model) {
 				model.vertices[i].pos[1], model.vertices[i].pos[2]);
 	}
 }
+
+void print_playanimlookup(BCM2 model) {
+	int i;
+	for(i=0; i < model.header.nPlayableAnimationLookup;i++){
+		printf("ID : %d\n\tReal ID: %d Flags:%d",i,model.PlayAnimLookup[i].ID, model.PlayAnimLookup[i].flags);
+	}
+}

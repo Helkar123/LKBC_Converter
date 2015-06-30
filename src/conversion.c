@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "structures.h"
+#include "fallback.h"
 
 /**
  * Header conversion
@@ -27,7 +28,7 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsAnimations = lk_header.ofsAnimations;
 	ptr->header.nAnimationLookup = lk_header.nAnimationLookup;
 	ptr->header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
-	ptr->header.nPlayableAnimationLookup = 0x00; //TODO Placeholder. I don't know where this data is in WotLK.
+	ptr->header.nPlayableAnimationLookup = 226; //TODO Placeholder. I don't know where this data is in WotLK.
 	ptr->header.ofsPlayableAnimationLookup = 0x00;
 	ptr->header.nBones = lk_header.nBones;
 	ptr->header.ofsBones = lk_header.ofsBones;
@@ -113,7 +114,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		timeline += 3333; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
 		ptr->animations[i].animID = lk_m2.animations[i].animID;
 		ptr->animations[i].subAnimID = lk_m2.animations[i].subAnimID;
-		ptr->animations[i].subAnimID = 0;//FIXME
+		ptr->animations[i].subAnimID = 0; //FIXME
 		ptr->animations[i].timeStart = timeline;
 		timeline += lk_m2.animations[i].length;
 		ptr->animations[i].timeEnd = timeline;
@@ -822,9 +823,10 @@ int cameras_converter(BCM2 *ptr, LKM2 lk_m2) {
 				&ptr->cameras[i].transtar, &ptr->camerasdata[i].transtar,
 				animations, nAnimations);
 		//scaling
-		convert_Vec3DAnimBlock(lk_m2.cameras[i].scal, lk_m2.camerasanimofs[i].scal,
-				lk_m2.camerasdata[i].scal, &ptr->cameras[i].scal,
-				&ptr->camerasdata[i].scal, animations, nAnimations);
+		convert_Vec3DAnimBlock(lk_m2.cameras[i].scal,
+				lk_m2.camerasanimofs[i].scal, lk_m2.camerasdata[i].scal,
+				&ptr->cameras[i].scal, &ptr->camerasdata[i].scal, animations,
+				nAnimations);
 
 		ptr->cameras[i].Type = lk_m2.cameras[i].Type;
 		ptr->cameras[i].FOV = lk_m2.cameras[i].FOV;
@@ -1181,6 +1183,25 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
 	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
 		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
+	}
+
+	//PlayAnimLookup
+	ptr->PlayAnimLookup = malloc(226 * sizeof(PlayAnimRecord));
+	for (i = 0; i < 226; i++) {
+		short realID = get_RealID((short)i, lk_m2);
+		ptr->PlayAnimLookup[i].ID = realID;
+		//Tricks when you don't have a dedicated animation
+		if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123 || i == 132
+				|| i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
+			if (realID != i) {
+				ptr->PlayAnimLookup[i].flags = 3;//Play then stop
+			}
+		}
+		else if (i==13||i==45||i==101||i==189){//Walkbackwards, SwimBackwards, SleepUp, LootUp
+			if (realID != i) {
+				ptr->PlayAnimLookup[i].flags = 3;//Play backwards
+			}
+		}
 	}
 
 	//KeyboneLookup
