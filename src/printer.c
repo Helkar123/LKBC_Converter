@@ -240,35 +240,97 @@ void print_transparency_lk(LKM2 model) {
 				}
 			}
 		}
+		printf("\n");
 	}
 }
+void print_events_lk(LKM2 model) {
+	int i;
+	for (i = 0; i < model.header.nEvents; i++) {
+		int j;
+		printf("[Event #%d]\n", i);
+		printf("ID: %s\n", model.events[i].ID);
+		printf("Data: %d\n", model.events[i].data);
+		printf("Bone: %d\n", model.events[i].bone);
+		printf("Position Vector: (%f,%f,%f)\n", model.events[i].position[0],
+				model.events[i].position[1], model.events[i].position[2]);
+		printf("Type: %d\n", model.events[i].timer.type);
+		printf("Seq: %d\n", model.events[i].timer.seq);
+		printf("Number of times: %d\n", model.events[i].timer.Times.n);
+		//Content
+		if (model.events[i].timer.Times.n > 0) {
+			for (j = 0; j < model.events[i].timer.Times.n; j++) {
+				printf("\t Animation : %d\n", j);
+				if (model.eventsanimofs[i].times[j].n > 0) {
+					int k;
+					for (k = 0; k < model.eventsanimofs[i].times[j].n; k++) {
+						printf("\t\tOccuring Time : %d\n",
+								model.eventsdata[i].times[j][k]);
+					}
+				}
+			}
+		}
+		printf("\n");
+	}
+}
+
+void print_events_bc(BCM2 model) {
+	int i;
+	for (i = 0; i < model.header.nEvents; i++) {
+		int j;
+		printf("[Event #%d]\n", i);
+		printf("ID: %s\n", model.events[i].ID);
+		printf("Data: %d\n", model.events[i].data);
+		printf("Bone: %d\n", model.events[i].bone);
+		printf("Position Vector: (%f,%f,%f)\n", model.events[i].position[0],
+				model.events[i].position[1], model.events[i].position[2]);
+		printf("Type: %d\n", model.events[i].timer.type);
+		printf("Seq: %d\n", model.events[i].timer.seq);
+		printf("Number of times: %d\n", model.events[i].timer.Times.n);
+		//Content
+		if (model.events[i].timer.Ranges.n > 0) {
+			printf("\tRanges:\n");
+			for (j = 0; j < model.events[i].timer.Ranges.n; j++) {
+				printf("\t(%d,%d)\n", model.eventsdata[i].ranges[j][0], model.eventsdata[i].ranges[j][1]);
+			}
+			printf("\n");
+		}
+		if (model.events[i].timer.Times.n > 0) {
+			printf("\tTimes:\n");
+			for (j = 0; j < model.events[i].timer.Times.n; j++) {
+				printf("\t%d\n", model.eventsdata[i].times[j]);
+			}
+		}
+	printf("\n");
+	}
+}
+
 /**
  * ATM print Translation timestamps of every bone in a LK model
  * @param model
  */
 void print_bonesdata(LKM2 model) {
-	int i;
-	for (i = 0; i < model.header.nBones; i++) {
-		LKModelBoneDef lk_bone = model.bones[i];
-		int j;
-		printf("LKBone : %d\n", i);
-		//Translation
-		if (lk_bone.rot.Keys.n > 0) {
-			for (j = 0; j < lk_bone.rot.Keys.n; j++) {
-				printf("\t LKAnimation : %d\n", j);
-				if (model.animofs[i].rot.keys[j].n > 0) {
-					int k;
-					for (k = 0; k < model.animofs[i].rot.keys[j].n; k++) {
-						printf("\t\tLKValue : (%d,%d,%d,%d)\n",
-								model.bonesdata[i].rot[j].keys[k][0],
-								model.bonesdata[i].rot[j].keys[k][1],
-								model.bonesdata[i].rot[j].keys[k][2],
-								model.bonesdata[i].rot[j].keys[k][3]);
-					}
+int i;
+for (i = 0; i < model.header.nBones; i++) {
+	LKModelBoneDef lk_bone = model.bones[i];
+	int j;
+	printf("LKBone : %d\n", i);
+	//Translation
+	if (lk_bone.rot.Keys.n > 0) {
+		for (j = 0; j < lk_bone.rot.Keys.n; j++) {
+			printf("\t LKAnimation : %d\n", j);
+			if (model.animofs[i].rot.keys[j].n > 0) {
+				int k;
+				for (k = 0; k < model.animofs[i].rot.keys[j].n; k++) {
+					printf("\t\tLKValue : (%d,%d,%d,%d)\n",
+							model.bonesdata[i].rot[j].keys[k][0],
+							model.bonesdata[i].rot[j].keys[k][1],
+							model.bonesdata[i].rot[j].keys[k][2],
+							model.bonesdata[i].rot[j].keys[k][3]);
 				}
 			}
 		}
 	}
+}
 }
 
 /**
@@ -276,11 +338,11 @@ void print_bonesdata(LKM2 model) {
  * @param model
  */
 void print_vertices_lk(LKM2 model) {
-	int i;
-	for (i = 0; i < model.header.nVertices; i++) {
-		printf("%d : (%f,%f,%f)\n", i, model.vertices[i].pos[0],
-				model.vertices[i].pos[1], model.vertices[i].pos[2]);
-	}
+int i;
+for (i = 0; i < model.header.nVertices; i++) {
+	printf("%d : (%f,%f,%f)\n", i, model.vertices[i].pos[0],
+			model.vertices[i].pos[1], model.vertices[i].pos[2]);
+}
 }
 
 /**
@@ -288,9 +350,9 @@ void print_vertices_lk(LKM2 model) {
  * @param model
  */
 void print_vertices_bc(BCM2 model) {
-	int i;
-	for (i = 0; i < model.header.nVertices; i++) {
-		printf("%d : (%f,%f,%f)\n", i, model.vertices[i].pos[0],
-				model.vertices[i].pos[1], model.vertices[i].pos[2]);
-	}
+int i;
+for (i = 0; i < model.header.nVertices; i++) {
+	printf("%d : (%f,%f,%f)\n", i, model.vertices[i].pos[0],
+			model.vertices[i].pos[1], model.vertices[i].pos[2]);
+}
 }

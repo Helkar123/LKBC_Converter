@@ -176,6 +176,29 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		}
 	}
 }
+
+void read_EventAnimBlock(FILE *lk_m2_file, LKEventAnimBlock *ptrBlock,
+		ArrayRef **ptrAnimRefs, uint32 ***ptrDataBlock) {
+	if (ptrBlock->Times.n > 0) {
+		//Layer 1
+		(*ptrAnimRefs) = malloc(ptrBlock->Times.n * sizeof(ArrayRef));
+		fseek(lk_m2_file, ptrBlock->Times.ofs, SEEK_SET);
+		fread((*ptrAnimRefs), sizeof(ArrayRef), ptrBlock->Times.n, lk_m2_file);
+		//Layer 2
+		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(uint32*)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+		int j;
+		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if ((*ptrAnimRefs)[j].n > 0) {
+				(*ptrDataBlock)[j] = malloc(
+						(*ptrAnimRefs)[j].n * sizeof(uint32)); //The number of elements was found previously in this function (stored in animofs)
+				fseek(lk_m2_file, (*ptrAnimRefs)[j].ofs,
+				SEEK_SET);
+				fread((*ptrDataBlock)[j], sizeof(uint32), (*ptrAnimRefs)[j].n,
+						lk_m2_file);
+			}
+		}
+	}
+}
 /**
  * Read model bones with animations.
  * @param lk_m2_file The file to read data.
@@ -207,14 +230,14 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		int i;
 		for (i = 0; i < ptr->header.nBones; i++) {
 			//Translation
-			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].trans, &ptr->animofs[i].trans,
-					&ptr->bonesdata[i].trans);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].trans,
+					&ptr->animofs[i].trans, &ptr->bonesdata[i].trans);
 			//Rotation
-			read_QuatAnimBlock(lk_m2_file, &ptr->bones[i].rot, &ptr->animofs[i].rot,
-					&ptr->bonesdata[i].rot);
+			read_QuatAnimBlock(lk_m2_file, &ptr->bones[i].rot,
+					&ptr->animofs[i].rot, &ptr->bonesdata[i].rot);
 			//Scaling
-			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].scal, &ptr->animofs[i].scal,
-					&ptr->bonesdata[i].scal);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].scal,
+					&ptr->animofs[i].scal, &ptr->bonesdata[i].scal);
 		}
 		return 0;
 	}
@@ -222,19 +245,43 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 }
 
 int read_attachments(FILE *lk_m2_file, LKM2 *ptr) {
-	if (ptr->header.nAttachments > 0) { //I think lights and other non-geometric things don't have any
-		ptr->attachments = malloc(ptr->header.nAttachments * sizeof(LKAttachment));
+	if (ptr->header.nAttachments > 0) {
+		ptr->attachments = malloc(
+				ptr->header.nAttachments * sizeof(LKAttachment));
 		fseek(lk_m2_file, ptr->header.ofsAttachments, SEEK_SET);
 		fread(ptr->attachments, sizeof(LKAttachment), ptr->header.nAttachments,
 				lk_m2_file);
 
-		ptr->attachmentsanimofs = malloc(ptr->header.nAttachments * sizeof(AttachmentsRefBlock));//1 LKRefBlock per bone
-		ptr->attachmentsdata = malloc(ptr->header.nAttachments * sizeof(LKAttachmentsDataBlock));
+		ptr->attachmentsanimofs = malloc(
+				ptr->header.nAttachments * sizeof(AttachmentsRefBlock));//1 LKRefBlock per bone
+		ptr->attachmentsdata = malloc(
+				ptr->header.nAttachments * sizeof(LKAttachmentsDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nAttachments; i++) {
 			//Data
-			read_IntAnimBlock(lk_m2_file, &ptr->attachments[i].data, &ptr->attachmentsanimofs[i].data,
+			read_IntAnimBlock(lk_m2_file, &ptr->attachments[i].data,
+					&ptr->attachmentsanimofs[i].data,
 					&ptr->attachmentsdata[i].data);
+		}
+		return 0;
+	}
+	return -1;
+}
+int read_events(FILE *lk_m2_file, LKM2 *ptr) {
+	if (ptr->header.nEvents > 0) {
+		ptr->events = malloc(ptr->header.nEvents * sizeof(LKEvent));
+		fseek(lk_m2_file, ptr->header.ofsEvents, SEEK_SET);
+		fread(ptr->events, sizeof(LKEvent), ptr->header.nEvents, lk_m2_file);
+
+		ptr->eventsanimofs = malloc(
+				ptr->header.nEvents * sizeof(EventsRefBlock));	//1 LKRefBlock per bone
+		ptr->eventsdata = malloc(
+				ptr->header.nEvents * sizeof(LKEventsDataBlock));
+		int i;
+		for (i = 0; i < ptr->header.nEvents; i++) {
+			//Data
+			read_EventAnimBlock(lk_m2_file, &ptr->events[i].timer,
+					&ptr->eventsanimofs[i].times, &ptr->eventsdata[i].times);
 		}
 		return 0;
 	}
@@ -251,19 +298,19 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nColors > 0) { //I think lights and other non-geometric things don't have any
 		ptr->colors = malloc(ptr->header.nColors * sizeof(LKColorDef));
 		fseek(lk_m2_file, ptr->header.ofsColors, SEEK_SET);
-		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors,
-				lk_m2_file);
+		fread(ptr->colors, sizeof(LKColorDef), ptr->header.nColors, lk_m2_file);
 
-		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorRefBlock));//1 LKRefBlock per bone
-		ptr->colorsdata = malloc(ptr->header.nColors * sizeof(LKColorDataBlock));
+		ptr->coloranimofs = malloc(ptr->header.nColors * sizeof(ColorRefBlock)); //1 LKRefBlock per bone
+		ptr->colorsdata = malloc(
+				ptr->header.nColors * sizeof(LKColorDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nColors; i++) {
 			//RGB
-			read_Vec3DAnimBlock(lk_m2_file, &ptr->colors[i].rgb, &ptr->coloranimofs[i].rgb,
-					&ptr->colorsdata[i].rgb);
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->colors[i].rgb,
+					&ptr->coloranimofs[i].rgb, &ptr->colorsdata[i].rgb);
 			//Opacity
-			read_ShortAnimBlock(lk_m2_file, &ptr->colors[i].opacity, &ptr->coloranimofs[i].opacity,
-					&ptr->colorsdata[i].opacity);
+			read_ShortAnimBlock(lk_m2_file, &ptr->colors[i].opacity,
+					&ptr->coloranimofs[i].opacity, &ptr->colorsdata[i].opacity);
 		}
 		return 0;
 	}
@@ -272,17 +319,21 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 
 int read_transparency(FILE *lk_m2_file, LKM2 *ptr) {
 	if (ptr->header.nTransparency > 0) {
-		ptr->transparencyrefs = malloc(ptr->header.nTransparency * sizeof(LKTransparency));
+		ptr->transparencyrefs = malloc(
+				ptr->header.nTransparency * sizeof(LKTransparency));
 		fseek(lk_m2_file, ptr->header.ofsTransparency, SEEK_SET);
-		fread(ptr->transparencyrefs, sizeof(LKTransparency), ptr->header.nTransparency,
-				lk_m2_file);
+		fread(ptr->transparencyrefs, sizeof(LKTransparency),
+				ptr->header.nTransparency, lk_m2_file);
 
-		ptr->transparencyanimofs = malloc(ptr->header.nTransparency * sizeof(TransparencyRefBlock));//1 LKRefBlock per bone
-		ptr->transparencydata = malloc(ptr->header.nTransparency * sizeof(LKTransparencyDataBlock));
+		ptr->transparencyanimofs = malloc(
+				ptr->header.nTransparency * sizeof(TransparencyRefBlock)); //1 LKRefBlock per bone
+		ptr->transparencydata = malloc(
+				ptr->header.nTransparency * sizeof(LKTransparencyDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nTransparency; i++) {
 			//Alpha
-			read_ShortAnimBlock(lk_m2_file, &ptr->transparencyrefs[i].alpha, &ptr->transparencyanimofs[i].alpha,
+			read_ShortAnimBlock(lk_m2_file, &ptr->transparencyrefs[i].alpha,
+					&ptr->transparencyanimofs[i].alpha,
 					&ptr->transparencydata[i].alpha);
 		}
 		return 0;
@@ -495,9 +546,33 @@ int read_model_bc(FILE *bc_m2_file, BCM2 *ptr) {
 						ptr->bones[i].scal.Keys.n, bc_m2_file);
 			}
 		}
-		return 0;
 	}
-	return -1;
+	//Events
+	if (ptr->header.nEvents > 0) { //I think lights and other non-geometric things don't have any
+		ptr->events = malloc(ptr->header.nEvents * sizeof(Event));
+		ptr->eventsdata = malloc(ptr->header.nEvents * sizeof(EventsDataBlock));
+		fseek(bc_m2_file, ptr->header.ofsEvents, SEEK_SET);
+		fread(ptr->events, sizeof(Event), ptr->header.nEvents, bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nEvents; i++) {
+			//Translation
+			if (ptr->events[i].timer.Ranges.n > 0) {
+				ptr->eventsdata[i].ranges = malloc(
+						ptr->events[i].timer.Ranges.n * sizeof(Range));
+				fseek(bc_m2_file, ptr->events[i].timer.Ranges.ofs, SEEK_SET);
+				fread(ptr->eventsdata[i].ranges, sizeof(Range),
+						ptr->events[i].timer.Ranges.n, bc_m2_file);
+			}
+			if (ptr->events[i].timer.Times.n > 0) {
+				ptr->eventsdata[i].times = malloc(
+						ptr->events[i].timer.Times.n * sizeof(uint32));
+				fseek(bc_m2_file, ptr->events[i].timer.Times.ofs, SEEK_SET);
+				fread(ptr->eventsdata[i].times, sizeof(uint32),
+						ptr->events[i].timer.Times.n, bc_m2_file);
+			}
+		}
+	}
+	return 0;
 }
 
 /**
@@ -651,5 +726,8 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsAttachLookup, SEEK_SET);
 	fread(ptr->AttachLookup, sizeof(short), ptr->header.nAttachLookup,
 			lk_m2_file);
+
+	//Events
+	read_events(lk_m2_file, ptr);
 	return 0;
 }

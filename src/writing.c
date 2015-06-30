@@ -208,7 +208,40 @@ int write_attachments(FILE *bc_m2_file, BCM2 *ptr) {
 		}
 	}
 	fseek(bc_m2_file, ptr->header.ofsAttachments, SEEK_SET);
-	fwrite(ptr->attachments, sizeof(Attachment), ptr->header.nAttachments, bc_m2_file);
+	fwrite(ptr->attachments, sizeof(Attachment), ptr->header.nAttachments,
+			bc_m2_file);
+	fseek(bc_m2_file, 0, SEEK_END);
+	return 0;
+}
+int write_events(FILE *bc_m2_file, BCM2 *ptr) {
+	if (ptr->header.nEvents > 0) {
+		ptr->header.ofsEvents = getPos(bc_m2_file);
+		fwrite(ptr->events, sizeof(Event), ptr->header.nEvents, bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nEvents; i++) {
+			//timer
+			EventAnimBlock *ptrBlock = &ptr->events[i].timer;
+			Range **ptrRangeList = &ptr->eventsdata[i].ranges;
+			uint32 **ptrTimeList = &ptr->eventsdata[i].times;
+			if (ptrBlock->Ranges.n > 0) {
+				ptrBlock->Ranges.ofs = getPos(bc_m2_file);
+				int j;
+				for (j = 0; j < ptrBlock->Ranges.n; j++) {
+					fwrite((*ptrRangeList)[j], sizeof(Range), 1, bc_m2_file);
+				}
+				align(bc_m2_file);
+			}
+			if (ptrBlock->Times.n > 0) {
+				ptrBlock->Times.ofs = getPos(bc_m2_file);
+				fwrite((*ptrTimeList), sizeof(uint32), ptrBlock->Times.n,
+						bc_m2_file);
+				align(bc_m2_file);
+			}
+		}
+	}
+	fseek(bc_m2_file, ptr->header.ofsEvents, SEEK_SET);
+	fwrite(ptr->events, sizeof(Event), ptr->header.nEvents, bc_m2_file);
 	fseek(bc_m2_file, 0, SEEK_END);
 	return 0;
 }
@@ -216,8 +249,7 @@ int write_attachments(FILE *bc_m2_file, BCM2 *ptr) {
 int write_colors(FILE *bc_m2_file, BCM2 *ptr) {
 	if (ptr->header.nColors > 0) {
 		ptr->header.ofsColors = getPos(bc_m2_file);
-		fwrite(ptr->colors, sizeof(ColorDef), ptr->header.nColors,
-				bc_m2_file);
+		fwrite(ptr->colors, sizeof(ColorDef), ptr->header.nColors, bc_m2_file);
 		align(bc_m2_file);
 		int i;
 		for (i = 0; i < ptr->header.nColors; i++) {
@@ -238,8 +270,8 @@ int write_colors(FILE *bc_m2_file, BCM2 *ptr) {
 int write_transparency(FILE *bc_m2_file, BCM2 *ptr) {
 	if (ptr->header.nTransparency > 0) {
 		ptr->header.ofsTransparency = getPos(bc_m2_file);
-		fwrite(ptr->transparencyrefs, sizeof(Transparency), ptr->header.nTransparency,
-				bc_m2_file);
+		fwrite(ptr->transparencyrefs, sizeof(Transparency),
+				ptr->header.nTransparency, bc_m2_file);
 		align(bc_m2_file);
 		int i;
 		for (i = 0; i < ptr->header.nTransparency; i++) {
@@ -249,7 +281,8 @@ int write_transparency(FILE *bc_m2_file, BCM2 *ptr) {
 		}
 	}
 	fseek(bc_m2_file, ptr->header.ofsTransparency, SEEK_SET);
-	fwrite(ptr->transparencyrefs, sizeof(Transparency), ptr->header.nTransparency, bc_m2_file);
+	fwrite(ptr->transparencyrefs, sizeof(Transparency),
+			ptr->header.nTransparency, bc_m2_file);
 	fseek(bc_m2_file, 0, SEEK_END);
 	return 0;
 }
@@ -385,6 +418,9 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 				bc_m2_file);
 		align(bc_m2_file);
 	}
+
+	//Events
+	write_events(bc_m2_file, ptr);
 
 	//Rewrite the header with updated offsets
 	fseek(bc_m2_file, 0, SEEK_SET);

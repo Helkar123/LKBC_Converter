@@ -71,8 +71,8 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsAttachments = lk_header.ofsAttachments;
 	ptr->header.nAttachLookup = lk_header.nAttachLookup;
 	ptr->header.ofsAttachLookup = lk_header.ofsAttachLookup;
-	ptr->header.nAttachments_2 = lk_header.nAttachments_2;
-	ptr->header.ofsAttachments_2 = lk_header.ofsAttachments_2;
+	ptr->header.nEvents = lk_header.nEvents;
+	ptr->header.ofsEvents = lk_header.ofsEvents;
 	ptr->header.nLights = lk_header.nLights;
 	ptr->header.ofsLights = lk_header.ofsLights;
 	ptr->header.nCameras = lk_header.nCameras;
@@ -89,10 +89,6 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	}
 
 	//TODO Unimplemented features
-	ptr->header.nAttachLookup = 0;
-	ptr->header.ofsAttachLookup = 0;
-	ptr->header.nAttachments_2 = 0;
-	ptr->header.ofsAttachments_2 = 0;
 	ptr->header.nLights = 0;
 	ptr->header.ofsLights = 0;
 	ptr->header.nCameras = 0;
@@ -147,17 +143,16 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
  * @param ptrRange Pointer to range_time.
  * @param j Animation index.
  */
-void compute_ranges(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
-		Range **ptrRangeList) {
+void compute_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
 	int range_time = 0;
 	int j;
-	for (j = 0; j < LKBlock.Times.n; j++) {
-		if (AnimRefs.times[j].n == 0) {
+	for (j = 0; j < nTimes; j++) {
+		if (TimeRefs[j].n == 0) {
 			(*ptrRangeList)[j][0] = range_time;
 			range_time++;
 			(*ptrRangeList)[j][1] = range_time;
 			range_time++;
-		} else if (AnimRefs.times[j].n == 1) {
+		} else if (TimeRefs[j].n == 1) {
 			if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
 				(*ptrRangeList)[j][0] = range_time;
 				range_time++;
@@ -170,31 +165,46 @@ void compute_ranges(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 			}
 		} else {				//n > 1
 			(*ptrRangeList)[j][0] = range_time;
-			range_time += AnimRefs.times[j].n - 1;
+			range_time += TimeRefs[j].n - 1;
 			(*ptrRangeList)[j][1] = range_time;
 			range_time++;
 		}
 	}
 }
-
-int get_keyframes_number(LKAnimationBlock LKBlock, AnimRefs AnimRefs){
-		size_t keyframes_size = 0; //Number of (Timestamp, key) tuples
-		int j;
-		for (j = 0; j < LKBlock.Times.n; j++) {
-			if (AnimRefs.times[j].n > 1) {
-				keyframes_size += AnimRefs.times[j].n;
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j == 0) {
-					keyframes_size += 2;
-				} else {
-					keyframes_size += 1;
-				}
-			} else { //n=0
-				keyframes_size += 2;
-			}
+void compute_event_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
+	int range_time = 0;
+	int j;
+	for (j = 0; j < nTimes; j++) {
+		if (TimeRefs[j].n == 0) {
+			(*ptrRangeList)[j][0] = range_time;
+			(*ptrRangeList)[j][1] = range_time;
+		} else {
+			(*ptrRangeList)[j][0] = range_time;
+			range_time += TimeRefs[j].n;
+			(*ptrRangeList)[j][1] = range_time;
 		}
-		return keyframes_size;
+	}
 }
+
+int get_keyframes_number(uint32 nTimes, ArrayRef *TimeRefs) {
+	size_t keyframes_size = 0; //Number of (Timestamp, key) tuples
+	int j;
+	for (j = 0; j < nTimes; j++) {
+		if (TimeRefs[j].n > 1) {
+			keyframes_size += TimeRefs[j].n;
+		} else if (TimeRefs[j].n == 1) {
+			if (j == 0) {
+				keyframes_size += 2;
+			} else {
+				keyframes_size += 1;
+			}
+		} else { //n=0
+			keyframes_size += 2;
+		}
+	}
+	return keyframes_size;
+}
+
 /**
  * Converts an AnimBlock of 3D Vectors values from LK to BC.
  * @param LKBlock Layer 0.
@@ -215,9 +225,10 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
 		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 		ptrDataBlock->ranges[nAnimations][1] = 0;
-		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+		compute_ranges(LKBlock.Times.n, AnimRefs.times, &ptrDataBlock->ranges);
 
-		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		size_t keyframes_size = get_keyframes_number(LKBlock.Times.n,
+				AnimRefs.times); //Number of (Timestamp, key) tuples
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
@@ -317,9 +328,10 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
 		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 		ptrDataBlock->ranges[nAnimations][1] = 0;
-		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+		compute_ranges(LKBlock.Times.n, AnimRefs.times, &ptrDataBlock->ranges);
 
-		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		size_t keyframes_size = get_keyframes_number(LKBlock.Times.n,
+				AnimRefs.times); //Number of (Timestamp, key) tuples
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
@@ -403,17 +415,17 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 
 void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		Int_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
-		Int_SubBlock *ptrDataBlock, ModelAnimation *animations,
-		int nAnimations) {
+		Int_SubBlock *ptrDataBlock, ModelAnimation *animations, int nAnimations) {
 	if (LKBlock.Times.n > 1) {
 		//Interpolation ranges
 		ptrBlock->Ranges.n = nAnimations + 1;
 		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
 		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 		ptrDataBlock->ranges[nAnimations][1] = 0;
-		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+		compute_ranges(LKBlock.Times.n, AnimRefs.times, &ptrDataBlock->ranges);
 
-		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		size_t keyframes_size = get_keyframes_number(LKBlock.Times.n,
+				AnimRefs.times); //Number of (Timestamp, key) tuples
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
@@ -430,8 +442,8 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart + LKDataBlock[j].times[k]; //Start Time + animation-relative time
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[k];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[k];
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
@@ -440,8 +452,8 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeEnd;
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[0];
 					keyframes_index++;
 				} else {						//First animation (j=0)
 					//TIMESTAMP
@@ -450,10 +462,10 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index + 1] =
 							animations[j].timeEnd;
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[0];
-						ptrDataBlock->keys[keyframes_index + 1] =
-								LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index + 1] =
+							LKDataBlock[j].keys[0];
 					keyframes_index += 2;
 				}
 			} else {						//n=0
@@ -462,8 +474,8 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 				ptrDataBlock->times[keyframes_index + 1] =
 						animations[j].timeEnd;
 				//KEY
-					ptrDataBlock->keys[keyframes_index] = 0;
-					ptrDataBlock->keys[keyframes_index + 1] = 0;
+				ptrDataBlock->keys[keyframes_index] = 0;
+				ptrDataBlock->keys[keyframes_index + 1] = 0;
 				keyframes_index += 2;
 			}
 		}
@@ -487,9 +499,10 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
 		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
 		ptrDataBlock->ranges[nAnimations][1] = 0;
-		compute_ranges(LKBlock, AnimRefs, &ptrDataBlock->ranges);
+		compute_ranges(LKBlock.Times.n, AnimRefs.times, &ptrDataBlock->ranges);
 
-		size_t keyframes_size = get_keyframes_number(LKBlock, AnimRefs); //Number of (Timestamp, key) tuples
+		size_t keyframes_size = get_keyframes_number(LKBlock.Times.n,
+				AnimRefs.times); //Number of (Timestamp, key) tuples
 		ptrBlock->Times.n = keyframes_size;
 		ptrBlock->Keys.n = keyframes_size;
 		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
@@ -506,8 +519,8 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart + LKDataBlock[j].times[k]; //Start Time + animation-relative time
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[k];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[k];
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
@@ -516,8 +529,8 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeEnd;
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[0];
 					keyframes_index++;
 				} else {						//First animation (j=0)
 					//TIMESTAMP
@@ -526,10 +539,10 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->times[keyframes_index + 1] =
 							animations[j].timeEnd;
 					//KEY
-						ptrDataBlock->keys[keyframes_index] =
-								LKDataBlock[j].keys[0];
-						ptrDataBlock->keys[keyframes_index + 1] =
-								LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index] =
+							LKDataBlock[j].keys[0];
+					ptrDataBlock->keys[keyframes_index + 1] =
+							LKDataBlock[j].keys[0];
 					keyframes_index += 2;
 				}
 			} else {						//n=0
@@ -538,8 +551,8 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 				ptrDataBlock->times[keyframes_index + 1] =
 						animations[j].timeEnd;
 				//KEY
-					ptrDataBlock->keys[keyframes_index] = 0;
-					ptrDataBlock->keys[keyframes_index + 1] = 0;
+				ptrDataBlock->keys[keyframes_index] = 0;
+				ptrDataBlock->keys[keyframes_index + 1] = 0;
 				keyframes_index += 2;
 			}
 		}
@@ -554,6 +567,46 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 	}
 }
 
+void convert_EventAnimBlock(LKEventAnimBlock LKBlock, ArrayRef *ArrayRefs,
+		LKEventsDataBlock LKDataBlock, EventAnimBlock *ptrBlock,
+		EventsDataBlock *ptrDataBlock, ModelAnimation *animations,
+		int nAnimations) {
+	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
+		ptrBlock->Ranges.n = nAnimations + 1;
+		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
+		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_event_ranges(LKBlock.Times.n, ArrayRefs, &ptrDataBlock->ranges);
+
+		size_t keyframes_size = 0;
+		int j;
+		for (j = 0; j < LKBlock.Times.n; j++) {
+			keyframes_size += ArrayRefs[j].n;
+		}
+		ptrBlock->Times.n = keyframes_size;
+		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
+
+		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		for (j = 0; j < LKBlock.Times.n; j++) {
+			//Keyframes
+			if (ArrayRefs[j].n > 0) {
+				int k;
+				for (k = 0; k < ArrayRefs[j].n; k++) { //Take each value for this anim and put it in the BC data
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart + LKDataBlock.times[j][k]; //Start Time + animation-relative time
+					keyframes_index++;
+				}
+			}
+		}
+	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrDataBlock->times = malloc(sizeof(uint32));
+		ptrDataBlock->times[0] = LKDataBlock.times[0][0];
+	}
+}
 /**
  * Converts bones with their animations data
  * @param ptr Pointer to BC M2 structure
@@ -572,19 +625,22 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 		int nAnimations = ptr->header.nAnimations;
 
 		//translation
-		convert_Vec3DAnimBlock(lk_m2.bones[i].trans, lk_m2.animofs[i].trans, lk_m2.bonesdata[i].trans, &ptr->bones[i].trans,
+		convert_Vec3DAnimBlock(lk_m2.bones[i].trans, lk_m2.animofs[i].trans,
+				lk_m2.bonesdata[i].trans, &ptr->bones[i].trans,
 				&ptr->bonesdata[i].trans, animations, nAnimations);
 
 		//rotation
-		convert_QuatAnimBlock(lk_m2.bones[i].rot, lk_m2.animofs[i].rot, lk_m2.bonesdata[i].rot, &ptr->bones[i].rot,
+		convert_QuatAnimBlock(lk_m2.bones[i].rot, lk_m2.animofs[i].rot,
+				lk_m2.bonesdata[i].rot, &ptr->bones[i].rot,
 				&ptr->bonesdata[i].rot, animations, nAnimations);
 
 		//scaling
-		convert_Vec3DAnimBlock(lk_m2.bones[i].scal, lk_m2.animofs[i].scal, lk_m2.bonesdata[i].scal, &ptr->bones[i].scal,
+		convert_Vec3DAnimBlock(lk_m2.bones[i].scal, lk_m2.animofs[i].scal,
+				lk_m2.bonesdata[i].scal, &ptr->bones[i].scal,
 				&ptr->bonesdata[i].scal, animations, nAnimations);
 
-	//Bones
-	//numbers in animblocks are already done in the Data procedure
+		//Bones
+		//numbers in animblocks are already done in the Data procedure
 		ptr->bones[i].animid = lk_m2.bones[i].animid;
 		ptr->bones[i].flags = lk_m2.bones[i].flags;
 		ptr->bones[i].parent = lk_m2.bones[i].parent;
@@ -609,7 +665,8 @@ int bones_converter(BCM2 *ptr, LKM2 lk_m2) {
 
 int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
 	ptr->attachments = malloc(ptr->header.nAttachments * sizeof(Attachment));
-	ptr->attachmentsdata = malloc(ptr->header.nAttachments * sizeof(AttachmentsDataBlock));
+	ptr->attachmentsdata = malloc(
+			ptr->header.nAttachments * sizeof(AttachmentsDataBlock));
 	int i;
 	for (i = 0; i < ptr->header.nAttachments; i++) {
 		//INIT
@@ -617,8 +674,10 @@ int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
 		int nAnimations = ptr->header.nAnimations;
 
 		//data
-		convert_IntAnimBlock(lk_m2.attachments[i].data, lk_m2.attachmentsanimofs[i].data, lk_m2.attachmentsdata[i].data, &ptr->attachments[i].data,
-				&ptr->attachmentsdata[i].data, animations, nAnimations);
+		convert_IntAnimBlock(lk_m2.attachments[i].data,
+				lk_m2.attachmentsanimofs[i].data, lk_m2.attachmentsdata[i].data,
+				&ptr->attachments[i].data, &ptr->attachmentsdata[i].data,
+				animations, nAnimations);
 
 		ptr->attachments[i].ID = lk_m2.attachments[i].ID;
 		ptr->attachments[i].bone = lk_m2.attachments[i].bone;
@@ -633,6 +692,37 @@ int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
 	return 0;
 }
 
+int events_converter(BCM2 *ptr, LKM2 lk_m2) {
+	ptr->events = malloc(ptr->header.nEvents * sizeof(Event));
+	ptr->eventsdata = malloc(ptr->header.nEvents * sizeof(EventsDataBlock));
+	int i;
+	for (i = 0; i < ptr->header.nEvents; i++) {
+		//INIT
+		ModelAnimation *animations = ptr->animations;
+		int nAnimations = ptr->header.nAnimations;
+
+		//data
+		convert_EventAnimBlock(lk_m2.events[i].timer,
+				lk_m2.eventsanimofs[i].times, lk_m2.eventsdata[i],
+				&ptr->events[i].timer, &ptr->eventsdata[i], animations,
+				nAnimations);
+
+		int j;
+		for (j = 0; j < 4; j++) {
+			ptr->events[i].ID[j] = lk_m2.events[i].ID[j];
+		}
+		ptr->events[i].data = lk_m2.events[i].data;
+		ptr->events[i].bone = lk_m2.events[i].bone;
+		for (j = 0; j < 3; j++) {
+			ptr->events[i].position[j] = lk_m2.events[i].position[j];
+		}
+		//data
+		ptr->events[i].timer.type = lk_m2.events[i].timer.type;
+		ptr->events[i].timer.seq = lk_m2.events[i].timer.seq;
+	}
+	return 0;
+}
+
 int colors_converter(BCM2 *ptr, LKM2 lk_m2) {
 	ptr->colors = malloc(ptr->header.nColors * sizeof(ColorDef));
 	ptr->colorsdata = malloc(ptr->header.nColors * sizeof(ColorDataBlock));
@@ -643,11 +733,14 @@ int colors_converter(BCM2 *ptr, LKM2 lk_m2) {
 		int nAnimations = ptr->header.nAnimations;
 
 		//RGB
-		convert_Vec3DAnimBlock(lk_m2.colors[i].rgb, lk_m2.coloranimofs[i].rgb, lk_m2.colorsdata[i].rgb, &ptr->colors[i].rgb,
+		convert_Vec3DAnimBlock(lk_m2.colors[i].rgb, lk_m2.coloranimofs[i].rgb,
+				lk_m2.colorsdata[i].rgb, &ptr->colors[i].rgb,
 				&ptr->colorsdata[i].rgb, animations, nAnimations);
 		//Opacity
-		convert_ShortAnimBlock(lk_m2.colors[i].opacity, lk_m2.coloranimofs[i].opacity, lk_m2.colorsdata[i].opacity, &ptr->colors[i].opacity,
-				&ptr->colorsdata[i].opacity, animations, nAnimations);
+		convert_ShortAnimBlock(lk_m2.colors[i].opacity,
+				lk_m2.coloranimofs[i].opacity, lk_m2.colorsdata[i].opacity,
+				&ptr->colors[i].opacity, &ptr->colorsdata[i].opacity,
+				animations, nAnimations);
 		//RGB
 		ptr->colors[i].rgb.type = lk_m2.colors[i].rgb.type;
 		ptr->colors[i].rgb.seq = lk_m2.colors[i].rgb.seq;
@@ -659,8 +752,10 @@ int colors_converter(BCM2 *ptr, LKM2 lk_m2) {
 }
 
 int transparency_converter(BCM2 *ptr, LKM2 lk_m2) {
-	ptr->transparencyrefs = malloc(ptr->header.nTransparency * sizeof(Transparency));
-	ptr->transparencydata = malloc(ptr->header.nTransparency * sizeof(TransparencyDataBlock));
+	ptr->transparencyrefs = malloc(
+			ptr->header.nTransparency * sizeof(Transparency));
+	ptr->transparencydata = malloc(
+			ptr->header.nTransparency * sizeof(TransparencyDataBlock));
 	int i;
 	for (i = 0; i < ptr->header.nTransparency; i++) {
 		//INIT
@@ -668,12 +763,17 @@ int transparency_converter(BCM2 *ptr, LKM2 lk_m2) {
 		int nAnimations = ptr->header.nAnimations;
 
 		//Alpha
-		convert_ShortAnimBlock(lk_m2.transparencyrefs[i].alpha, lk_m2.transparencyanimofs[i].alpha, lk_m2.transparencydata[i].alpha, &ptr->transparencyrefs[i].alpha,
+		convert_ShortAnimBlock(lk_m2.transparencyrefs[i].alpha,
+				lk_m2.transparencyanimofs[i].alpha,
+				lk_m2.transparencydata[i].alpha,
+				&ptr->transparencyrefs[i].alpha,
 				&ptr->transparencydata[i].alpha, animations, nAnimations);
 
 		//Alpha
-		ptr->transparencyrefs[i].alpha.type = lk_m2.transparencyrefs[i].alpha.type;
-		ptr->transparencyrefs[i].alpha.seq = lk_m2.transparencyrefs[i].alpha.seq;
+		ptr->transparencyrefs[i].alpha.type =
+				lk_m2.transparencyrefs[i].alpha.type;
+		ptr->transparencyrefs[i].alpha.seq =
+				lk_m2.transparencyrefs[i].alpha.seq;
 	}
 	return 0;
 }
@@ -964,8 +1064,10 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	//Attachments
 	attachments_converter(ptr, lk_m2);
-
 	ptr->AttachLookup = lk_m2.AttachLookup;
+
+	//Events
+	events_converter(ptr, lk_m2);
 	/*TODO
 	 TexAnims;
 	 renderflags;

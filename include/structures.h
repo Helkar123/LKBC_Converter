@@ -106,8 +106,8 @@ typedef struct LKModelHeader {
 	uint32 ofsAttachments;					//0x0f4
 	uint32 nAttachLookup; 					//0x0f8
 	uint32 ofsAttachLookup;					//0x0fc
-	uint32 nAttachments_2; 					//0x100 Events
-	uint32 ofsAttachments_2;				//0x104
+	uint32 nEvents; 					//0x100 Events
+	uint32 ofsEvents;				//0x104
 	uint32 nLights; 						//0x108
 	uint32 ofsLights;						//0x10c
 	uint32 nCameras; 						//0x110
@@ -189,8 +189,8 @@ typedef struct ModelHeader {
 	uint32 ofsAttachments;					//0x108
 	uint32 nAttachLookup; 					//0x10c
 	uint32 ofsAttachLookup;					//0x110
-	uint32 nAttachments_2; 					//0x114
-	uint32 ofsAttachments_2;				//0x118
+	uint32 nEvents; 					//0x114
+	uint32 ofsEvents;				//0x118
 	uint32 nLights; 						//0x11c
 	uint32 ofsLights;						//0x120
 	uint32 nCameras; 						//0x124
@@ -422,6 +422,7 @@ typedef struct TransparencyDataBlock {
 	Short_SubBlock alpha;
 } TransparencyDataBlock;
 
+
 //TODO TexAnims
 typedef struct RefBlockSimple { //Temporary, for TexAnims. Remnant of Stan84's code.
 	ArrayRef t_times;
@@ -514,8 +515,6 @@ typedef struct ModelTextureDef {
 	uint32 nameOfs;
 } ModelTextureDef;
 
-
-
 typedef struct LKTextureAnimation {
 	LKAnimationBlock Translation;
 	LKAnimationBlock Rotation;
@@ -537,6 +536,45 @@ typedef struct View { //Only present in 2.x models. Replaced by Skin files in 3.
 	TexUnit *TextureUnits;
 } View;
 
+//Events
+typedef struct EventsRefBlock{
+	ArrayRef *times;
+}EventsRefBlock;
+typedef struct LKEventsDataBlock {
+	uint32 **times;
+} LKEventsDataBlock;
+typedef struct EventsDataBlock {
+	Range *ranges;
+	uint32 *times;
+} EventsDataBlock;
+
+typedef struct LKEventAnimBlock {
+	int16 type;
+	int16 seq;
+	ArrayRef Times;  //links to i ArraysRefs of j uint32
+} LKEventAnimBlock;
+
+typedef struct EventAnimBlock {
+	int16 type;
+	int16 seq;
+	ArrayRef Ranges;  //links to i interpolations ranges of type (int,int)
+	ArrayRef Times;  //links to i uint32
+} EventAnimBlock;
+
+typedef struct LKEvent {
+	char ID[4];
+	uint32 data;
+	uint32 bone;
+	Vec3D position;
+	LKEventAnimBlock timer;
+}LKEvent;
+typedef struct Event {
+	char ID[4];
+	uint32 data;
+	uint32 bone;
+	Vec3D position;
+	EventAnimBlock timer;
+}Event;
 
 //FILES
 
@@ -583,8 +621,13 @@ typedef struct LKM2 {
 	LKAttachment *attachments;
 	AttachmentsRefBlock *attachmentsanimofs;
 	LKAttachmentsDataBlock *attachmentsdata;
-
 	uint16 *AttachLookup;
+
+	LKEvent *events;
+	EventsRefBlock *eventsanimofs;
+	LKEventsDataBlock *eventsdata;
+
+
 /*TODO Events, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
@@ -641,8 +684,10 @@ typedef struct BCM2 {
 
 	Attachment *attachments;
 	AttachmentsDataBlock *attachmentsdata;
-
 	uint16 *AttachLookup;
+
+	Event *events;
+	EventsDataBlock *eventsdata;
 /*TODO Attachments_2, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
