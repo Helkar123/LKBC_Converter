@@ -122,6 +122,19 @@ void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 		align(bc_m2_file);
 	}
 }
+void write_BigFloatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
+		BigFloat_SubBlock *ptrDataBlock) {
+	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
+			&ptrDataBlock->times);
+	if (ptrBlock->Keys.n > 0) {
+		ptrBlock->Keys.ofs = getPos(bc_m2_file);
+		int j;
+		for (j = 0; j < ptrBlock->Keys.n; j++) {
+			fwrite(ptrDataBlock->keys[j], sizeof(BigFloat), 1, bc_m2_file);
+		}
+		align(bc_m2_file);
+	}
+}
 void write_QuatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 		Quat_SubBlock *ptrDataBlock) {
 	write_rangestimes(bc_m2_file, ptrBlock, &ptrDataBlock->ranges,
@@ -190,6 +203,31 @@ int write_bones(FILE *bc_m2_file, BCM2 *ptr) {
 	}
 	fseek(bc_m2_file, ptr->header.ofsBones, SEEK_SET);
 	fwrite(ptr->bones, sizeof(ModelBoneDef), ptr->header.nBones, bc_m2_file);
+	fseek(bc_m2_file, 0, SEEK_END);
+	return 0;
+}
+
+int write_cameras(FILE *bc_m2_file, BCM2 *ptr) {
+	if (ptr->header.nCameras > 0) {
+		ptr->header.ofsCameras = getPos(bc_m2_file);
+		fwrite(ptr->cameras, sizeof(Camera), ptr->header.nCameras,
+				bc_m2_file);
+		align(bc_m2_file);
+		int i;
+		for (i = 0; i < ptr->header.nCameras; i++) {
+			//translation position
+			write_BigFloatAnimBlock(bc_m2_file, &ptr->cameras[i].transpos,
+					&ptr->camerasdata[i].transpos);
+			//translation target
+			write_BigFloatAnimBlock(bc_m2_file, &ptr->cameras[i].transtar,
+					&ptr->camerasdata[i].transtar);
+			//scaling
+			write_Vec3DAnimBlock(bc_m2_file, &ptr->cameras[i].scal,
+					&ptr->camerasdata[i].scal);
+		}
+	}
+	fseek(bc_m2_file, ptr->header.ofsCameras, SEEK_SET);
+	fwrite(ptr->cameras, sizeof(Camera), ptr->header.nCameras, bc_m2_file);
 	fseek(bc_m2_file, 0, SEEK_END);
 	return 0;
 }
@@ -302,6 +340,14 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 	fwrite(ptr->filename, sizeof(char), ptr->header.nameLength, bc_m2_file);
 	align(bc_m2_file);
 
+	//Global Sequences
+	if (ptr->header.nGlobalSequences > 0) {
+		ptr->header.ofsGlobalSequences = getPos(bc_m2_file);
+		fwrite(ptr->globalsequences, sizeof(int), ptr->header.nGlobalSequences,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+
 	//Animations
 	if (ptr->header.nAnimations > 0) {
 		ptr->header.ofsAnimations = getPos(bc_m2_file);
@@ -375,6 +421,14 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
+	//TexReplace
+	if (ptr->header.nTexReplace > 0) {
+		ptr->header.ofsTexReplace = getPos(bc_m2_file);
+		fwrite(ptr->TexReplace, sizeof(short), ptr->header.nTexReplace,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+
 	//BoneLookupTable
 	if (ptr->header.nBoneLookupTable > 0) {
 		ptr->header.ofsBoneLookupTable = getPos(bc_m2_file);
@@ -411,7 +465,6 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 
 	//Attachments
 	write_attachments(bc_m2_file, ptr);
-
 	if (ptr->header.nAttachLookup > 0) {
 		ptr->header.ofsAttachLookup = getPos(bc_m2_file);
 		fwrite(ptr->AttachLookup, sizeof(int16), ptr->header.nAttachLookup,
@@ -421,6 +474,15 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 
 	//Events
 	write_events(bc_m2_file, ptr);
+
+	//Cameras
+	write_cameras(bc_m2_file, ptr);
+	if (ptr->header.nCameraLookup > 0) {
+		ptr->header.ofsCameraLookup = getPos(bc_m2_file);
+		fwrite(ptr->CameraLookup, sizeof(int16), ptr->header.nCameraLookup,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
 
 	//Rewrite the header with updated offsets
 	fseek(bc_m2_file, 0, SEEK_SET);

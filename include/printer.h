@@ -9,6 +9,7 @@ void print_transparency_bc(BCM2 model);
 void print_transparency_lk(LKM2 model);
 void print_events_lk(LKM2 model);
 void print_events_bc(BCM2 model);
+void print_cameras_bc(BCM2 model);
 void print_bones(BCM2 model, char flags);
 void print_bonesdata(LKM2 model);
 void print_vertices_lk(LKM2 model);

@@ -111,6 +111,28 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 	}
 }
 
+void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
+		AnimRefs *ptrAnimRefs, BigFloat_LKSubBlock **ptrDataBlock) {
+	if (ptrBlock->Times.n > 0) {
+		//Layer 1
+		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
+		//Layer 2
+		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(BigFloat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+		int j;
+		for (j = 0; j < ptrBlock->Times.n; j++) {
+			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
+			if (ptrAnimRefs->keys[j].n > 0) {
+				(*ptrDataBlock)[j].keys = malloc(
+						ptrAnimRefs->keys[j].n * sizeof(BigFloat));
+				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
+				SEEK_SET);
+				fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
+						ptrAnimRefs->keys[j].n, lk_m2_file);
+			}
+		}
+	}
+}
+
 void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		AnimRefs *ptrAnimRefs, Quat_LKSubBlock **ptrDataBlock) {
 	if (ptrBlock->Times.n > 0) {
@@ -279,7 +301,7 @@ int read_events(FILE *lk_m2_file, LKM2 *ptr) {
 				ptr->header.nEvents * sizeof(LKEventsDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nEvents; i++) {
-			//Data
+			//Timer
 			read_EventAnimBlock(lk_m2_file, &ptr->events[i].timer,
 					&ptr->eventsanimofs[i].times, &ptr->eventsdata[i].times);
 		}
@@ -311,6 +333,32 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 			//Opacity
 			read_ShortAnimBlock(lk_m2_file, &ptr->colors[i].opacity,
 					&ptr->coloranimofs[i].opacity, &ptr->colorsdata[i].opacity);
+		}
+		return 0;
+	}
+	return -1;
+}
+
+int read_cameras(FILE *lk_m2_file, LKM2 *ptr) {
+	if (ptr->header.nCameras > 0) { //I think lights and other non-geometric things don't have any
+		ptr->cameras = malloc(ptr->header.nCameras * sizeof(LKCamera));
+		fseek(lk_m2_file, ptr->header.ofsCameras, SEEK_SET);
+		fread(ptr->cameras, sizeof(LKCamera), ptr->header.nCameras, lk_m2_file);
+
+		ptr->camerasanimofs = malloc(ptr->header.nCameras * sizeof(CamerasRefBlock)); //1 LKRefBlock per bone
+		ptr->camerasdata = malloc(
+				ptr->header.nCameras * sizeof(LKCamerasDataBlock));
+		int i;
+		for (i = 0; i < ptr->header.nCameras; i++) {
+			//Translation position
+			read_BigFloatAnimBlock(lk_m2_file, &ptr->cameras[i].transpos,
+					&ptr->camerasanimofs[i].transpos, &ptr->camerasdata[i].transpos);
+			//Translation target
+			read_BigFloatAnimBlock(lk_m2_file, &ptr->cameras[i].transtar,
+					&ptr->camerasanimofs[i].transtar, &ptr->camerasdata[i].transtar);
+			//Scaling
+			read_Vec3DAnimBlock(lk_m2_file, &ptr->cameras[i].scal,
+					&ptr->camerasanimofs[i].scal, &ptr->camerasdata[i].scal);
 		}
 		return 0;
 	}
@@ -663,6 +711,11 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	//TexAnims
 	read_texanims(lk_m2_file, ptr);
 
+	//TexReplace
+	ptr->TexReplace = malloc(ptr->header.nTexReplace * sizeof(short));
+	fseek(lk_m2_file, ptr->header.ofsTexReplace, SEEK_SET);
+	fread(ptr->TexReplace, sizeof(short), ptr->header.nTexReplace, lk_m2_file);
+
 	//Render Flags
 	ptr->renderflags = malloc(ptr->header.nRenderFlags * sizeof(int));
 	fseek(lk_m2_file, ptr->header.ofsRenderFlags, SEEK_SET);
@@ -729,5 +782,14 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 	//Events
 	read_events(lk_m2_file, ptr);
+
+	//Cameras
+	read_cameras(lk_m2_file, ptr);
+
+	//Cameras Lookup
+	ptr->CameraLookup = malloc(ptr->header.nCameraLookup * sizeof(short));
+	fseek(lk_m2_file, ptr->header.ofsCameraLookup, SEEK_SET);
+	fread(ptr->CameraLookup, sizeof(short), ptr->header.nCameraLookup,
+			lk_m2_file);
 	return 0;
 }

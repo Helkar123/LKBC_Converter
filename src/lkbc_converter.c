@@ -87,7 +87,8 @@ int main(int argc, char *argv[]) {
 	printf("Conversion complete.\n\n");
 
 	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
-	FILE *genuine_m2_file = fopen("BC_Frog.m2", "r+b");
+	/*
+	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
 	if (genuine_m2_file == NULL) {
 		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
 		return -1;
@@ -95,7 +96,9 @@ int main(int argc, char *argv[]) {
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
 	print_events_bc(genuine_model);
+	*/
 	//print_events_lk(lk_model);
+	print_cameras_bc(bc_model);
 
 	//Writing
 	char new_name[64] = "BC_";

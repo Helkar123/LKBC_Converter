@@ -19,6 +19,7 @@ typedef float Vec2D[2];
 typedef uint16 Triangle[3]; //Indices for Triangles
 typedef uint16 Vertex; //The vertex in the global vertex list
 typedef uint32 Property; //Bones Indices into BoneLookupTable
+typedef Vec3D BigFloat[3];
 
 typedef struct ArrayRef { //Can point to absolutely anything
 	uint32 n;
@@ -302,6 +303,16 @@ typedef struct Int_SubBlock{
 	int *keys;
 }Int_SubBlock;
 
+typedef struct BigFloat_LKSubBlock{
+	uint32 *times;
+	BigFloat *keys;
+}BigFloat_LKSubBlock;
+typedef struct BigFloat_SubBlock{
+	Range *ranges;
+	uint32 *times;
+	BigFloat *keys;
+}BigFloat_SubBlock;
+
 typedef struct AnimRefs{
 	ArrayRef *times;
 	ArrayRef *keys;
@@ -382,6 +393,45 @@ typedef struct LKAttachmentsDataBlock {
 typedef struct AttachmentsDataBlock {
 	Int_SubBlock data;
 } AttachmentsDataBlock;
+
+//Cameras
+typedef struct LKCamera {
+	uint32 Type;
+	float FOV;
+	float farClipping;
+	float nearClipping;
+	LKAnimationBlock transpos;
+	Vec3D position;
+	LKAnimationBlock transtar;
+	Vec3D target;
+	LKAnimationBlock scal;
+} LKCamera;
+typedef struct Camera {
+	uint32 Type;
+	float FOV;
+	float farClipping;
+	float nearClipping;
+	AnimationBlock transpos;
+	Vec3D position;
+	AnimationBlock transtar;
+	Vec3D target;
+	AnimationBlock scal;
+} Camera;
+typedef struct CamerasRefBlock {
+	AnimRefs transpos;
+	AnimRefs transtar;
+	AnimRefs scal;
+} CamerasRefBlock;
+typedef struct LKCamerasDataBlock {
+	BigFloat_LKSubBlock *transpos;
+	BigFloat_LKSubBlock *transtar;
+	Vec3D_LKSubBlock *scal;
+} LKCamerasDataBlock;
+typedef struct CamerasDataBlock {
+	BigFloat_SubBlock transpos;
+	BigFloat_SubBlock transtar;
+	Vec3D_SubBlock scal;
+} CamerasDataBlock;
 
 //Colors
 typedef struct LKColorDef {
@@ -608,6 +658,8 @@ typedef struct LKM2 {
 
 	LKTextureAnimation *tex_anims;
 	RefBlockSimple *temp_anim_ofs;
+
+	short *TexReplace;
 	int *renderflags;
 	int16 *BoneLookupTable;
 	short *TexLookupTable;
@@ -627,7 +679,10 @@ typedef struct LKM2 {
 	EventsRefBlock *eventsanimofs;
 	LKEventsDataBlock *eventsdata;
 
-
+	LKCamera *cameras;
+	CamerasRefBlock *camerasanimofs;
+	LKCamerasDataBlock *camerasdata;
+	uint16 *CameraLookup;
 /*TODO Events, Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
@@ -672,6 +727,7 @@ typedef struct BCM2 {
 	TransparencyDataBlock *transparencydata;
 
 	TextureAnimation *tex_anims;
+	short *TexReplace;
 	int *renderflags;
 	int16 *BoneLookupTable;
 	short *TexLookupTable;
@@ -688,7 +744,11 @@ typedef struct BCM2 {
 
 	Event *events;
 	EventsDataBlock *eventsdata;
-/*TODO Attachments_2, Lights, Cameras,
+
+	Camera *cameras;
+	CamerasDataBlock *camerasdata;
+	uint16 *CameraLookup;
+/*TODO Lights, Cameras,
  * CameraLookup, RibbonEmitters, ParticleEmmiters.
  */
 } BCM2;

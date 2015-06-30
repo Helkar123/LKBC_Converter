@@ -91,10 +91,10 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	//TODO Unimplemented features
 	ptr->header.nLights = 0;
 	ptr->header.ofsLights = 0;
-	ptr->header.nCameras = 0;
-	ptr->header.ofsCameras = 0;
-	ptr->header.nCameraLookup = 0;
-	ptr->header.ofsCameraLookup = 0;
+	ptr->header.nRibbonEmitters = 0;
+	ptr->header.ofsRibbonEmitters = 0;
+	ptr->header.nParticleEmitters = 0;
+	ptr->header.ofsParticleEmitters = 0;
 	return 0;
 }
 
@@ -171,7 +171,8 @@ void compute_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
 		}
 	}
 }
-void compute_event_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
+void compute_event_ranges(uint32 nTimes, ArrayRef *TimeRefs,
+		Range **ptrRangeList) {
 	int range_time = 0;
 	int j;
 	for (j = 0; j < nTimes; j++) {
@@ -304,6 +305,114 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		int m;
 		for (m = 0; m < 3; m++) {
 			ptrDataBlock->keys[0][m] = LKDataBlock[0].keys[0][m];
+		}
+	}
+}
+
+void convert_BigFloatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
+		BigFloat_LKSubBlock *LKDataBlock, AnimationBlock *ptrBlock,
+		BigFloat_SubBlock *ptrDataBlock, ModelAnimation *animations,
+		int nAnimations) {
+	if (LKBlock.Times.n > 1) {
+		//Interpolation ranges
+		ptrBlock->Ranges.n = nAnimations + 1;
+		ptrDataBlock->ranges = malloc(ptrBlock->Ranges.n * sizeof(Range));
+		ptrDataBlock->ranges[nAnimations][0] = 0; //No idea why the last (int,int) is always 0
+		ptrDataBlock->ranges[nAnimations][1] = 0;
+		compute_ranges(LKBlock.Times.n, AnimRefs.times, &ptrDataBlock->ranges);
+
+		size_t keyframes_size = get_keyframes_number(LKBlock.Times.n,
+				AnimRefs.times); //Number of (Timestamp, key) tuples
+		ptrBlock->Times.n = keyframes_size;
+		ptrBlock->Keys.n = keyframes_size;
+		ptrDataBlock->times = malloc((keyframes_size) * sizeof(uint32));
+		ptrDataBlock->keys = malloc((keyframes_size) * sizeof(BigFloat));
+
+		int keyframes_index = 0; //Not reset when we finish the extraction of keys from 1 animation
+		int j;
+		for (j = 0; j < LKBlock.Times.n; j++) {
+			//Keyframes
+			if (AnimRefs.times[j].n > 1) {
+				int k;
+				for (k = 0; k < AnimRefs.times[j].n; k++) {	//Take each value for this anim and put it in the BC data
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart + LKDataBlock[j].times[k]; //Start Time + animation-relative time
+					//KEY
+					int m;
+					for (m = 0; m < 3; m++) {
+						int n;
+						for (n = 0; n < 3; n++) {
+							ptrDataBlock->keys[keyframes_index][m][n] =
+									LKDataBlock[j].keys[k][m][n];
+						}
+					}
+					keyframes_index++;
+				}
+			} else if (AnimRefs.times[j].n == 1) {
+				if (j > 0) {
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeEnd;
+					//KEY
+					int m;
+					for (m = 0; m < 3; m++) {
+						int n;
+						for (n = 0; n < 3; n++) {
+							ptrDataBlock->keys[keyframes_index][m][n] =
+									LKDataBlock[j].keys[0][m][n];
+						}
+					}
+					keyframes_index++;
+				} else {						//First animation (j=0)
+					//TIMESTAMP
+					ptrDataBlock->times[keyframes_index] =
+							animations[j].timeStart;
+					ptrDataBlock->times[keyframes_index + 1] =
+							animations[j].timeEnd;
+					//KEY
+					int m;
+					for (m = 0; m < 3; m++) {
+						int n;
+						for (n = 0; n < 3; n++) {
+							ptrDataBlock->keys[keyframes_index][m][n] =
+									LKDataBlock[j].keys[0][m][n];
+							ptrDataBlock->keys[keyframes_index + 1][m][n] =
+									LKDataBlock[j].keys[0][m][n];
+						}
+					}
+					keyframes_index += 2;
+				}
+			} else {						//n=0
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				int m;
+				for (m = 0; m < 3; m++) {
+					int n;
+					for (n = 0; n < 3; n++) {
+						ptrDataBlock->keys[keyframes_index][m][n] = 0;
+						ptrDataBlock->keys[keyframes_index + 1][m][n] = 0;
+					}
+				}
+				keyframes_index += 2;
+			}
+		}
+	} else if (LKBlock.Times.n == 1) { //Constant value across all animations for the bone
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 1;
+		ptrBlock->Keys.n = 1;
+		ptrDataBlock->times = malloc(sizeof(uint32));
+		ptrDataBlock->keys = malloc(sizeof(BigFloat));
+		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
+		int m;
+		for (m = 0; m < 3; m++) {
+			int n;
+			for (n = 0; n < 3; n++) {
+				ptrDataBlock->keys[0][m][n] = LKDataBlock[0].keys[0][m][n];
+			}
 		}
 	}
 }
@@ -692,6 +801,59 @@ int attachments_converter(BCM2 *ptr, LKM2 lk_m2) {
 	return 0;
 }
 
+int cameras_converter(BCM2 *ptr, LKM2 lk_m2) {
+	ptr->cameras = malloc(ptr->header.nCameras * sizeof(Camera));
+	ptr->camerasdata = malloc(ptr->header.nCameras * sizeof(CamerasDataBlock));
+	int i;
+	for (i = 0; i < ptr->header.nCameras; i++) {
+		//INIT
+		ModelAnimation *animations = ptr->animations;
+		int nAnimations = ptr->header.nAnimations;
+
+		//translation position
+		convert_BigFloatAnimBlock(lk_m2.cameras[i].transpos,
+				lk_m2.camerasanimofs[i].transpos, lk_m2.camerasdata[i].transpos,
+				&ptr->cameras[i].transpos, &ptr->camerasdata[i].transpos,
+				animations, nAnimations);
+		//translation target
+		convert_BigFloatAnimBlock(lk_m2.cameras[i].transtar,
+				lk_m2.camerasanimofs[i].transtar, lk_m2.camerasdata[i].transtar,
+				&ptr->cameras[i].transtar, &ptr->camerasdata[i].transtar,
+				animations, nAnimations);
+		//scaling
+		convert_Vec3DAnimBlock(lk_m2.cameras[i].scal, lk_m2.camerasanimofs[i].scal,
+				lk_m2.camerasdata[i].scal, &ptr->cameras[i].scal,
+				&ptr->camerasdata[i].scal, animations, nAnimations);
+
+		ptr->cameras[i].Type = lk_m2.cameras[i].Type;
+		ptr->cameras[i].FOV = lk_m2.cameras[i].FOV;
+		ptr->cameras[i].farClipping = lk_m2.cameras[i].farClipping;
+		ptr->cameras[i].nearClipping = lk_m2.cameras[i].nearClipping;
+
+		//translation position
+		ptr->cameras[i].transpos.type = lk_m2.cameras[i].transpos.type;
+		ptr->cameras[i].transpos.seq = lk_m2.cameras[i].transpos.seq;
+
+		int j;
+		for (j = 0; j < 3; j++) {
+			ptr->cameras[i].position[j] = lk_m2.cameras[i].position[j];
+		}
+
+		//translation target
+		ptr->cameras[i].transtar.type = lk_m2.cameras[i].transtar.type;
+		ptr->cameras[i].transtar.seq = lk_m2.cameras[i].transtar.seq;
+
+		for (j = 0; j < 3; j++) {
+			ptr->cameras[i].target[j] = lk_m2.cameras[i].target[j];
+		}
+
+		//scaling
+		ptr->cameras[i].scal.type = lk_m2.cameras[i].scal.type;
+		ptr->cameras[i].scal.seq = lk_m2.cameras[i].scal.seq;
+	}
+	return 0;
+}
+
 int events_converter(BCM2 *ptr, LKM2 lk_m2) {
 	ptr->events = malloc(ptr->header.nEvents * sizeof(Event));
 	ptr->eventsdata = malloc(ptr->header.nEvents * sizeof(EventsDataBlock));
@@ -1053,6 +1215,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	transparency_converter(ptr, lk_m2);
 
 	ptr->renderflags = lk_m2.renderflags;
+	ptr->TexReplace = lk_m2.TexReplace;
 	ptr->BoneLookupTable = lk_m2.BoneLookupTable;
 	ptr->TexLookupTable = lk_m2.TexLookupTable;
 	ptr->TexUnit = lk_m2.TexUnit;
@@ -1068,19 +1231,13 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	//Events
 	events_converter(ptr, lk_m2);
+
+	//Cameras
+	cameras_converter(ptr, lk_m2);
+	ptr->CameraLookup = lk_m2.CameraLookup;
+
 	/*TODO
 	 TexAnims;
-	 renderflags;
-	 BoneLookupTable;
-	 TexLookupTable;
-	 TexUnit;
-	 TransparencyLookup;
-	 TexAnimLookup;
-	 BoundingTriangles;
-	 BoundingVertice *BoundingVertices;
-	 BoundingNormals;
-	 Attachments;
-	 AttachLookup;
 	 */
 
 	return 0;
