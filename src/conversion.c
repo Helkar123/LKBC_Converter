@@ -113,6 +113,7 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		timeline += 3333; //FIXME Time between anims. I chose a random number. Not sure how Blizzard decided its values. Should not matter.
 		ptr->animations[i].animID = lk_m2.animations[i].animID;
 		ptr->animations[i].subAnimID = lk_m2.animations[i].subAnimID;
+		ptr->animations[i].subAnimID = 0;//FIXME
 		ptr->animations[i].timeStart = timeline;
 		timeline += lk_m2.animations[i].length;
 		ptr->animations[i].timeEnd = timeline;

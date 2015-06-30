@@ -95,10 +95,8 @@ int main(int argc, char *argv[]) {
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
-	print_events_bc(genuine_model);
+	print_anims_bc(bc_model);
 	*/
-	//print_events_lk(lk_model);
-	print_cameras_bc(bc_model);
 
 	//Writing
 	char new_name[64] = "BC_";
