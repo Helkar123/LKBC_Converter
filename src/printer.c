@@ -393,6 +393,19 @@ void print_vertices_bc(BCM2 model) {
 void print_playanimlookup(BCM2 model) {
 	int i;
 	for(i=0; i < model.header.nPlayableAnimationLookup;i++){
-		printf("ID : %d\n\tReal ID: %d Flags:%d",i,model.PlayAnimLookup[i].ID, model.PlayAnimLookup[i].flags);
+		printf("ID : %d\n\tReal ID: %d Flags:%d\n",i,model.PlayAnimLookup[i].ID, model.PlayAnimLookup[i].flags);
+	}
+}
+
+void print_texnames_bc(BCM2 model) {
+	int i;
+	for(i=0; i < model.header.nTextures;i++){
+		printf("[Texture #%d]\n\t%s\n",i,model.texture_names[i]);
+	}
+}
+void print_texnames_lk(LKM2 model) {
+	int i;
+	for(i=0; i < model.header.nTextures;i++){
+		printf("[Texture #%d]\n\t%s\n",i,model.texture_names[i]);
 	}
 }

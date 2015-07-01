@@ -1184,22 +1184,39 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
 		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
 	}
+	if (ptr->header.nAnimationLookup == 0 && ptr->header.nAnimations > 0) {
+		short maxID = 0;
+		for (i = 0; i < ptr->header.nAnimations; i++) {
+			if (ptr->animations[i].animID > maxID) {
+				maxID = ptr->animations[i].animID;
+			}
+		}
+		ptr->header.nAnimationLookup = maxID + 1;
+		ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
+		for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
+			ptr->AnimLookup[i] = -1;
+		}
+		for (i = 0; i < ptr->header.nAnimations; i++) {
+			if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {
+				ptr->AnimLookup[ptr->animations[i].animID] = i;
+			}
+		}
+	}
 
 	//PlayAnimLookup
 	ptr->PlayAnimLookup = malloc(226 * sizeof(PlayAnimRecord));
 	for (i = 0; i < 226; i++) {
-		short realID = get_RealID((short)i, lk_m2);
+		short realID = get_RealID((short) i, (*ptr));
 		ptr->PlayAnimLookup[i].ID = realID;
 		//Tricks when you don't have a dedicated animation
 		if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123 || i == 132
 				|| i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
 			if (realID != i) {
-				ptr->PlayAnimLookup[i].flags = 3;//Play then stop
+				ptr->PlayAnimLookup[i].flags = 3;	//Play then stop
 			}
-		}
-		else if (i==13||i==45||i==101||i==189){//Walkbackwards, SwimBackwards, SleepUp, LootUp
+		} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
 			if (realID != i) {
-				ptr->PlayAnimLookup[i].flags = 3;//Play backwards
+				ptr->PlayAnimLookup[i].flags = 3;	//Play backwards
 			}
 		}
 	}

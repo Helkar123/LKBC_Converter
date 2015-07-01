@@ -95,7 +95,6 @@ int main(int argc, char *argv[]) {
 	}
 	BCM2 genuine_model;
 	read_model_bc(genuine_m2_file, &genuine_model);
-	print_anims_bc(bc_model);
 	*/
 
 	//Writing

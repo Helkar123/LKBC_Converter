@@ -75,7 +75,8 @@ void init_Fallback() {//Extracted from AnimationData.dbc
 	Fallback[138] = 63;
 	Fallback[141] = 115;
 	Fallback[143] = 5;
-	Fallback[146] = 148;//Loop
+	//Fallback[146] = 148;//Loop
+	Fallback[146] = 0;//FIXME
 	Fallback[147] = 146;
 	Fallback[148] = 146;
 	Fallback[149] = 148;
@@ -98,17 +99,15 @@ void init_Fallback() {//Extracted from AnimationData.dbc
 	Fallback[224] = 127;
 }
 
-short get_RealID(short ID, LKM2 model) {
+short get_RealID(short ID, BCM2 model) {
 	if (init == 0) {
 		init_Fallback();
 	}
 	if (ID >= 226) {
 		return 0; //Not a Burning Crusade ID
 	}
-	int i;
 	if (ID < model.header.nAnimationLookup && (model.AnimLookup[ID] > -1)) {
 		return ID;
 	}
-	printf("Falling back !");//FIXME Debug printing
 	return get_RealID(Fallback[ID], model);
 }

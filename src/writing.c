@@ -367,6 +367,14 @@ int write_model(FILE *bc_m2_file, BCM2 *ptr) {
 		align(bc_m2_file);
 	}
 
+	//PlayAnimlookup
+	if (ptr->header.nPlayableAnimationLookup > 0) {
+		ptr->header.ofsPlayableAnimationLookup = getPos(bc_m2_file);
+		fwrite(ptr->PlayAnimLookup, sizeof(PlayAnimRecord), ptr->header.nPlayableAnimationLookup,
+				bc_m2_file);
+		align(bc_m2_file);
+	}
+
 	//Keybonelookup
 	if (ptr->header.nKeyBoneLookup > 0) {
 		ptr->header.ofsKeyBoneLookup = getPos(bc_m2_file);

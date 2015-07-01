@@ -15,5 +15,7 @@ void print_bonesdata(LKM2 model);
 void print_vertices_lk(LKM2 model);
 void print_vertices_bc(BCM2 model);
 void print_playanimlookup(BCM2 model);
+void print_texnames_bc(BCM2 model);
+void print_texnames_lk(LKM2 model);
 
 #endif
