@@ -15,7 +15,7 @@ file(GLOB UnitTests tests/U*.c)
 execute_process(
 	COMMAND "tests/make-tests.sh" ${UnitTests}
 	OUTPUT_FILE "tests/UAll.c")
-add_executable(UAll ${UnitTests} tests/CuTest.c src/conversion.c src/reading.c)
+add_executable(UAll ${UnitTests} tests/CuTest.c src/conversion.c src/fallback.c src/reading.c)
 add_test(UAll UAll)
 
 if (UNIX)
