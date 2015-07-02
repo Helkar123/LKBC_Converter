@@ -155,16 +155,10 @@ void compute_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
 			(*ptrRangeList)[j][1] = range_time;
 			range_time++;
 		} else if (TimeRefs[j].n == 1) {
-			if (j == 0) { //If it's the first anim, you obviously can't take the end of the previous range
 				(*ptrRangeList)[j][0] = range_time;
 				range_time++;
 				(*ptrRangeList)[j][1] = range_time;
 				range_time++;
-			} else {
-				(*ptrRangeList)[j][0] = (*ptrRangeList)[j - 1][1];
-				(*ptrRangeList)[j][1] = range_time;
-				range_time++;
-			}
 		} else {				//n > 1
 			(*ptrRangeList)[j][0] = range_time;
 			range_time += TimeRefs[j].n - 1;
@@ -196,11 +190,7 @@ int get_keyframes_number(uint32 nTimes, ArrayRef *TimeRefs) {
 		if (TimeRefs[j].n > 1) {
 			keyframes_size += TimeRefs[j].n;
 		} else if (TimeRefs[j].n == 1) {
-			if (j == 0) {
 				keyframes_size += 2;
-			} else {
-				keyframes_size += 1;
-			}
 		} else { //n=0
 			keyframes_size += 2;
 		}
@@ -255,19 +245,7 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					}
 					keyframes_index++;
 				}
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j > 0) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 3; m++) {
-						ptrDataBlock->keys[keyframes_index][m] =
-								LKDataBlock[j].keys[0][m];
-					}
-					keyframes_index++;
-				} else {						//First animation (j=0)
+			} else if (AnimRefs.times[j].n == 1) {//Constant value across one animation
 					//TIMESTAMP
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart;
@@ -282,7 +260,6 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 								LKDataBlock[j].keys[0][m];
 					}
 					keyframes_index += 2;
-				}
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -351,22 +328,7 @@ void convert_BigFloatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					}
 					keyframes_index++;
 				}
-			} else if (AnimRefs.times[j].n == 1) {
-				if (j > 0) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 3; m++) {
-						int n;
-						for (n = 0; n < 3; n++) {
-							ptrDataBlock->keys[keyframes_index][m][n] =
-									LKDataBlock[j].keys[0][m][n];
-						}
-					}
-					keyframes_index++;
-				} else {						//First animation (j=0)
+			} else if (AnimRefs.times[j].n == 1) {//Constant value for 1 animation
 					//TIMESTAMP
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart;
@@ -384,7 +346,6 @@ void convert_BigFloatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 						}
 					}
 					keyframes_index += 2;
-				}
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -467,18 +428,6 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-				if (j > 0) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 4; m++) {
-						ptrDataBlock->keys[keyframes_index][m] =
-								LKDataBlock[j].keys[0][m];
-					}
-					keyframes_index++;
-				} else {						//First animation (j=0)
 					//TIMESTAMP
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart;
@@ -493,7 +442,6 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 								LKDataBlock[j].keys[0][m];
 					}
 					keyframes_index += 2;
-				}
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -558,15 +506,6 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-				if (j > 0) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeEnd;
-					//KEY
-					ptrDataBlock->keys[keyframes_index] =
-							LKDataBlock[j].keys[0];
-					keyframes_index++;
-				} else {						//First animation (j=0)
 					//TIMESTAMP
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart;
@@ -578,7 +517,6 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->keys[keyframes_index + 1] =
 							LKDataBlock[j].keys[0];
 					keyframes_index += 2;
-				}
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -635,15 +573,6 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-				if (j > 0) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeEnd;
-					//KEY
-					ptrDataBlock->keys[keyframes_index] =
-							LKDataBlock[j].keys[0];
-					keyframes_index++;
-				} else {						//First animation (j=0)
 					//TIMESTAMP
 					ptrDataBlock->times[keyframes_index] =
 							animations[j].timeStart;
@@ -655,7 +584,6 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					ptrDataBlock->keys[keyframes_index + 1] =
 							LKDataBlock[j].keys[0];
 					keyframes_index += 2;
-				}
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
