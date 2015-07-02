@@ -155,10 +155,10 @@ void compute_ranges(uint32 nTimes, ArrayRef *TimeRefs, Range **ptrRangeList) {
 			(*ptrRangeList)[j][1] = range_time;
 			range_time++;
 		} else if (TimeRefs[j].n == 1) {
-				(*ptrRangeList)[j][0] = range_time;
-				range_time++;
-				(*ptrRangeList)[j][1] = range_time;
-				range_time++;
+			(*ptrRangeList)[j][0] = range_time;
+			range_time++;
+			(*ptrRangeList)[j][1] = range_time;
+			range_time++;
 		} else {				//n > 1
 			(*ptrRangeList)[j][0] = range_time;
 			range_time += TimeRefs[j].n - 1;
@@ -190,7 +190,7 @@ int get_keyframes_number(uint32 nTimes, ArrayRef *TimeRefs) {
 		if (TimeRefs[j].n > 1) {
 			keyframes_size += TimeRefs[j].n;
 		} else if (TimeRefs[j].n == 1) {
-				keyframes_size += 2;
+			keyframes_size += 2;
 		} else { //n=0
 			keyframes_size += 2;
 		}
@@ -246,20 +246,19 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {//Constant value across one animation
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeStart;
-					ptrDataBlock->times[keyframes_index + 1] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 3; m++) {
-						ptrDataBlock->keys[keyframes_index][m] =
-								LKDataBlock[j].keys[0][m];
-						ptrDataBlock->keys[keyframes_index + 1][m] =
-								LKDataBlock[j].keys[0][m];
-					}
-					keyframes_index += 2;
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				int m;
+				for (m = 0; m < 3; m++) {
+					ptrDataBlock->keys[keyframes_index][m] =
+							LKDataBlock[j].keys[0][m];
+					ptrDataBlock->keys[keyframes_index + 1][m] =
+							LKDataBlock[j].keys[0][m];
+				}
+				keyframes_index += 2;
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -329,23 +328,22 @@ void convert_BigFloatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {//Constant value for 1 animation
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeStart;
-					ptrDataBlock->times[keyframes_index + 1] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 3; m++) {
-						int n;
-						for (n = 0; n < 3; n++) {
-							ptrDataBlock->keys[keyframes_index][m][n] =
-									LKDataBlock[j].keys[0][m][n];
-							ptrDataBlock->keys[keyframes_index + 1][m][n] =
-									LKDataBlock[j].keys[0][m][n];
-						}
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				int m;
+				for (m = 0; m < 3; m++) {
+					int n;
+					for (n = 0; n < 3; n++) {
+						ptrDataBlock->keys[keyframes_index][m][n] =
+								LKDataBlock[j].keys[0][m][n];
+						ptrDataBlock->keys[keyframes_index + 1][m][n] =
+								LKDataBlock[j].keys[0][m][n];
 					}
-					keyframes_index += 2;
+				}
+				keyframes_index += 2;
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -428,20 +426,19 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeStart;
-					ptrDataBlock->times[keyframes_index + 1] =
-							animations[j].timeEnd;
-					//KEY
-					int m;
-					for (m = 0; m < 4; m++) {
-						ptrDataBlock->keys[keyframes_index][m] =
-								LKDataBlock[j].keys[0][m];
-						ptrDataBlock->keys[keyframes_index + 1][m] =
-								LKDataBlock[j].keys[0][m];
-					}
-					keyframes_index += 2;
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				int m;
+				for (m = 0; m < 4; m++) {
+					ptrDataBlock->keys[keyframes_index][m] =
+							LKDataBlock[j].keys[0][m];
+					ptrDataBlock->keys[keyframes_index + 1][m] =
+							LKDataBlock[j].keys[0][m];
+				}
+				keyframes_index += 2;
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -506,17 +503,15 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeStart;
-					ptrDataBlock->times[keyframes_index + 1] =
-							animations[j].timeEnd;
-					//KEY
-					ptrDataBlock->keys[keyframes_index] =
-							LKDataBlock[j].keys[0];
-					ptrDataBlock->keys[keyframes_index + 1] =
-							LKDataBlock[j].keys[0];
-					keyframes_index += 2;
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				ptrDataBlock->keys[keyframes_index] = LKDataBlock[j].keys[0];
+				ptrDataBlock->keys[keyframes_index + 1] =
+						LKDataBlock[j].keys[0];
+				keyframes_index += 2;
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -573,17 +568,15 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 					keyframes_index++;
 				}
 			} else if (AnimRefs.times[j].n == 1) {
-					//TIMESTAMP
-					ptrDataBlock->times[keyframes_index] =
-							animations[j].timeStart;
-					ptrDataBlock->times[keyframes_index + 1] =
-							animations[j].timeEnd;
-					//KEY
-					ptrDataBlock->keys[keyframes_index] =
-							LKDataBlock[j].keys[0];
-					ptrDataBlock->keys[keyframes_index + 1] =
-							LKDataBlock[j].keys[0];
-					keyframes_index += 2;
+				//TIMESTAMP
+				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
+				ptrDataBlock->times[keyframes_index + 1] =
+						animations[j].timeEnd;
+				//KEY
+				ptrDataBlock->keys[keyframes_index] = LKDataBlock[j].keys[0];
+				ptrDataBlock->keys[keyframes_index + 1] =
+						LKDataBlock[j].keys[0];
+				keyframes_index += 2;
 			} else {						//n=0
 				//TIMESTAMP
 				ptrDataBlock->times[keyframes_index] = animations[j].timeStart;
@@ -1108,28 +1101,30 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	bones_converter(ptr, lk_m2);
 
 	//Animlookup
+	/*
+	 ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
+	 for (i = 0; i < ptr->header.nAnimationLookup; i++) {
+	 ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
+	 }
+	 if (ptr->header.nAnimationLookup == 0 && ptr->header.nAnimations > 0) {
+	 */
+	short maxID = 0;
+	for (i = 0; i < ptr->header.nAnimations; i++) {
+		if (ptr->animations[i].animID > maxID) {
+			maxID = ptr->animations[i].animID;
+		}
+	}
+	ptr->header.nAnimationLookup = maxID + 1;
 	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
-	for (i = 0; i < ptr->header.nAnimationLookup; i++) {
-		ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
+	for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
+		ptr->AnimLookup[i] = -1;
 	}
-	if (ptr->header.nAnimationLookup == 0 && ptr->header.nAnimations > 0) {
-		short maxID = 0;
-		for (i = 0; i < ptr->header.nAnimations; i++) {
-			if (ptr->animations[i].animID > maxID) {
-				maxID = ptr->animations[i].animID;
-			}
-		}
-		ptr->header.nAnimationLookup = maxID + 1;
-		ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
-		for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
-			ptr->AnimLookup[i] = -1;
-		}
-		for (i = 0; i < ptr->header.nAnimations; i++) {
-			if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {
-				ptr->AnimLookup[ptr->animations[i].animID] = i;
-			}
+	for (i = 0; i < ptr->header.nAnimations; i++) {
+		if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {//Animation says : "If there is no position in the lookup for my AnimID,
+			ptr->AnimLookup[ptr->animations[i].animID] = i;// I put mine"
 		}
 	}
+	//}
 
 	//PlayAnimLookup
 	ptr->PlayAnimLookup = malloc(226 * sizeof(PlayAnimRecord));
@@ -1144,7 +1139,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 			}
 		} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
 			if (realID != i) {
-				ptr->PlayAnimLookup[i].flags = 3;	//Play backwards
+				ptr->PlayAnimLookup[i].flags = 1;	//Play backwards
 			}
 		}
 	}

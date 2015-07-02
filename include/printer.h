@@ -3,6 +3,7 @@
 #include "structures.h"
 
 void print_anims_lk(LKM2 model);
+void print_anims_bc(BCM2 model);
 void print_skin(Skin skin);
 void print_views(BCM2 model);
 void print_transparency_bc(BCM2 model);
