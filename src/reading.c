@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "reading.h"
-#include "common.h"//To open .anim files
+#include "common.h"
 
 char* animfile_name(char *name, short AnimID, short SubAnimID) {
 	size_t name_length = strlen(name);
@@ -118,6 +118,7 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("MARK VEC3D\n");//FIXME
 				printf("Opening Anim file : \t\t%s\n",
 						animfile_name(model_name, AnimList[j].animID,
 								AnimList[j].subAnimID));
@@ -126,11 +127,13 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 								AnimList[j].subAnimID), "r+b");
 				if (anim_file == NULL) {
 					fprintf(stderr, ".anim file opening error \n");
-					break;
+					exit(EXIT_FAILURE);
 				}
 				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(Vec3D));
 					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
@@ -166,6 +169,7 @@ void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("MARK BIGFLOAT\n");//FIXME
 				printf("Opening Anim file : \t\t%s\n",
 						animfile_name(model_name, AnimList[j].animID,
 								AnimList[j].subAnimID));
@@ -174,11 +178,13 @@ void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 								AnimList[j].subAnimID), "r+b");
 				if (anim_file == NULL) {
 					fprintf(stderr, ".anim file opening error \n");
-					break;
+					exit(EXIT_FAILURE);
 				}
 				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(BigFloat));
 					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
@@ -212,6 +218,7 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("MARK QUAT\n");//FIXME
 				printf("Opening Anim file : \t\t%s\n",
 						animfile_name(model_name, AnimList[j].animID,
 								AnimList[j].subAnimID));
@@ -220,11 +227,13 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 								AnimList[j].subAnimID), "r+b");
 				if (anim_file == NULL) {
 					fprintf(stderr, ".anim file opening error \n");
-					break;
+					exit(EXIT_FAILURE);
 				}
 				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(Quat));
 					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(Quat),
@@ -258,6 +267,7 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("MARK SHORT\n");//FIXME
 				printf("Opening Anim file : \t\t%s\n",
 						animfile_name(model_name, AnimList[j].animID,
 								AnimList[j].subAnimID));
@@ -266,11 +276,13 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 								AnimList[j].subAnimID), "r+b");
 				if (anim_file == NULL) {
 					fprintf(stderr, ".anim file opening error \n");
-					break;
+					exit(EXIT_FAILURE);
 				}
 				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(short));
 					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(short),
@@ -304,6 +316,7 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("MARK INT\n");//FIXME
 				printf("Opening Anim file : \t\t%s\n",
 						animfile_name(model_name, AnimList[j].animID,
 								AnimList[j].subAnimID));
@@ -312,11 +325,13 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 								AnimList[j].subAnimID), "r+b");
 				if (anim_file == NULL) {
 					fprintf(stderr, ".anim file opening error \n");
-					break;
+					exit(EXIT_FAILURE);
 				}
 				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(int));
 					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(int),

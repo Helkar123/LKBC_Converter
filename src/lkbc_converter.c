@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 	if (argc < 2) {
 		fprintf(stderr, "No M2 file specified.\n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 	//Storing M2 name
 	size_t m2_name_length = strlen(argv[1]);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 	FILE *lk_m2_file = fopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	LKM2 lk_model;
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 		skin_files[i] = fopen(skin_name(argv[1], i), "r+b");
 		if (skin_files[i] == NULL) {
 			fprintf(stderr, "SKIN/LK number %d opening error \r\n", i);
-			return -1;
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 	 FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
 	 if (genuine_m2_file == NULL) {
 	 fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
-	 return -1;
+			exit(EXIT_FAILURE);
 	 }
 	 BCM2 genuine_model;
 	 read_model_bc(genuine_m2_file, &genuine_model);
@@ -120,5 +120,5 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(lk_m2_file);
 	fclose(bc_m2_file);
-	return 0;
+	return EXIT_SUCCESS;
 }
