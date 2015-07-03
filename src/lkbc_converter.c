@@ -10,6 +10,7 @@
 #include "reading.h"
 #include "conversion.h"
 #include "writing.h"
+#include "common.h"
 
 /** Skin file extension */
 #define SKIN_SUFF ".skin"
@@ -45,14 +46,20 @@ char* skin_name(char *m2_name, int number) {
 int main(int argc, char *argv[]) {
 	printf("============================\n");
 	printf("= LKBC_Converter by Koward =\n");
-	printf("============================\n");
-	printf("\tNote : models with .anim files are unsupported.\n");
-	printf("\tThe converter will crash or produce a flawed m2 if you try them.\n");
+	printf("==v0.2-alpha================\n");
+	printf("\tNote : models with .anim files are still work in progress.\n");
+	printf(
+			"\tThe converter can crash or produce a flawed m2 if you try them.\n");
 	printf("\n");
 	if (argc < 2) {
 		fprintf(stderr, "No M2 file specified.\n");
 		return -1;
 	}
+	//Storing M2 name
+	size_t m2_name_length = strlen(argv[1]);
+	model_name = malloc(m2_name_length - 3 + 1);
+	strncpy(model_name, argv[1], m2_name_length - 3);
+	model_name[m2_name_length - 3] = 0;
 
 	//Reading files
 	printf("Opening M2/WotLK file : \t%s\n", argv[1]);
@@ -88,14 +95,14 @@ int main(int argc, char *argv[]) {
 
 	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
 	/*
-	FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
-	if (genuine_m2_file == NULL) {
-		fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
-		return -1;
-	}
-	BCM2 genuine_model;
-	read_model_bc(genuine_m2_file, &genuine_model);
-	*/
+	 FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
+	 if (genuine_m2_file == NULL) {
+	 fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
+	 return -1;
+	 }
+	 BCM2 genuine_model;
+	 read_model_bc(genuine_m2_file, &genuine_model);
+	 */
 
 	//Writing
 	char new_name[64] = "BC_";

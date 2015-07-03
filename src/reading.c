@@ -5,8 +5,26 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "reading.h"
+#include "common.h"//To open .anim files
 
+char* animfile_name(char *name, short AnimID, short SubAnimID) {
+	size_t name_length = strlen(name);
+	char animID_number[4];
+	char subAnimID_number[2];
+	sprintf(animID_number, "%04d", AnimID);
+	sprintf(subAnimID_number, "%02d", SubAnimID);
+	char *s = malloc(
+			name_length + strlen(animID_number) + 1 + strlen(subAnimID_number)
+					+ strlen(".anim") + 1 + 16); //%s%04d-%02d.anim + extra memory for strcat
+	strcpy(s, name);
+	strcat(s, animID_number);
+	strcat(s, "-");
+	strcat(s, subAnimID_number);
+	strcat(s, ".anim");
+	return s;
+}
 /**
  * @param skin_files A list of pointers to skin files to read data from.
  * @param ptr A pointer to a list of skins structure where data will be written.
@@ -90,7 +108,8 @@ void read_times(FILE *lk_m2_file, AnimRefs *ptrAnimRefs, uint32 **ptrTimeList,
 	}
 }
 void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, Vec3D_LKSubBlock **ptrDataBlock) {
+		AnimRefs *ptrAnimRefs, Vec3D_LKSubBlock **ptrDataBlock,
+		LKModelAnimation *AnimList) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
 		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
@@ -98,28 +117,76 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Vec3D_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
-			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
-			if (ptrAnimRefs->keys[j].n > 0) {
-				(*ptrDataBlock)[j].keys = malloc(
-						ptrAnimRefs->keys[j].n * sizeof(Vec3D));
-				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
-						ptrAnimRefs->keys[j].n, lk_m2_file);
+			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("Opening Anim file : \t\t%s\n",
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID));
+				FILE *anim_file = fopen(
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID), "r+b");
+				if (anim_file == NULL) {
+					fprintf(stderr, ".anim file opening error \n");
+					break;
+				}
+				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
+							ptrAnimRefs->keys[j].n, anim_file);
+				}
+				fclose(anim_file);
+			}
+			else {
+				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					(*ptrDataBlock)[j].keys = malloc(
+							ptrAnimRefs->keys[j].n * sizeof(Vec3D));
+					fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
+							ptrAnimRefs->keys[j].n, lk_m2_file);
+				}
 			}
 		}
 	}
 }
 
 void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, BigFloat_LKSubBlock **ptrDataBlock) {
+		AnimRefs *ptrAnimRefs, BigFloat_LKSubBlock **ptrDataBlock,
+		LKModelAnimation *AnimList) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
 		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
 		//Layer 2
-		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(BigFloat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
+		(*ptrDataBlock) = malloc(
+				ptrBlock->Times.n * sizeof(BigFloat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("Opening Anim file : \t\t%s\n",
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID));
+				FILE *anim_file = fopen(
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID), "r+b");
+				if (anim_file == NULL) {
+					fprintf(stderr, ".anim file opening error \n");
+					break;
+				}
+				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
+							ptrAnimRefs->keys[j].n, anim_file);
+				}
+				fclose(anim_file);
+			}
+		else{
 			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
@@ -130,11 +197,13 @@ void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 						ptrAnimRefs->keys[j].n, lk_m2_file);
 			}
 		}
+		}
 	}
 }
 
 void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, Quat_LKSubBlock **ptrDataBlock) {
+		AnimRefs *ptrAnimRefs, Quat_LKSubBlock **ptrDataBlock,
+		LKModelAnimation *AnimList) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
 		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
@@ -142,6 +211,28 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Quat_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("Opening Anim file : \t\t%s\n",
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID));
+				FILE *anim_file = fopen(
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID), "r+b");
+				if (anim_file == NULL) {
+					fprintf(stderr, ".anim file opening error \n");
+					break;
+				}
+				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(Quat),
+							ptrAnimRefs->keys[j].n, anim_file);
+				}
+				fclose(anim_file);
+			}
+		else{
 			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
@@ -152,11 +243,13 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 						ptrAnimRefs->keys[j].n, lk_m2_file);
 			}
 		}
+		}
 	}
 }
 
 void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, Short_LKSubBlock **ptrDataBlock) {
+		AnimRefs *ptrAnimRefs, Short_LKSubBlock **ptrDataBlock,
+		LKModelAnimation *AnimList) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
 		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
@@ -164,6 +257,28 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Short_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("Opening Anim file : \t\t%s\n",
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID));
+				FILE *anim_file = fopen(
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID), "r+b");
+				if (anim_file == NULL) {
+					fprintf(stderr, ".anim file opening error \n");
+					break;
+				}
+				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(short),
+							ptrAnimRefs->keys[j].n, anim_file);
+				}
+				fclose(anim_file);
+			}
+		else{
 			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
@@ -174,11 +289,13 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 						ptrAnimRefs->keys[j].n, lk_m2_file);
 			}
 		}
+		}
 	}
 }
 
 void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
-		AnimRefs *ptrAnimRefs, Int_LKSubBlock **ptrDataBlock) {
+		AnimRefs *ptrAnimRefs, Int_LKSubBlock **ptrDataBlock,
+		LKModelAnimation *AnimList) {
 	if (ptrBlock->Times.n > 0) {
 		//Layer 1
 		read_layer1(lk_m2_file, ptrBlock, ptrAnimRefs);
@@ -186,6 +303,28 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		(*ptrDataBlock) = malloc(ptrBlock->Times.n * sizeof(Int_LKSubBlock)); //Each Array_Ref leads to an array of elements (and there are Times.n of them, as seen previously)
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
+			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
+				printf("Opening Anim file : \t\t%s\n",
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID));
+				FILE *anim_file = fopen(
+						animfile_name(model_name, AnimList[j].animID,
+								AnimList[j].subAnimID), "r+b");
+				if (anim_file == NULL) {
+					fprintf(stderr, ".anim file opening error \n");
+					break;
+				}
+				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+						j);
+				if (ptrAnimRefs->keys[j].n > 0) {
+					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					SEEK_SET);
+					fread((*ptrDataBlock)[j].keys, sizeof(int),
+							ptrAnimRefs->keys[j].n, anim_file);
+				}
+				fclose(anim_file);
+			}
+		else{
 			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
 			if (ptrAnimRefs->keys[j].n > 0) {
 				(*ptrDataBlock)[j].keys = malloc(
@@ -195,6 +334,7 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 				fread((*ptrDataBlock)[j].keys, sizeof(int),
 						ptrAnimRefs->keys[j].n, lk_m2_file);
 			}
+		}
 		}
 	}
 }
@@ -253,13 +393,16 @@ int read_bones(FILE *lk_m2_file, LKM2 *ptr) {
 		for (i = 0; i < ptr->header.nBones; i++) {
 			//Translation
 			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].trans,
-					&ptr->animofs[i].trans, &ptr->bonesdata[i].trans);
+					&ptr->animofs[i].trans, &ptr->bonesdata[i].trans,
+					ptr->animations);
 			//Rotation
 			read_QuatAnimBlock(lk_m2_file, &ptr->bones[i].rot,
-					&ptr->animofs[i].rot, &ptr->bonesdata[i].rot);
+					&ptr->animofs[i].rot, &ptr->bonesdata[i].rot,
+					ptr->animations);
 			//Scaling
 			read_Vec3DAnimBlock(lk_m2_file, &ptr->bones[i].scal,
-					&ptr->animofs[i].scal, &ptr->bonesdata[i].scal);
+					&ptr->animofs[i].scal, &ptr->bonesdata[i].scal,
+					ptr->animations);
 		}
 		return 0;
 	}
@@ -283,7 +426,7 @@ int read_attachments(FILE *lk_m2_file, LKM2 *ptr) {
 			//Data
 			read_IntAnimBlock(lk_m2_file, &ptr->attachments[i].data,
 					&ptr->attachmentsanimofs[i].data,
-					&ptr->attachmentsdata[i].data);
+					&ptr->attachmentsdata[i].data, ptr->animations);
 		}
 		return 0;
 	}
@@ -296,7 +439,7 @@ int read_events(FILE *lk_m2_file, LKM2 *ptr) {
 		fread(ptr->events, sizeof(LKEvent), ptr->header.nEvents, lk_m2_file);
 
 		ptr->eventsanimofs = malloc(
-				ptr->header.nEvents * sizeof(EventsRefBlock));	//1 LKRefBlock per bone
+				ptr->header.nEvents * sizeof(EventsRefBlock));//1 LKRefBlock per bone
 		ptr->eventsdata = malloc(
 				ptr->header.nEvents * sizeof(LKEventsDataBlock));
 		int i;
@@ -329,10 +472,12 @@ int read_colors(FILE *lk_m2_file, LKM2 *ptr) {
 		for (i = 0; i < ptr->header.nColors; i++) {
 			//RGB
 			read_Vec3DAnimBlock(lk_m2_file, &ptr->colors[i].rgb,
-					&ptr->coloranimofs[i].rgb, &ptr->colorsdata[i].rgb);
+					&ptr->coloranimofs[i].rgb, &ptr->colorsdata[i].rgb,
+					ptr->animations);
 			//Opacity
 			read_ShortAnimBlock(lk_m2_file, &ptr->colors[i].opacity,
-					&ptr->coloranimofs[i].opacity, &ptr->colorsdata[i].opacity);
+					&ptr->coloranimofs[i].opacity, &ptr->colorsdata[i].opacity,
+					ptr->animations);
 		}
 		return 0;
 	}
@@ -345,20 +490,24 @@ int read_cameras(FILE *lk_m2_file, LKM2 *ptr) {
 		fseek(lk_m2_file, ptr->header.ofsCameras, SEEK_SET);
 		fread(ptr->cameras, sizeof(LKCamera), ptr->header.nCameras, lk_m2_file);
 
-		ptr->camerasanimofs = malloc(ptr->header.nCameras * sizeof(CamerasRefBlock)); //1 LKRefBlock per bone
+		ptr->camerasanimofs = malloc(
+				ptr->header.nCameras * sizeof(CamerasRefBlock)); //1 LKRefBlock per bone
 		ptr->camerasdata = malloc(
 				ptr->header.nCameras * sizeof(LKCamerasDataBlock));
 		int i;
 		for (i = 0; i < ptr->header.nCameras; i++) {
 			//Translation position
 			read_BigFloatAnimBlock(lk_m2_file, &ptr->cameras[i].transpos,
-					&ptr->camerasanimofs[i].transpos, &ptr->camerasdata[i].transpos);
+					&ptr->camerasanimofs[i].transpos,
+					&ptr->camerasdata[i].transpos, ptr->animations);
 			//Translation target
 			read_BigFloatAnimBlock(lk_m2_file, &ptr->cameras[i].transtar,
-					&ptr->camerasanimofs[i].transtar, &ptr->camerasdata[i].transtar);
+					&ptr->camerasanimofs[i].transtar,
+					&ptr->camerasdata[i].transtar, ptr->animations);
 			//Scaling
 			read_Vec3DAnimBlock(lk_m2_file, &ptr->cameras[i].scal,
-					&ptr->camerasanimofs[i].scal, &ptr->camerasdata[i].scal);
+					&ptr->camerasanimofs[i].scal, &ptr->camerasdata[i].scal,
+					ptr->animations);
 		}
 		return 0;
 	}
@@ -382,7 +531,7 @@ int read_transparency(FILE *lk_m2_file, LKM2 *ptr) {
 			//Alpha
 			read_ShortAnimBlock(lk_m2_file, &ptr->transparencyrefs[i].alpha,
 					&ptr->transparencyanimofs[i].alpha,
-					&ptr->transparencydata[i].alpha);
+					&ptr->transparencydata[i].alpha, ptr->animations);
 		}
 		return 0;
 	}

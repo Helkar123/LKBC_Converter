@@ -1,16 +1,32 @@
 # LKBC_Converter
-World of Warcraft M2 models converter from version 08 (Wrath of the Lich King) to 07-04 (The Burning Crusade).
+World of Warcraft M2 model converter from version 08 (_Wrath of the Lich King_) to 07-04 (_The Burning Crusade_).
 Written in ANSI C, documented with Doxygen, tested with CuTest, made with love and tears.
 
-What's yet to be implemented :
-	Models with .anim files (that also means character models can't be converted yet)
-	Lights
-	Ribbons
-	Particles
+##What's yet to be implemented :
+* Models with .anim files
+* Lights
+* Ribbons
+* Particles
 	
-This is still heavy work in progress. I want to have strong, working, well-designed structures before moving too much forward.
+This is still heavy work in progress.
+  
+  
+##Frequently Asked Questions :
+###Can we convert Warlords of Draenor character models ?
+Not yet. I don't know if we'll ever be able to. It would be the pinnacle of this project.
 
+###Can we use it on creatures or only with static objects ?
+This converted is aimed at converting creatures, something that had never been done previously by any LKBC conversion tool.
+Not all of them are working perfectly, but the code is getting better every day.
+
+###My model is not working !
+In most cases, you're just using a model which has unsupported features, like particles or lights. 
+But errors can happen elsewhere too. Report your problem in the issue section ;) !
+Don't forget to add the name of your model and the nature of the problem.
+  
+  
+##Credits :
 Original idea and structures by Stan84.
-
 Thanks to Stan84, PhilipTNG, Schlumpf and all the people who contributed to M2&M2/WotLK pages on the WoWDev wiki.
+
 If you want to contribute and have ANSI C knowledge, feel free to send me a message. ;)
