@@ -8,6 +8,7 @@
 
 #include "structures.h"
 #include "fallback.h"
+#include "common.h"
 
 /**
  * Header conversion
@@ -962,6 +963,7 @@ int views_converter(BCM2 *ptr, Skin *skins) {
 
 /**
  * In WotLK, nViews is a number between 1 and 4. But in Burning Crusade, it's always 4, so there must be some kind of fake views.
+ * With this function, the last view is copied until we have 4 views in the model.
  * @param ptr
  * @return
  */
@@ -1100,14 +1102,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	//bones
 	bones_converter(ptr, lk_m2);
 
-	//Animlookup
-	/*
-	 ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
-	 for (i = 0; i < ptr->header.nAnimationLookup; i++) {
-	 ptr->AnimLookup[i] = lk_m2.AnimLookup[i];
-	 }
-	 if (ptr->header.nAnimationLookup == 0 && ptr->header.nAnimations > 0) {
-	 */
+	//AnimLookup (The one in the original model can be wrong, especially for Cata+ models, so I rewrote it myself)
 	short maxID = 0;
 	for (i = 0; i < ptr->header.nAnimations; i++) {
 		if (ptr->animations[i].animID > maxID) {
@@ -1120,11 +1115,12 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 		ptr->AnimLookup[i] = -1;
 	}
 	for (i = 0; i < ptr->header.nAnimations; i++) {
-		if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {//Animation says : "If there is no position in the lookup for my AnimID,
-			ptr->AnimLookup[ptr->animations[i].animID] = i;// I put mine"
+		if (!isBugged(ptr->animations[i].flags)) {//Non implemented animations shouldn't show themselves on the Lookup
+			if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {	//Animation says : "If there is no position in the lookup for my AnimID,
+				ptr->AnimLookup[ptr->animations[i].animID] = i;	// I put mine"
+			}
 		}
 	}
-	//}
 
 	//PlayAnimLookup
 	ptr->PlayAnimLookup = malloc(226 * sizeof(PlayAnimRecord));
@@ -1200,6 +1196,9 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 
 	/*TODO
 	 TexAnims;
+	 Lights;
+	 Ribbons;
+	 Particles
 	 */
 
 	return 0;

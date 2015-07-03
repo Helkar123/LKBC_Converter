@@ -348,17 +348,17 @@ void print_bonesdata(LKM2 model) {
 		int j;
 		printf("LKBone : %d\n", i);
 		//Translation
-		if (lk_bone.rot.Keys.n > 0) {
-			for (j = 0; j < lk_bone.rot.Keys.n; j++) {
+		if (lk_bone.trans.Keys.n > 0) {
+			for (j = 0; j < lk_bone.trans.Keys.n; j++) {
 				printf("\t LKAnimation : %d\n", j);
-				if (model.animofs[i].rot.keys[j].n > 0) {
+				if (model.animofs[i].trans.keys[j].n > 0) {
 					int k;
-					for (k = 0; k < model.animofs[i].rot.keys[j].n; k++) {
-						printf("\t\tLKValue : (%d,%d,%d,%d)\n",
-								model.bonesdata[i].rot[j].keys[k][0],
-								model.bonesdata[i].rot[j].keys[k][1],
-								model.bonesdata[i].rot[j].keys[k][2],
-								model.bonesdata[i].rot[j].keys[k][3]);
+					for (k = 0; k < model.animofs[i].trans.keys[j].n; k++) {
+						printf("\t\t%d : (%f,%f,%f)\n",
+								model.bonesdata[i].trans[j].times[k],
+								model.bonesdata[i].trans[j].keys[k][0],
+								model.bonesdata[i].trans[j].keys[k][1],
+								model.bonesdata[i].trans[j].keys[k][2]);
 					}
 				}
 			}
@@ -394,28 +394,44 @@ void print_animlookup(BCM2 model) {
 	printf("[Animation Lookup]\n");
 	printf("PhysicalID -- AnimID\n");
 	int i;
-	for(i=0;i< model.header.nAnimationLookup;i++){
-		printf("%d -- %d\n",model.AnimLookup[i],i);
+	for (i = 0; i < model.header.nAnimationLookup; i++) {
+		printf("%d -- %d\n", model.AnimLookup[i], i);
 	}
 }
 void print_playanimlookup(BCM2 model) {
 	printf("[Playable Animation Lookup]\n");
 	printf("TargetID,Flags -- AnimID\n");
 	int i;
-	for(i=0; i < model.header.nPlayableAnimationLookup;i++){
-		printf("%d,%d -- %d\n",model.PlayAnimLookup[i].ID, model.PlayAnimLookup[i].flags,i);
+	for (i = 0; i < model.header.nPlayableAnimationLookup; i++) {
+		printf("%d,%d -- %d\n", model.PlayAnimLookup[i].ID,
+				model.PlayAnimLookup[i].flags, i);
 	}
 }
 
 void print_texnames_bc(BCM2 model) {
 	int i;
-	for(i=0; i < model.header.nTextures;i++){
-		printf("[Texture #%d]\n\t%s\n",i,model.texture_names[i]);
+	for (i = 0; i < model.header.nTextures; i++) {
+		printf("[Texture #%d]\n\t%s\n", i, model.texture_names[i]);
 	}
 }
 void print_texnames_lk(LKM2 model) {
 	int i;
-	for(i=0; i < model.header.nTextures;i++){
-		printf("[Texture #%d]\n\t%s\n",i,model.texture_names[i]);
+	for (i = 0; i < model.header.nTextures; i++) {
+		printf("[Texture #%d]\n\t%s\n", i, model.texture_names[i]);
 	}
+}
+
+//assumes little endian
+void printBits(size_t const size, void const * const ptr) {
+	unsigned char *b = (unsigned char*) ptr;
+	unsigned char byte;
+	int i, j;
+	for (i = size - 1; i >= 0; i--) {
+		for (j = 7; j >= 0; j--) {
+			byte = b[i] & (1 << j);
+			byte >>= j;
+			printf("%u", byte);
+		}
+	}
+	puts("");
 }

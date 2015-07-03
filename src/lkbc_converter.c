@@ -40,6 +40,13 @@ char* skin_name(char *m2_name, int number) {
 	return s;
 }
 
+char* final_name(char *name) {
+	size_t name_length = strlen(name);
+	char *s = malloc(name_length + strlen("_BC.m2") + 1 + 16);
+	strcpy(s, name);
+	strcat(s, "_BC.m2");
+	return s;
+}
 /**
  * Main function
  */
@@ -98,15 +105,16 @@ int main(int argc, char *argv[]) {
 	 FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
 	 if (genuine_m2_file == NULL) {
 	 fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
-			exit(EXIT_FAILURE);
+	 exit(EXIT_FAILURE);
 	 }
 	 BCM2 genuine_model;
 	 read_model_bc(genuine_m2_file, &genuine_model);
 	 */
 
 	//Writing
-	char new_name[64] = "BC_";
-	strcat(new_name, argv[1]);
+	/*char new_name[64] = "BC_";
+	strcat(new_name, argv[1]);*/
+	char *new_name=final_name(model_name);
 	printf("Output name : %s\n", new_name);
 	FILE *bc_m2_file = fopen(new_name, "w+b");
 	write_model(bc_m2_file, &bc_model);

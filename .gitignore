@@ -51,3 +51,4 @@ lkbc_converter
 
 # Debug files
 *.dSYM/
+/Models/

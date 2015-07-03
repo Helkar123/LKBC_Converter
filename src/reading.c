@@ -17,7 +17,7 @@ char* animfile_name(char *name, short AnimID, short SubAnimID) {
 	sprintf(subAnimID_number, "%02d", SubAnimID);
 	char *s = malloc(
 			name_length + strlen(animID_number) + 1 + strlen(subAnimID_number)
-					+ strlen(".anim") + 1 + 16); //%s%04d-%02d.anim + extra memory for strcat
+					+ strlen(".anim") + 1 + 128); //%s%04d-%02d.anim + extra memory for strcat
 	strcpy(s, name);
 	strcat(s, animID_number);
 	strcat(s, "-");
@@ -118,30 +118,37 @@ void read_Vec3DAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
-				printf("MARK VEC3D\n");//FIXME
-				printf("Opening Anim file : \t\t%s\n",
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID));
-				FILE *anim_file = fopen(
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID), "r+b");
-				if (anim_file == NULL) {
-					fprintf(stderr, ".anim file opening error \n");
-					exit(EXIT_FAILURE);
+				if (isBugged(AnimList[j].flags)) {	//Bug with some animations, hardfixed
+					ptrAnimRefs->keys[j].n = 0;	//Nuke it from orbit, it's the only way to be sure
+					ptrAnimRefs->keys[j].ofs = 0;
+					ptrAnimRefs->times[j].n = 0;
+					ptrAnimRefs->times[j].ofs = 0;
+				} else {
+					FILE *anim_file;
+					anim_file = fopen(
+							animfile_name(model_name, AnimList[j].animID,
+									AnimList[j].subAnimID), "r+b");
+					if (anim_file == NULL) {
+						fprintf(stderr,
+								"[Vec3D][Anim #%d, Flags %d] %s file opening error \n",
+								j, AnimList[j].flags,
+								animfile_name(model_name, AnimList[j].animID,
+										AnimList[j].subAnimID));
+						exit(EXIT_FAILURE);
+					}
+					read_times(anim_file, ptrAnimRefs,
+							&(*ptrDataBlock)[j].times, j);
+					if (ptrAnimRefs->keys[j].n > 0) {
+						(*ptrDataBlock)[j].keys = malloc(
+								ptrAnimRefs->keys[j].n * sizeof(Vec3D));
+						fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+						SEEK_SET);
+						fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
+								ptrAnimRefs->keys[j].n, anim_file);
+					}
+					fclose(anim_file);
 				}
-				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
-						j);
-				if (ptrAnimRefs->keys[j].n > 0) {
-					(*ptrDataBlock)[j].keys = malloc(
-							ptrAnimRefs->keys[j].n * sizeof(Vec3D));
-					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
-					SEEK_SET);
-					fread((*ptrDataBlock)[j].keys, sizeof(Vec3D),
-							ptrAnimRefs->keys[j].n, anim_file);
-				}
-				fclose(anim_file);
-			}
-			else {
+			} else {
 				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
@@ -169,40 +176,47 @@ void read_BigFloatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
-				printf("MARK BIGFLOAT\n");//FIXME
-				printf("Opening Anim file : \t\t%s\n",
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID));
-				FILE *anim_file = fopen(
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID), "r+b");
-				if (anim_file == NULL) {
-					fprintf(stderr, ".anim file opening error \n");
-					exit(EXIT_FAILURE);
+				if (isBugged(AnimList[j].flags)) {
+					ptrAnimRefs->keys[j].n = 0;	//Nuke it from orbit, it's the only way to be sure
+					ptrAnimRefs->keys[j].ofs = 0;
+					ptrAnimRefs->times[j].n = 0;
+					ptrAnimRefs->times[j].ofs = 0;
+				} else {
+					FILE *anim_file = fopen(
+							animfile_name(model_name, AnimList[j].animID,
+									AnimList[j].subAnimID), "r+b");
+					if (anim_file == NULL) {
+						fprintf(stderr,
+								"[BigFloat][Anim #%d, Flags %d] %s file opening error \n",
+								j, AnimList[j].flags,
+								animfile_name(model_name, AnimList[j].animID,
+										AnimList[j].subAnimID));
+						exit(EXIT_FAILURE);
+					}
+					read_times(anim_file, ptrAnimRefs,
+							&(*ptrDataBlock)[j].times, j);
+					if (ptrAnimRefs->keys[j].n > 0) {
+						(*ptrDataBlock)[j].keys = malloc(
+								ptrAnimRefs->keys[j].n * sizeof(BigFloat));
+						fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+						SEEK_SET);
+						fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
+								ptrAnimRefs->keys[j].n, anim_file);
+					}
+					fclose(anim_file);
 				}
-				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+			} else {
+				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
 					(*ptrDataBlock)[j].keys = malloc(
 							ptrAnimRefs->keys[j].n * sizeof(BigFloat));
-					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
-							ptrAnimRefs->keys[j].n, anim_file);
+							ptrAnimRefs->keys[j].n, lk_m2_file);
 				}
-				fclose(anim_file);
 			}
-		else{
-			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
-			if (ptrAnimRefs->keys[j].n > 0) {
-				(*ptrDataBlock)[j].keys = malloc(
-						ptrAnimRefs->keys[j].n * sizeof(BigFloat));
-				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].keys, sizeof(BigFloat),
-						ptrAnimRefs->keys[j].n, lk_m2_file);
-			}
-		}
 		}
 	}
 }
@@ -218,40 +232,48 @@ void read_QuatAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
-				printf("MARK QUAT\n");//FIXME
-				printf("Opening Anim file : \t\t%s\n",
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID));
-				FILE *anim_file = fopen(
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID), "r+b");
-				if (anim_file == NULL) {
-					fprintf(stderr, ".anim file opening error \n");
-					exit(EXIT_FAILURE);
+				if (isBugged(AnimList[j].flags)) {
+					ptrAnimRefs->keys[j].n = 0;	//Nuke it from orbit, it's the only way to be sure
+					ptrAnimRefs->keys[j].ofs = 0;
+					ptrAnimRefs->times[j].n = 0;
+					ptrAnimRefs->times[j].ofs = 0;
+				} else {
+
+					FILE *anim_file = fopen(
+							animfile_name(model_name, AnimList[j].animID,
+									AnimList[j].subAnimID), "r+b");
+					if (anim_file == NULL) {
+						fprintf(stderr,
+								"[Quat][Anim #%d, Flags %d] %s file opening error \n",
+								j, AnimList[j].flags,
+								animfile_name(model_name, AnimList[j].animID,
+										AnimList[j].subAnimID));
+						exit(EXIT_FAILURE);
+					}
+					read_times(anim_file, ptrAnimRefs,
+							&(*ptrDataBlock)[j].times, j);
+					if (ptrAnimRefs->keys[j].n > 0) {
+						(*ptrDataBlock)[j].keys = malloc(
+								ptrAnimRefs->keys[j].n * sizeof(Quat));
+						fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+						SEEK_SET);
+						fread((*ptrDataBlock)[j].keys, sizeof(Quat),
+								ptrAnimRefs->keys[j].n, anim_file);
+					}
+					fclose(anim_file);
 				}
-				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+			} else {
+				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
 					(*ptrDataBlock)[j].keys = malloc(
 							ptrAnimRefs->keys[j].n * sizeof(Quat));
-					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(Quat),
-							ptrAnimRefs->keys[j].n, anim_file);
+							ptrAnimRefs->keys[j].n, lk_m2_file);
 				}
-				fclose(anim_file);
 			}
-		else{
-			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
-			if (ptrAnimRefs->keys[j].n > 0) {
-				(*ptrDataBlock)[j].keys = malloc(
-						ptrAnimRefs->keys[j].n * sizeof(Quat));
-				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].keys, sizeof(Quat),
-						ptrAnimRefs->keys[j].n, lk_m2_file);
-			}
-		}
 		}
 	}
 }
@@ -267,40 +289,48 @@ void read_ShortAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
-				printf("MARK SHORT\n");//FIXME
-				printf("Opening Anim file : \t\t%s\n",
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID));
-				FILE *anim_file = fopen(
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID), "r+b");
-				if (anim_file == NULL) {
-					fprintf(stderr, ".anim file opening error \n");
-					exit(EXIT_FAILURE);
+				if (isBugged(AnimList[j].flags)) {
+					ptrAnimRefs->keys[j].n = 0;	//Nuke it from orbit, it's the only way to be sure
+					ptrAnimRefs->keys[j].ofs = 0;
+					ptrAnimRefs->times[j].n = 0;
+					ptrAnimRefs->times[j].ofs = 0;
+				} else {
+
+					FILE *anim_file = fopen(
+							animfile_name(model_name, AnimList[j].animID,
+									AnimList[j].subAnimID), "r+b");
+					if (anim_file == NULL) {
+						fprintf(stderr,
+								"[Short][Anim #%d, Flags %d] %s file opening error \n",
+								j, AnimList[j].flags,
+								animfile_name(model_name, AnimList[j].animID,
+										AnimList[j].subAnimID));
+						exit(EXIT_FAILURE);
+					}
+					read_times(anim_file, ptrAnimRefs,
+							&(*ptrDataBlock)[j].times, j);
+					if (ptrAnimRefs->keys[j].n > 0) {
+						(*ptrDataBlock)[j].keys = malloc(
+								ptrAnimRefs->keys[j].n * sizeof(short));
+						fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+						SEEK_SET);
+						fread((*ptrDataBlock)[j].keys, sizeof(short),
+								ptrAnimRefs->keys[j].n, anim_file);
+					}
+					fclose(anim_file);
 				}
-				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+			} else {
+				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
 					(*ptrDataBlock)[j].keys = malloc(
 							ptrAnimRefs->keys[j].n * sizeof(short));
-					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(short),
-							ptrAnimRefs->keys[j].n, anim_file);
+							ptrAnimRefs->keys[j].n, lk_m2_file);
 				}
-				fclose(anim_file);
 			}
-		else{
-			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
-			if (ptrAnimRefs->keys[j].n > 0) {
-				(*ptrDataBlock)[j].keys = malloc(
-						ptrAnimRefs->keys[j].n * sizeof(short));
-				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].keys, sizeof(short),
-						ptrAnimRefs->keys[j].n, lk_m2_file);
-			}
-		}
 		}
 	}
 }
@@ -316,40 +346,48 @@ void read_IntAnimBlock(FILE *lk_m2_file, LKAnimationBlock *ptrBlock,
 		int j;
 		for (j = 0; j < ptrBlock->Times.n; j++) {
 			if ((AnimList[j].flags & 0x30) == 0) {		//Open .anim file
-				printf("MARK INT\n");//FIXME
-				printf("Opening Anim file : \t\t%s\n",
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID));
-				FILE *anim_file = fopen(
-						animfile_name(model_name, AnimList[j].animID,
-								AnimList[j].subAnimID), "r+b");
-				if (anim_file == NULL) {
-					fprintf(stderr, ".anim file opening error \n");
-					exit(EXIT_FAILURE);
+				if (isBugged(AnimList[j].flags)) {
+					ptrAnimRefs->keys[j].n = 0;	//Nuke it from orbit, it's the only way to be sure
+					ptrAnimRefs->keys[j].ofs = 0;
+					ptrAnimRefs->times[j].n = 0;
+					ptrAnimRefs->times[j].ofs = 0;
+				} else {
+
+					FILE *anim_file = fopen(
+							animfile_name(model_name, AnimList[j].animID,
+									AnimList[j].subAnimID), "r+b");
+					if (anim_file == NULL) {
+						fprintf(stderr,
+								"[Int][Anim #%d, Flags %d] %s file opening error \n",
+								j, AnimList[j].flags,
+								animfile_name(model_name, AnimList[j].animID,
+										AnimList[j].subAnimID));
+						exit(EXIT_FAILURE);
+					}
+					read_times(anim_file, ptrAnimRefs,
+							&(*ptrDataBlock)[j].times, j);
+					if (ptrAnimRefs->keys[j].n > 0) {
+						(*ptrDataBlock)[j].keys = malloc(
+								ptrAnimRefs->keys[j].n * sizeof(int));
+						fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+						SEEK_SET);
+						fread((*ptrDataBlock)[j].keys, sizeof(int),
+								ptrAnimRefs->keys[j].n, anim_file);
+					}
+					fclose(anim_file);
 				}
-				read_times(anim_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
+			} else {
+				read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times,
 						j);
 				if (ptrAnimRefs->keys[j].n > 0) {
 					(*ptrDataBlock)[j].keys = malloc(
 							ptrAnimRefs->keys[j].n * sizeof(int));
-					fseek(anim_file, ptrAnimRefs->keys[j].ofs,
+					fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
 					SEEK_SET);
 					fread((*ptrDataBlock)[j].keys, sizeof(int),
-							ptrAnimRefs->keys[j].n, anim_file);
+							ptrAnimRefs->keys[j].n, lk_m2_file);
 				}
-				fclose(anim_file);
 			}
-		else{
-			read_times(lk_m2_file, ptrAnimRefs, &(*ptrDataBlock)[j].times, j);
-			if (ptrAnimRefs->keys[j].n > 0) {
-				(*ptrDataBlock)[j].keys = malloc(
-						ptrAnimRefs->keys[j].n * sizeof(int));
-				fseek(lk_m2_file, ptrAnimRefs->keys[j].ofs,
-				SEEK_SET);
-				fread((*ptrDataBlock)[j].keys, sizeof(int),
-						ptrAnimRefs->keys[j].n, lk_m2_file);
-			}
-		}
 		}
 	}
 }
@@ -797,6 +835,11 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	//Header
 	fseek(lk_m2_file, 0, SEEK_SET);
 	fread(&ptr->header, sizeof(LKModelHeader), 1, lk_m2_file);
+	if (ptr->header.version != 264) {
+		fprintf(stderr, "Incorrect model version (%d).\n", ptr->header.version);
+		fprintf(stderr, "A WotLK model (264) is expected\n");
+		exit(EXIT_FAILURE);
+	}
 
 	//Name
 	ptr->filename = malloc(ptr->header.nameLength);
@@ -871,9 +914,6 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 
 	//Transparency
 	read_transparency(lk_m2_file, ptr);
-
-	//TexAnims
-	read_texanims(lk_m2_file, ptr);
 
 	//TexReplace
 	ptr->TexReplace = malloc(ptr->header.nTexReplace * sizeof(short));
@@ -955,5 +995,14 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	fseek(lk_m2_file, ptr->header.ofsCameraLookup, SEEK_SET);
 	fread(ptr->CameraLookup, sizeof(short), ptr->header.nCameraLookup,
 			lk_m2_file);
+
+	//TexAnims
+	//read_texanims(lk_m2_file, ptr);
+	/*TODO
+	 TexAnims;
+	 Lights;
+	 Ribbons;
+	 Particles
+	 */
 	return 0;
 }
