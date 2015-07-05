@@ -14,8 +14,8 @@ short get_BCID(short ID) {
 	return get_BCID(Fallback[ID]);
 }
 
-void init_Fallback() {//Extracted from AnimationData.dbc
-	init = 1;//74
+void init_Fallback() {//Extracted from AnimationData.dbc (TBC 2.4.3)
+	init = 1;
 	Fallback[0] = 147;
 	Fallback[6] = 1;
 	Fallback[8] = 25;
@@ -99,11 +99,19 @@ void init_Fallback() {//Extracted from AnimationData.dbc
 	Fallback[224] = 127;
 }
 
+int get_RealPos(int pos, LKModelAnimation *animations) {
+	if((animations[pos].flags & 0x40) == 0){
+		return pos;
+	}
+	return get_RealPos(animations[pos].Index, animations);
+}
+
 short get_RealID(short ID, BCM2 model) {
 	if (init == 0) {
 		init_Fallback();
 	}
 	if (ID >= 226) {
+		fprintf(stderr, "Error : Invalid ID (>226) in get_RealID().");
 		return 0; //Not a Burning Crusade ID
 	}
 	if (ID < model.header.nAnimationLookup && (model.AnimLookup[ID] > -1)) {

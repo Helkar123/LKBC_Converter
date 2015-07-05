@@ -29,4 +29,4 @@ endif(DOXYGEN_FOUND)
 include(tests/tests.cmake)
 
 #files
-add_executable(lkbc_converter src/lkbc_converter.c src/reading.c src/fallback.c src/conversion.c src/writing.c src/printer.c src/common.c)
+add_executable(lkbc_converter src/lkbc_converter.c src/reading.c src/fallback.c src/conversion.c src/writing.c src/printer.c src/common.c src/fcaseopen.c)

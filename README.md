@@ -28,5 +28,6 @@ Don't forget to add the name of your model and the nature of the problem.
 ##Credits :
 Original idea and structures by Stan84.
 Thanks to Stan84, PhilipTNG, Schlumpf and all the people who contributed to M2&M2/WotLK pages on the WoWDev wiki.
+Thanks to OneSadCookie for its https://github.com/OneSadCookie/fcaseopen
 
 If you want to contribute and have ANSI C knowledge, feel free to send me a message. ;)

@@ -11,6 +11,8 @@
 #include "conversion.h"
 #include "writing.h"
 #include "common.h"
+#include "fcaseopen.h"
+#include "colors.h"
 
 /** Skin file extension */
 #define SKIN_SUFF ".skin"
@@ -52,25 +54,37 @@ char* final_name(char *name) {
  */
 int main(int argc, char *argv[]) {
 	printf("============================\n");
-	printf("= LKBC_Converter by Koward =\n");
-	printf("==v0.2-alpha================\n");
+	printf("= LKBC_Converter by " KGRN "Koward" RESET " =\n");
+	printf("==v0.3-alpha================\n");
 	printf("\tNote : models with .anim files are still work in progress.\n");
-	printf(
-			"\tThe converter can crash or produce a flawed m2 if you try them.\n");
 	printf("\n");
-	if (argc < 2) {
+	char *m2_name;
+	int i;
+	for (i = 1; i < argc; i++) {
+		if (argv[i][0] == '-') {
+			switch (argv[i][1]) {
+			default:
+				fprintf(stderr, "[Warning] Unknown argument %s\n", argv[i]);
+			}
+		} else { //M2 file
+			m2_name = argv[i];
+		}
+	}
+
+	if (m2_name == NULL) {
 		fprintf(stderr, "No M2 file specified.\n");
 		exit(EXIT_FAILURE);
 	}
-	//Storing M2 name
-	size_t m2_name_length = strlen(argv[1]);
+	//Storing M2 name (without .m2 extension)
+	size_t m2_name_length = strlen(m2_name);
 	model_name = malloc(m2_name_length - 3 + 1);
+	name_length = m2_name_length - 3;
 	strncpy(model_name, argv[1], m2_name_length - 3);
 	model_name[m2_name_length - 3] = 0;
 
 	//Reading files
-	printf("Opening M2/WotLK file : \t%s\n", argv[1]);
-	FILE *lk_m2_file = fopen(argv[1], "r+b");
+	printf("[Opening M2/WotLK file]\n\t%s\n", argv[1]);
+	FILE *lk_m2_file = fcaseopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
 		fprintf(stderr, "M2 opening error \n");
 		exit(EXIT_FAILURE);
@@ -81,16 +95,18 @@ int main(int argc, char *argv[]) {
 
 	FILE **skin_files;
 	skin_files = malloc(lk_model.header.nViews * sizeof(FILE *));
-	int i;
+	//int i;
+	printf("[Opening Skin files]\n");
 	for (i = 0; i < lk_model.header.nViews; i++) {
-		printf("Opening Skin file : \t\t%s\n", skin_name(argv[1], i));
-		skin_files[i] = fopen(skin_name(argv[1], i), "r+b");
+		printf("\t%s\n", skin_name(argv[1], i));
+		skin_files[i] = fcaseopen(skin_name(argv[1], i), "r+b");
 		if (skin_files[i] == NULL) {
 			fprintf(stderr, "SKIN/LK number %d opening error \r\n", i);
 			exit(EXIT_FAILURE);
 		}
 	}
 
+	printf("==> ");
 	Skin *skins;
 	read_skins(skin_files, &skins, lk_model.header.nViews);
 	printf("Model successfully read.\n\n");
@@ -102,7 +118,7 @@ int main(int argc, char *argv[]) {
 
 	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
 	/*
-	 FILE *genuine_m2_file = fopen("FrogGenuine.m2", "r+b");
+	 FILE *genuine_m2_file = fcaseopen("MountedKnightGenuine.m2", "r+b");
 	 if (genuine_m2_file == NULL) {
 	 fprintf(stderr, "Debug file opening error.\nIf you have this error using a release version, please report issue on Github.\n");
 	 exit(EXIT_FAILURE);
@@ -110,13 +126,12 @@ int main(int argc, char *argv[]) {
 	 BCM2 genuine_model;
 	 read_model_bc(genuine_m2_file, &genuine_model);
 	 */
-
+	//print_anims_bc(bc_model);
 	//Writing
-	/*char new_name[64] = "BC_";
-	strcat(new_name, argv[1]);*/
-	char *new_name=final_name(model_name);
-	printf("Output name : %s\n", new_name);
-	FILE *bc_m2_file = fopen(new_name, "w+b");
+	char *new_name = final_name(model_name);
+	printf("Output M2/BC file \t: \t%s\n", new_name);
+	printf("==> ");
+	FILE *bc_m2_file = fcaseopen(new_name, "w+b");
 	write_model(bc_m2_file, &bc_model);
 	printf("Model successfully written.\n");
 

@@ -121,7 +121,6 @@ int animations_converter(BCM2 *ptr, LKM2 lk_m2) {
 		ptr->animations[i].timeEnd = timeline;
 		ptr->animations[i].moveSpeed = lk_m2.animations[i].moveSpeed;
 		ptr->animations[i].flags = lk_m2.animations[i].flags;
-		ptr->animations[i].flags -= 0x20; //Flags difference ?
 		ptr->animations[i].probability = lk_m2.animations[i].probability;
 		ptr->animations[i].unused = lk_m2.animations[i].unused; //The Wiki says it's unused, but just in case, it's always better to convert it ;)
 		ptr->animations[i].d1 = lk_m2.animations[i].d1;
@@ -1115,10 +1114,8 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 		ptr->AnimLookup[i] = -1;
 	}
 	for (i = 0; i < ptr->header.nAnimations; i++) {
-		if (!isBugged(ptr->animations[i].flags)) {//Non implemented animations shouldn't show themselves on the Lookup
-			if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {	//Animation says : "If there is no position in the lookup for my AnimID,
-				ptr->AnimLookup[ptr->animations[i].animID] = i;	// I put mine"
-			}
+		if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {	//Animation says : "If there is no position in the lookup for my AnimID,
+			ptr->AnimLookup[ptr->animations[i].animID] = i;	// I put mine"
 		}
 	}
 
