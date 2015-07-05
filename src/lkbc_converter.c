@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 	lk_to_bc(lk_model, skins, &bc_model);
 	printf("Conversion complete.\n\n");
 
-	//FIXME Debug. Reads the genuine TBC file. Useful to compare the models.
+	//Reads the genuine TBC file. Useful to compare the models.
 	/*
 	 FILE *genuine_m2_file = fcaseopen("MountedKnightGenuine.m2", "r+b");
 	 if (genuine_m2_file == NULL) {
@@ -130,9 +130,6 @@ int main(int argc, char *argv[]) {
 	 BCM2 genuine_model;
 	 read_model_bc(genuine_m2_file, &genuine_model);
 	 */
-	//print_bonesdata(lk_model);
-	//print_bones(bc_model, 4);
-	//printf("[Bone #25] Number of Ranges: %d\n", bc_model.bones[25].trans.Ranges.n);
 
 	//Writing
 	char *new_name = final_name(model_name);

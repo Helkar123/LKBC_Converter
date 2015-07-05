@@ -1134,7 +1134,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 		}
 		ptr->header.nAnimationLookup = maxID + 1;
 		ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
-		for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
+		for (i = 0; i < ptr->header.nAnimationLookup; i++) {	//Init to -1;
 			ptr->AnimLookup[i] = -1;
 		}
 		for (i = 0; i < ptr->header.nAnimations; i++) {
@@ -1150,22 +1150,20 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 		for (i = 0; i < ptr->header.nPlayableAnimationLookup; i++) {
 			short realID = get_RealID((short) i, (*ptr));
 			ptr->PlayAnimLookup[i].ID = realID;
-			//Tricks when you don't have a dedicated animation
-			if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123
-					|| i == 132 || i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
-				if (realID != i) {
+			ptr->PlayAnimLookup[i].flags = 0;	//Normal
+			//Tricks when you don't have a dedicated animation to produce something that looks good
+			if (realID != i) {
+				if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123
+						|| i == 132 || i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
 					ptr->PlayAnimLookup[i].flags = 3;	//Play then stop
-				}
-			} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
-				if (realID != i) {
+				} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
 					ptr->PlayAnimLookup[i].flags = 1;	//Play backwards
 				}
-			} else {
-				ptr->PlayAnimLookup[i].flags = 0;
 			}
 		}
 	} else {
 		ptr->header.nAnimationLookup = 0;
+		ptr->header.nPlayableAnimationLookup = 0;
 	}
 
 	//KeyboneLookup
@@ -1180,7 +1178,7 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 		ptr->vertices[i] = lk_m2.vertices[i];
 	}
 
-	//views
+	//Views
 	views_converter(ptr, skins);
 	views_filler(ptr);
 

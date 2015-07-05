@@ -392,18 +392,18 @@ void print_vertices_bc(BCM2 model) {
 
 void print_animlookup(BCM2 model) {
 	printf("[Animation Lookup]\n");
-	printf("PhysicalID -- AnimID\n");
+	printf("PhysicalID \t-\t AnimID\n");
 	int i;
 	for (i = 0; i < model.header.nAnimationLookup; i++) {
-		printf("%d -- %d\n", model.AnimLookup[i], i);
+		printf("%d \t\t|\t %d\n", model.AnimLookup[i], i);
 	}
 }
 void print_playanimlookup(BCM2 model) {
 	printf("[Playable Animation Lookup]\n");
-	printf("TargetID,Flags -- AnimID\n");
+	printf("AnimID,Flags \t-\t In game ID\n");
 	int i;
 	for (i = 0; i < model.header.nPlayableAnimationLookup; i++) {
-		printf("%d,%d -- %d\n", model.PlayAnimLookup[i].ID,
+		printf("%d,%d \t\t|\t %d\n", model.PlayAnimLookup[i].ID,
 				model.PlayAnimLookup[i].flags, i);
 	}
 }
