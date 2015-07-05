@@ -54,17 +54,18 @@ char* final_name(char *name) {
  */
 int main(int argc, char *argv[]) {
 	printf("============================\n");
-	printf("= LKBC_Converter by " KGRN "Koward" RESET " =\n");
+	printf("= LKBC_Converter by Koward =\n");
 	printf("==v0.3-alpha================\n");
 	printf("\tNote : models with .anim files are still work in progress.\n");
 	printf("\n");
-	char *m2_name;
+	char *m2_name = 0;
 	int i;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
 			default:
-				fprintf(stderr, "[Warning] Unknown argument %s\n", argv[i]);
+				fprintf(stderr, KYEL "[Warning] " RESET "Unknown option: %s\n",
+						argv[i]);
 			}
 		} else { //M2 file
 			m2_name = argv[i];
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (m2_name == NULL) {
-		fprintf(stderr, "No M2 file specified.\n");
+		fprintf(stderr, KRED "[Error] " RESET "No M2 file specified.\n");
 		exit(EXIT_FAILURE);
 	}
 	//Storing M2 name (without .m2 extension)
@@ -83,10 +84,11 @@ int main(int argc, char *argv[]) {
 	model_name[m2_name_length - 3] = 0;
 
 	//Reading files
-	printf("[Opening M2/WotLK file]\n\t%s\n", argv[1]);
+	printf(KCYN "[Opening M2/WotLK file]\n" RESET);
+	printf("\t%s\n", m2_name);
 	FILE *lk_m2_file = fcaseopen(argv[1], "r+b");
 	if (lk_m2_file == NULL) {
-		fprintf(stderr, "M2 opening error \n");
+		fprintf(stderr, KRED "[Error] " RESET "M2 file not found\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -101,7 +103,9 @@ int main(int argc, char *argv[]) {
 		printf("\t%s\n", skin_name(argv[1], i));
 		skin_files[i] = fcaseopen(skin_name(argv[1], i), "r+b");
 		if (skin_files[i] == NULL) {
-			fprintf(stderr, "SKIN/LK number %d opening error \r\n", i);
+			fprintf(stderr,
+					KRED "[Error] " RESET "SKIN/LK number %d not found\n",
+					i);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -126,12 +130,20 @@ int main(int argc, char *argv[]) {
 	 BCM2 genuine_model;
 	 read_model_bc(genuine_m2_file, &genuine_model);
 	 */
-	//print_anims_bc(bc_model);
+	//print_bonesdata(lk_model);
+	//print_bones(bc_model, 4);
+	//printf("[Bone #25] Number of Ranges: %d\n", bc_model.bones[25].trans.Ranges.n);
+
 	//Writing
 	char *new_name = final_name(model_name);
-	printf("Output M2/BC file \t: \t%s\n", new_name);
+	printf(KGRN "[Creating M2/BC file]\n" RESET);
+	printf("\t%s\n", new_name);
 	printf("==> ");
 	FILE *bc_m2_file = fcaseopen(new_name, "w+b");
+	if (bc_m2_file == NULL) {
+		fprintf(stderr, KRED "[Error] " RESET "Can't write M2 file. Check system permissions.\n");
+		exit(EXIT_FAILURE);
+	}
 	write_model(bc_m2_file, &bc_model);
 	printf("Model successfully written.\n");
 

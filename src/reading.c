@@ -8,6 +8,7 @@
 #include <string.h>
 #include "reading.h"
 #include "common.h"
+#include "colors.h"
 
 char* animfile_name(char *name, short AnimID, short SubAnimID) {
 	char *s = malloc(name_length + 4 + 1 + 2 + strlen(".anim") + 1); //%s%04d-%02d.anim
@@ -782,7 +783,7 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 	int i;
 	for (i = 0; i < ptr->header.nAnimations; i++) {
 		if (((ptr->animations[i].flags & 0x40) == 0)
-				&& ((ptr->animations[i].flags & 0x130) == 0)) {//If anim[i] is not an alias and is not stored in the model
+				&& ((ptr->animations[i].flags & 0x130) == 0)) { //If anim[i] is not an alias and is not stored in the model
 			printf("\t%s\n",
 					animfile_name(model_name, ptr->animations[i].animID,
 							ptr->animations[i].subAnimID));
@@ -790,9 +791,9 @@ int read_model(FILE *lk_m2_file, LKM2 *ptr) {
 					animfile_name(model_name, ptr->animations[i].animID,
 							ptr->animations[i].subAnimID), "r+b");
 			if (anim_files[i] == NULL) {
-				fprintf(stderr,
-						"[Anim #%d, ID%d, Flags %d] %s file opening error \n",
-						i, ptr->animations[i].animID, ptr->animations[i].flags,
+				fprintf(stderr, KRED "[Error] " RESET
+				"[Anim #%d, ID%d, Flags %d] %s file opening error \n", i,
+						ptr->animations[i].animID, ptr->animations[i].flags,
 						animfile_name(model_name, ptr->animations[i].animID,
 								ptr->animations[i].subAnimID));
 				exit(EXIT_FAILURE);

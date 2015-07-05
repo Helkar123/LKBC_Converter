@@ -29,7 +29,7 @@ int header_converter(BCM2 *ptr, LKModelHeader lk_header) {
 	ptr->header.ofsAnimations = lk_header.ofsAnimations;
 	ptr->header.nAnimationLookup = lk_header.nAnimationLookup;
 	ptr->header.ofsAnimationLookup = lk_header.ofsAnimationLookup;
-	ptr->header.nPlayableAnimationLookup = 226; //TODO Placeholder. I don't know where this data is in WotLK.
+	ptr->header.nPlayableAnimationLookup = 0x00; //TODO Placeholder. I don't know where this data is in WotLK.
 	ptr->header.ofsPlayableAnimationLookup = 0x00;
 	ptr->header.nBones = lk_header.nBones;
 	ptr->header.ofsBones = lk_header.ofsBones;
@@ -284,6 +284,10 @@ void convert_Vec3DAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		for (m = 0; m < 3; m++) {
 			ptrDataBlock->keys[0][m] = LKDataBlock[0].keys[0][m];
 		}
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
+		ptrBlock->Keys.n = 0;
 	}
 }
 
@@ -375,6 +379,10 @@ void convert_BigFloatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 				ptrDataBlock->keys[0][m][n] = LKDataBlock[0].keys[0][m][n];
 			}
 		}
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
+		ptrBlock->Keys.n = 0;
 	}
 }
 
@@ -466,6 +474,10 @@ void convert_QuatAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		for (m = 0; m < 4; m++) {
 			ptrDataBlock->keys[0][m] = LKDataBlock[0].keys[0][m];
 		}
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
+		ptrBlock->Keys.n = 0;
 	}
 }
 
@@ -531,6 +543,10 @@ void convert_IntAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		ptrDataBlock->keys = malloc(sizeof(int));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
 		ptrDataBlock->keys[0] = LKDataBlock[0].keys[0];
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
+		ptrBlock->Keys.n = 0;
 	}
 }
 void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
@@ -596,6 +612,10 @@ void convert_ShortAnimBlock(LKAnimationBlock LKBlock, AnimRefs AnimRefs,
 		ptrDataBlock->keys = malloc(sizeof(short));
 		ptrDataBlock->times[0] = LKDataBlock[0].times[0];
 		ptrDataBlock->keys[0] = LKDataBlock[0].keys[0];
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
+		ptrBlock->Keys.n = 0;
 	}
 }
 
@@ -637,6 +657,9 @@ void convert_EventAnimBlock(LKEventAnimBlock LKBlock, ArrayRef *ArrayRefs,
 		ptrBlock->Times.n = 1;
 		ptrDataBlock->times = malloc(sizeof(uint32));
 		ptrDataBlock->times[0] = LKDataBlock.times[0][0];
+	} else {
+		ptrBlock->Ranges.n = 0;
+		ptrBlock->Times.n = 0;
 	}
 }
 /**
@@ -1101,40 +1124,48 @@ int lk_to_bc(LKM2 lk_m2, Skin *skins, BCM2 *ptr) {
 	//bones
 	bones_converter(ptr, lk_m2);
 
-	//AnimLookup (The one in the original model can be wrong, especially for Cata+ models, so I rewrote it myself)
-	short maxID = 0;
-	for (i = 0; i < ptr->header.nAnimations; i++) {
-		if (ptr->animations[i].animID > maxID) {
-			maxID = ptr->animations[i].animID;
+	if (ptr->header.nAnimations > 0) {
+		//AnimLookup (The one in the original model can be wrong, especially for Cata+ models, so I rewrote it myself)
+		short maxID = 0;
+		for (i = 0; i < ptr->header.nAnimations; i++) {
+			if (ptr->animations[i].animID > maxID) {
+				maxID = ptr->animations[i].animID;
+			}
 		}
-	}
-	ptr->header.nAnimationLookup = maxID + 1;
-	ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
-	for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
-		ptr->AnimLookup[i] = -1;
-	}
-	for (i = 0; i < ptr->header.nAnimations; i++) {
-		if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {	//Animation says : "If there is no position in the lookup for my AnimID,
-			ptr->AnimLookup[ptr->animations[i].animID] = i;	// I put mine"
+		ptr->header.nAnimationLookup = maxID + 1;
+		ptr->AnimLookup = malloc(ptr->header.nAnimationLookup * sizeof(int16));
+		for (i = 0; i < (maxID + 1); i++) {	//Init to -1;
+			ptr->AnimLookup[i] = -1;
 		}
-	}
+		for (i = 0; i < ptr->header.nAnimations; i++) {
+			if (ptr->AnimLookup[ptr->animations[i].animID] == -1) {	//Animation says : "If there is no position in the lookup for my AnimID,
+				ptr->AnimLookup[ptr->animations[i].animID] = i;	// I put mine"
+			}
+		}
 
-	//PlayAnimLookup
-	ptr->PlayAnimLookup = malloc(226 * sizeof(PlayAnimRecord));
-	for (i = 0; i < 226; i++) {
-		short realID = get_RealID((short) i, (*ptr));
-		ptr->PlayAnimLookup[i].ID = realID;
-		//Tricks when you don't have a dedicated animation
-		if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123 || i == 132
-				|| i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
-			if (realID != i) {
-				ptr->PlayAnimLookup[i].flags = 3;	//Play then stop
-			}
-		} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
-			if (realID != i) {
-				ptr->PlayAnimLookup[i].flags = 1;	//Play backwards
+		//PlayAnimLookup
+		ptr->header.nPlayableAnimationLookup = 226;
+		ptr->PlayAnimLookup = malloc(
+				ptr->header.nPlayableAnimationLookup * sizeof(PlayAnimRecord));
+		for (i = 0; i < ptr->header.nPlayableAnimationLookup; i++) {
+			short realID = get_RealID((short) i, (*ptr));
+			ptr->PlayAnimLookup[i].ID = realID;
+			//Tricks when you don't have a dedicated animation
+			if (i == 6 || i == 97 || i == 100 || i == 115 || i == 123
+					|| i == 132 || i == 188) {//Dead, SitGround, Sleep, KneelLoop, UseStandingLoop, Drowned, LootHold
+				if (realID != i) {
+					ptr->PlayAnimLookup[i].flags = 3;	//Play then stop
+				}
+			} else if (i == 13 || i == 45 || i == 101 || i == 189) {//Walkbackwards, SwimBackwards, SleepUp, LootUp
+				if (realID != i) {
+					ptr->PlayAnimLookup[i].flags = 1;	//Play backwards
+				}
+			} else {
+				ptr->PlayAnimLookup[i].flags = 0;
 			}
 		}
+	} else {
+		ptr->header.nAnimationLookup = 0;
 	}
 
 	//KeyboneLookup

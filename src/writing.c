@@ -97,10 +97,7 @@ void write_rangestimes(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 		Range **ptrRangeList, uint32 **ptrTimeList) {
 	if (ptrBlock->Ranges.n > 0) {
 		ptrBlock->Ranges.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Ranges.n; j++) {
-			fwrite((*ptrRangeList)[j], sizeof(Range), 1, bc_m2_file);
-		}
+		fwrite((*ptrRangeList), sizeof(Range), ptrBlock->Ranges.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 	if (ptrBlock->Times.n > 0) {
@@ -115,10 +112,7 @@ void write_Vec3DAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Keys.n; j++) {
-			fwrite(ptrDataBlock->keys[j], sizeof(Vec3D), 1, bc_m2_file);
-		}
+		fwrite(ptrDataBlock->keys, sizeof(Vec3D), ptrBlock->Keys.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 }
@@ -128,10 +122,7 @@ void write_BigFloatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Keys.n; j++) {
-			fwrite(ptrDataBlock->keys[j], sizeof(BigFloat), 1, bc_m2_file);
-		}
+		fwrite(ptrDataBlock->keys, sizeof(BigFloat), ptrBlock->Keys.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 }
@@ -141,10 +132,7 @@ void write_QuatAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Keys.n; j++) {
-			fwrite(ptrDataBlock->keys[j], sizeof(Quat), 1, bc_m2_file);
-		}
+		fwrite(ptrDataBlock->keys, sizeof(Quat), ptrBlock->Keys.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 }
@@ -154,10 +142,7 @@ void write_IntAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Keys.n; j++) {
-			fwrite(&ptrDataBlock->keys[j], sizeof(int), 1, bc_m2_file);
-		}
+		fwrite(ptrDataBlock->keys, sizeof(int), ptrBlock->Keys.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 }
@@ -167,10 +152,7 @@ void write_ShortAnimBlock(FILE *bc_m2_file, AnimationBlock *ptrBlock,
 			&ptrDataBlock->times);
 	if (ptrBlock->Keys.n > 0) {
 		ptrBlock->Keys.ofs = getPos(bc_m2_file);
-		int j;
-		for (j = 0; j < ptrBlock->Keys.n; j++) {
-			fwrite(&ptrDataBlock->keys[j], sizeof(short), 1, bc_m2_file);
-		}
+		fwrite(ptrDataBlock->keys, sizeof(short), ptrBlock->Keys.n, bc_m2_file);
 		align(bc_m2_file);
 	}
 }
@@ -264,10 +246,7 @@ int write_events(FILE *bc_m2_file, BCM2 *ptr) {
 			uint32 **ptrTimeList = &ptr->eventsdata[i].times;
 			if (ptrBlock->Ranges.n > 0) {
 				ptrBlock->Ranges.ofs = getPos(bc_m2_file);
-				int j;
-				for (j = 0; j < ptrBlock->Ranges.n; j++) {
-					fwrite((*ptrRangeList)[j], sizeof(Range), 1, bc_m2_file);
-				}
+				fwrite((*ptrRangeList), sizeof(Range), ptrBlock->Ranges.n, bc_m2_file);
 				align(bc_m2_file);
 			}
 			if (ptrBlock->Times.n > 0) {
